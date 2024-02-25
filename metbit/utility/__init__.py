@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 
 # utility
-from utility.unipair import unipair
-from utility.genpage import gen_page
+from unipair import unipair
+from genpage import gen_page
 
 # preprocessing
 from preprocessing.denoise_spec import decrease_noise
@@ -22,7 +22,4 @@ from multivariate.opls.vip import *
 
 # univariate
 from univariate.lingress import lingress
-
-
-# __all__ = ['unipair', 'genpage', 'decrease_noise', 'Normalization', 'anova', 'base', 'boxplot', 'cross_validation', 'elipse', 'opls', 'plotting', 'pls', 'pretreatment', 'vip', 'lingress']
 
