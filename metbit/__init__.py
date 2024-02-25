@@ -2,7 +2,7 @@
 
 # utility
 from utility.unipair import unipair
-from utility.genpage import genpage
+from utility.genpage import gen_page
 
 # preprocessing
 from preprocessing.denoise_spec import decrease_noise
