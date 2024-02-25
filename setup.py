@@ -12,7 +12,7 @@ DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
 setup(
   name = 'metbit',      
   packages = ['metbit'], 
-  version = '1.0.0',  
+  version = '1.0.1',  
   license='MIT', 
   description = 'Metabolomics data analysis and visualization tools.',
   long_description=DESCRIPTION,
