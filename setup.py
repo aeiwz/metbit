@@ -6,7 +6,7 @@ from setuptools import find_packages, setup
 HERE = dirname(abspath(__file__))
 LOAD_TEXT = lambda name: io.open(join(HERE, name), encoding='UTF-8').read()
 DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
-    'README.rst'
+    'README.md'
 ])
 
 setup(
