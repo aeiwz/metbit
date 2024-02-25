@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
 
 
-from lingress import lingress
+from .lingress import lingress
 
