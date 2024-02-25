@@ -18,8 +18,8 @@ setup(
   long_description=DESCRIPTION,
   author = 'aeiwz',                 
   author_email = 'theerayut_aeiw_123@hotmail.com',     
-  url = 'github link',  
-  download_url = 'download link',  
+  url = 'https://github.com/aeiwz/metbit.git',  
+  download_url = 'https://github.com/aeiwz/metbit/archive/refs/tags/v1.0.0.tar.gz',  
   keywords = ['Omics', 'Chemometrics', 'Visualization', 'Data Analysis'],
   install_requires=[            
           'scikit-learn',
