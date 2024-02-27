@@ -12,8 +12,8 @@ from .anova import anova_oplsda
 
 from .vip import vip
 
-import .cross_validation
-import .plotting
+from .cross_validation import *
+from .plotting import *
 
 # data preprocessing
 
