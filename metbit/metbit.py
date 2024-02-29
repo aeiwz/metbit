@@ -908,6 +908,20 @@ class pca:
         df_scores_ = self.df_scores_
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
+        
+        if color_ is not None:
+            if color_ not in self.label:
+                raise ValueError('color must be in y')
+        if symbol is not None:
+            if len(symbol) != len(self.label):
+                raise ValueError('symbol must have the same number of samples as y')
+
+        if color_ is None:
+            color_ = df_scores_['label']
+        else:
+            color_ = color_
+            
+
 
         
 
