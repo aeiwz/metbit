@@ -109,6 +109,8 @@ for i in range(len(dataset)):
     cv = pipeline.named_steps['opls']
     cv.fit(X, y)
 
+    
+
     oplsda.fit(X, pd.Categorical(y).codes)
     n_permutate = 1000
 

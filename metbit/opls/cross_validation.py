@@ -39,9 +39,9 @@ class CrossValidation:
     """
     def __init__(self, estimator="opls", kfold=10, scaler="pareto") -> None:
         
-        from pls import PLS
-        from opls import OPLS
-        import pretreatment
+        from .pls import PLS
+        from .opls import OPLS
+        from .pretreatment import Scaler
         # number of folds
         self.kfold = kfold
         # estimator
@@ -51,7 +51,7 @@ class CrossValidation:
             self.estimator = OPLS()
         self.estimator_id = estimator
         # scaler
-        self.scaler = pretreatment.Scaler(scaler=scaler)
+        self.scaler = Scaler(scaler=scaler)
 
         # initialize other attributes, but should be HIDDEN
         self._ypred: np.ndarray = None

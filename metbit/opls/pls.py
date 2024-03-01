@@ -1,7 +1,7 @@
 import numpy as np
 import numpy.linalg as la
 
-from base import nipals
+from .base import nipals
 
 
 class PLS:
