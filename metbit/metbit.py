@@ -837,6 +837,9 @@ class pca:
 
         return pca_model
 
+    def get_explained_variance(self):
+        df_explained_variance_ = self.df_explained_variance_
+        return df_explained_variance_
 
     def plot_observe_variance(self):
 
@@ -923,7 +926,7 @@ class pca:
             
 
 
-        
+
 
         #check symbol dimension must be equal to y
         if symbol is not None:
@@ -970,8 +973,8 @@ class pca:
                         title=f'<b>PCA Scores Plot<b> {scale} scaling', 
                         height=fig_height, width=fig_width,
                         labels={'label': 'Group',
-                                pc[0]: f"{pc[0]} R<sup>2</sup>X: {np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance']*100, decimals=2)}%",
-                                pc[1]: f"{pc[1]} R<sup>2</sup>X: {np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance']*100, decimals=2)}%"},
+                                pc[0]: "{} R<sup>2</sup>X: {}%".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
+                                pc[1]: "{} R<sup>2</sup>X: {}%".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2))},
                         text=text_)
 
         fig.update_traces(marker=dict(size=marker_size, 
@@ -984,7 +987,7 @@ class pca:
                                 x=1.0,
                                 y=0.05,
                                 showarrow=False,
-                                text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Cumulative variance']*100, decimals=2)}%<b>",
+                                text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Cumulative variance'].values[0]*100, decimals=2)}%<b>",
                                 textangle=0,
                                 xref="paper",
                                 yref="paper"),
@@ -1027,12 +1030,12 @@ class pca:
 
     def plot_loading_(self, pc=['PC1', 'PC2'], height_=600, width_=1800):
 
-        self.df_loadings_ = self.df_loadings_
+        df_loadings_ = self.df_loadings_
 
         loadings_label = self.features_name
 
 
-        fig = px.line(df_loadings_, x=loadings_label, y=pc, color=pc,
+        fig = px.line(df_loadings_, x=loadings_label, y=pc,
                                 height=height_, width=width_,
                                 title='Loadings plot',
                                 text=loadings_label)
@@ -1054,12 +1057,17 @@ class pca:
         return fig
 
 
+
+
+
+'''
     def plot_pca_trajectory(self,time_, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
                             color_dict = None, symbol_dict = None, 
                             height_=900, width_=1300,
                             marker_size=35, marker_opacity=0.7):
 
 
+        from opls.pca_ellipse import confidence_ellipse
 
 
         #check time are not missing
@@ -1078,7 +1086,8 @@ class pca:
         df_scores_ = self.df_scores_
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
-        df_scores_['time'] = time_
+        df_scores_['Time'] = time_
+        
 
         n_group = len(df_scores_['label'].unique())
 
@@ -1090,35 +1099,26 @@ class pca:
             raise ValueError('stat_[1] must be sem or std')
 
         if stat_[0] == 'mean':
-            df_scores_point = df_scores_.groupby(['time', 'label']).mean()
+            df_scores_point = df_scores_.groupby(['Time', 'label']).mean()
         if stat_[0] == 'median':
-            df_scores_point = df_scores_.groupby(['time', 'label']).median()
+            df_scores_point = df_scores_.groupby(['Time', 'label']).median()
 
         if stat_[1] == 'sem':
-            err_df = df_scores_.groupby(['time', 'label']).sem()
+            err_df = df_scores_.groupby(['Time', 'label']).sem()
         if stat_[1] == 'std':
-            err_df = df_scores_.groupby(['time', 'label']).std()
+            err_df = df_scores_.groupby(['Time', 'label']).std()
 
 
         df_scores_point.reset_index(inplace=True)
-        df.sort_values(by=['time'], inplace=True)
-        err_df.reset_index(inplace=True)
-        err_df.sort_values(by=['time'], inplace=True)
 
-        dict_color = ({0: '#1f77b4', 
-                        1: '#ff7f0e', 
-                        2: '#2ca02c', 
-                        3: '#d62728', 
-                        4: '#9467bd', 
-                        5: '#8c564b', 
-                        6: '#e377c2', 
-                        7: '#7f7f7f', 
-                        8: '#bcbd22', 
-                        9: '#17becf'})
+        err_df.reset_index(inplace=True)
+
 
 
         #Create dictionary for label and code 
-        label_dict = dict(zip(df_scores_point['label'].unique(), range(n_group)))
+        label_dict = dict(zip(range(len(df_scores_point['label'].unique())), df_scores_point['label'].unique()))
+
+
 
         #check color_dict must be a dictionary
         if color_dict is not None:
@@ -1146,8 +1146,10 @@ class pca:
                         symbol='Time', symbol_map=symbol_dict,
                         title='<b>Principle component analysis ({})<b>'.format(self.scale), 
                         height=height_, width=width_,
-                        labels={pc[0]: "{} R<sup>2</sup>X: {} %".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance']*100, decimals=2)),
-                                pc[1]: "{} R<sup>2</sup>X: {} %".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance']*100, decimals=2)),})
+                        labels={
+                            pc[0]: "{} R<sup>2</sup>X: {} %".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
+                            pc[1]: "{} R<sup>2</sup>X: {} %".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2)),
+                            })
 
 
         
@@ -1157,10 +1159,10 @@ class pca:
         for i in range(n_group):
             # create a new trace for the connecting line
             fig.add_trace(go.Scatter(
-                x=med_df.loc[i*n_group:(i+1)*n_group, pc[0]], # x-coordinates of the line
-                y=med_df.loc[i*n_group:(i+1)*n_group, pc[1]], # y-coordinates of the line
+                x=df_scores_point.loc[i*n_group:(i+2)*n_group, pc[0]], # x-coordinates of the line
+                y=df_scores_point.loc[i*n_group:(i+2)*n_group, pc[1]], # y-coordinates of the line
                 mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict[df_scores_point['label'].unique()[i]], width=2), # set the color and width of the line
+                line=dict(color=color_dict[i], width=2), # set the color and width of the line
                 showlegend=False # hide the trace from the legend
             ))
 
@@ -1171,7 +1173,7 @@ class pca:
                                 x=1.0,
                                 y=0.05,
                                 showarrow=False,
-                                text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Cumulative variance']*100, decimals=2)}%<b>",
+                                text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Cumulative variance'].values[0]*100, decimals=2)}%<b>",
                                 textangle=0,
                                 xref="paper",
                                 yref="paper"),
@@ -1218,4 +1220,4 @@ class pca:
         fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
         
         
-        return fig
+        return fig'''
