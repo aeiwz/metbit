@@ -6,19 +6,19 @@ from setuptools import find_packages, setup
 HERE = dirname(abspath(__file__))
 LOAD_TEXT = lambda name: io.open(join(HERE, name), encoding='UTF-8').read()
 DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
-    'README.md'
+    'README.rst'
 ])
 
 setup(
   name = 'metbit',      
-  packages = ['metbit', 'opls'], 
-  version = '1.2.0',  
+  packages = ['metbit'], 
+  version = '1.2.1',  
   license='MIT', 
   description = 'Metabolomics data analysis and visualization tools.',
   author = 'aeiwz',                 
   author_email = 'theerayut_aeiw_123@hotmail.com',   
   url = 'https://github.com/aeiwz/metbit.git',  
-  download_url = 'https://github.com/aeiwz/metbit/archive/refs/tags/V1.2.0.tar.gz',  
+  download_url = 'https://github.com/aeiwz/metbit/archive/refs/tags/V1.2.1.tar.gz',  
   keywords = ['Omics', 'Chemometrics', 'Visualization', 'Data Analysis'],
   install_requires=[            
           'scikit-learn',
