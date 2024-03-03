@@ -18,8 +18,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.offline as pyo
-import opls.cross_validation
-import opls.plotting
+import cross_validation
+import plotting
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 
@@ -54,8 +54,8 @@ class opls_da:
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
     import plotly.offline as pyo
-    import opls.cross_validation
-    import opls.plotting
+    import cross_validation
+    import plotting
     from sklearn.linear_model import LinearRegression
     from sklearn.metrics import mean_squared_error
 
@@ -210,7 +210,7 @@ class opls_da:
         pipeline = Pipeline([
                                 ('scale', ChemometricsScaler(scale_power=scale_power)),
                                 ('oplsda', PLSRegression(n_components=n_components)),
-                                ('opls', opls.cross_validation.CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
+                                ('opls', cross_validation.CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
                             ])
 
         self.pipeline = pipeline
@@ -222,7 +222,7 @@ class opls_da:
         oplsda.fit(X, pd.Categorical(y).codes)
         
         s_df_scores_ = pd.DataFrame({'correlation': cv.correlation,'covariance': cv.covariance}, index=features_name)
-        df_opls_scores = pd.DataFrame({'t_scores': cv.scores, 't_ortho': cv.orthogonal_score, 't_pred': cv.predictive_score, 'label': y})
+        df_opls_scores = pd.DataFrame({'t_scores': cv.scores, 't_ortho': cv.orthogonal_score, 't_pred': cv.predictive_score, 'Group': y})
 
 
         R2Xcorr = cv.R2Xcorr
@@ -390,12 +390,12 @@ class opls_da:
 
 
         
-        from opls.pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
         fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol, 
                     
                         symbol_map=symbol_dict,
                     
-                        color='label', 
+                        color='Group', 
                         color_discrete_map=color_dict, 
                         title='<b>OPLS-DA Scores Plot<b>', 
                         height=fig_height, width=fig_width,
@@ -403,7 +403,7 @@ class opls_da:
                             't_pred': 't<sub>predict</sub>',
                             't_ortho': 't<sub>orthogonal</sub>',
                             't_scores': 't<sub>scores</sub>',
-                            'label': 'Group'}
+                            'Group': 'Group'}
         )
 
         fig.update_traces(marker=dict(size=marker_size, 
@@ -644,7 +644,7 @@ class pca:
 
     from sklearn import decomposition
     from sklearn.preprocessing import scale
-    from opls.pca_ellipse import confidence_ellipse
+    from pca_ellipse import confidence_ellipse
 
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
@@ -740,7 +740,7 @@ class pca:
 
         from sklearn import decomposition
         from sklearn.preprocessing import scale
-        from opls.pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
 
         from sklearn.model_selection import train_test_split
         from sklearn.preprocessing import StandardScaler
@@ -780,7 +780,7 @@ class pca:
             else:
                 df_scores_['PC{}'.format(i+1)] = self.scores_[:,i]
 
-        df_scores_['label'] = label
+        df_scores_['Group'] = label
 
         self.df_scores_ = df_scores_
 
@@ -905,7 +905,7 @@ class pca:
                         marker_size=35, marker_opacity=0.7,
                         text_ = None):
 
-        from opls.pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
 
         scale = self.scale
         df_scores_ = self.df_scores_
@@ -920,7 +920,7 @@ class pca:
                 raise ValueError('symbol must have the same number of samples as y')
 
         if color_ is None:
-            color_ = df_scores_['label']
+            color_ = df_scores_['Group']
         else:
             color_ = color_
             
@@ -972,7 +972,7 @@ class pca:
                         symbol_map=symbol_dict, 
                         title=f'<b>PCA Scores Plot<b> {scale} scaling', 
                         height=fig_height, width=fig_width,
-                        labels={'label': 'Group',
+                        labels={'Group': 'Group',
                                 pc[0]: "{} R<sup>2</sup>X: {}%".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                                 pc[1]: "{} R<sup>2</sup>X: {}%".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2))},
                         text=text_)
@@ -1060,14 +1060,23 @@ class pca:
 
 
 
-'''
-    def plot_pca_trajectory(self,time_, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
+
+    def plot_pca_trajectory(self,time_, time_in_number, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
                             color_dict = None, symbol_dict = None, 
                             height_=900, width_=1300,
-                            marker_size=35, marker_opacity=0.7):
+                            marker_size=35, marker_opacity=0.7, ):
 
 
-        from opls.pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
+
+
+        #check time_in_number must be a dictionary
+        if not isinstance(time_in_number, dict):
+            raise ValueError("time_in_number must be a dictionary \n Example: time_in_number = {0: 'Day 1', 1: 'Day 2', 2: 'Day 3'}")
+
+        #chack time_in_number ditionary index must be match with time_.unique()
+        if set(time_in_number.keys()) != set(time_):
+            raise ValueError('time_in_number dictionary index must be match with time_')
 
 
         #check time are not missing
@@ -1080,16 +1089,16 @@ class pca:
         if len(time_) != len(self.label):
             raise ValueError('time_ must have the same number of samples as group')
 
-
+        
 
 
         df_scores_ = self.df_scores_
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
-        df_scores_['Time'] = time_
+        df_scores_['Time point'] = time_
         
 
-        n_group = len(df_scores_['label'].unique())
+
 
         #check stat_[0] must be mean or median
         if stat_[0] not in ['mean', 'median']:
@@ -1099,24 +1108,23 @@ class pca:
             raise ValueError('stat_[1] must be sem or std')
 
         if stat_[0] == 'mean':
-            df_scores_point = df_scores_.groupby(['Time', 'label']).mean()
+            df_scores_point = df_scores_.groupby(['Group', 'Time point']).mean()
         if stat_[0] == 'median':
-            df_scores_point = df_scores_.groupby(['Time', 'label']).median()
+            df_scores_point = df_scores_.groupby(['Group', 'Time point']).median()
 
         if stat_[1] == 'sem':
-            err_df = df_scores_.groupby(['Time', 'label']).sem()
+            err_df = df_scores_.groupby(['Group', 'Time point']).sem()
         if stat_[1] == 'std':
-            err_df = df_scores_.groupby(['Time', 'label']).std()
+            err_df = df_scores_.groupby(['Group', 'Time point']).std()
 
 
         df_scores_point.reset_index(inplace=True)
+        df_scores_point['Time point number'] = df_scores_point['Time point'].map(time_in_number)
+        df_scores_point.sort_values(by=['Group', 'Time point number'], inplace=True)
 
         err_df.reset_index(inplace=True)
-
-
-
-        #Create dictionary for label and code 
-        label_dict = dict(zip(range(len(df_scores_point['label'].unique())), df_scores_point['label'].unique()))
+        err_df['Time point number'] = err_df['Time point'].map(time_in_number)
+        err_df.sort_values(by=['Group', 'Time point number'], inplace=True)
 
 
 
@@ -1125,7 +1133,7 @@ class pca:
             if not isinstance(color_dict, dict):
                 raise ValueError('color_dict must be a dictionary')
         else:
-            color_dict = dict_color
+            color_dict = None
 
 
         if symbol_dict is not None:
@@ -1136,19 +1144,27 @@ class pca:
         
 
 
+        #If user not input color_dict then get unique of label and create color_dict
+        if color_dict is None:
+            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
+
+        #Change {0: '#636EFA', 1: '#EF553B', 2: '#00CC96'} to {'Group1': '#636EFA', 'Group2': '#EF553B', 'Group3': '#00CC96'}
+        color_dict = {df_scores_point['Group'].unique()[i]: list(color_dict.values())[i] for i in range(len(df_scores_point['Group'].unique()))}
+        
+        n_group = df_scores_point['Group'].unique()
 
 
 
-
-        fig = px.line(df_scores_point, x=pc[0], y=pc[1], line_group='Time', 
+        fig = px.line(df_scores_point, x=pc[0], y=pc[1], line_group='Time point', 
                         error_x=err_df[pc[0]], error_y=err_df[pc[1]],
-                        color='label', color_discrete_map=color_dict,
-                        symbol='Time', symbol_map=symbol_dict,
+                        color='Group', color_discrete_map=color_dict,
+                        symbol='Time point', symbol_map=symbol_dict,
                         title='<b>Principle component analysis ({})<b>'.format(self.scale), 
                         height=height_, width=width_,
                         labels={
                             pc[0]: "{} R<sup>2</sup>X: {} %".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                             pc[1]: "{} R<sup>2</sup>X: {} %".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2)),
+                            'Group': 'Group'
                             })
 
 
@@ -1156,13 +1172,13 @@ class pca:
 
 
 
-        for i in range(n_group):
+        for i in range(len(n_group)):
             # create a new trace for the connecting line
             fig.add_trace(go.Scatter(
-                x=df_scores_point.loc[i*n_group:(i+2)*n_group, pc[0]], # x-coordinates of the line
-                y=df_scores_point.loc[i*n_group:(i+2)*n_group, pc[1]], # y-coordinates of the line
+                x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[i]].index), pc[0]], # x-coordinates of the line
+                y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[i]].index), pc[1]], # y-coordinates of the line
                 mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict[i], width=2), # set the color and width of the line
+                line=dict(color=color_dict[n_group[i]], width=2), # set the color and width of the line
                 showlegend=False # hide the trace from the legend
             ))
 
@@ -1220,4 +1236,4 @@ class pca:
         fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
         
         
-        return fig'''
+        return fig

@@ -270,4 +270,83 @@ class gen_page:
         return print('HTML files created')
 
             
+class oplsda_path:
+
+    def __init__(self, data_path):
+
+        import os
+        from glob import glob
+
+        '''
+        This function takes in the path to the data folder and returns the path to the OPLS-DA plots.
+        Parameters
+        ----------
+        data_path: str
+            The path to the data folder.
+        oplsda_path(data_path).get_path()
+        '''
+
+
+        #check data_path is a string
+        if not isinstance(data_path, str):
+            raise ValueError("data_path should be a string")
+
+        #check data_path is a directory
+        if not os.path.isdir(data_path):
+            raise ValueError("data_path should be a directory")
+
+        #check if data_path is empty
+        if not os.listdir(data_path):
+            raise ValueError("data_path should not be empty")
+
+
+        #Implement \ to / for windows
+        data_path = data_path.replace('\\', '/')
+        
+        if data_path[-1] == '/':
+            #remove the last /
+            data_path = data_path[:-1]
+            
+        else:
+            data_path = data_path
+        
+
+        self.data_path = data_path
+
+
+
+    def make_path(self):
+
+
+
+        os.makedirs(data_path+'/OPLS_DA_report', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/main', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/element', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/element/hist_plot', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/element/Lingress', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/element/loading_plot', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/element/s_plot', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/element/score_plot', exist_ok=True)
+        os.makedirs(data_path+'/OPLS_DA_report/element/VIP_score', exist_ok=True)
+
+
+        #create dictionary to store the path
+        path = {}
+        path['main'] = data_path+'/OPLS_DA_report/main'
+        path['element'] = data_path+'/OPLS_DA_report/element'
+        path['hist_plot'] = data_path+'/OPLS_DA_report/element/hist_plot'
+        path['Lingress'] = data_path+'/OPLS_DA_report/element/Lingress'
+        path['loading_plot'] = data_path+'/OPLS_DA_report/element/loading_plot'
+        path['s_plot'] = data_path+'/OPLS_DA_report/element/s_plot'
+        path['score_plot'] = data_path+'/OPLS_DA_report/element/score_plot'
+        path['VIP_score'] = data_path+'/OPLS_DA_report/element/VIP_score'
+
+        self.path = path
+
+    def get_path(self):
+        path = self.path
+        return path
+
+
+
 

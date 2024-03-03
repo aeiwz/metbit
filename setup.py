@@ -11,11 +11,10 @@ DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
 
 setup(
   name = 'metbit',      
-  packages = ['metbit'], 
-  version = '1.1.0',  
+  packages = ['metbit', 'opls'], 
+  version = '1.1.4',  
   license='MIT', 
   description = 'Metabolomics data analysis and visualization tools.',
-  long_description=DESCRIPTION,
   author = 'aeiwz',                 
   author_email = 'theerayut_aeiw_123@hotmail.com',     
   url = 'https://github.com/aeiwz/metbit.git',  
