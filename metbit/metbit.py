@@ -769,7 +769,7 @@ class pca:
 
         pca_mod.plot_loading_()
 
-        pca_mod.plot_pca_trajectory(time_=time, time_in_number={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)
+        pca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)
 
 
 
@@ -1192,7 +1192,7 @@ class pca:
 
 
 
-    def plot_pca_trajectory(self,time_, time_in_number, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
+    def plot_pca_trajectory(self,time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
                             color_dict = None, symbol_dict = None, 
                             height_=900, width_=1300,
                             marker_size=35, marker_opacity=0.7, ):
@@ -1201,13 +1201,13 @@ class pca:
         from .pca_ellipse import confidence_ellipse
 
 
-        #check time_in_number must be a dictionary
-        if not isinstance(time_in_number, dict):
-            raise ValueError("time_in_number must be a dictionary \n Example: time_in_number = {0: 'Day 1', 1: 'Day 2', 2: 'Day 3'}")
+        #check time_order must be a dictionary
+        if not isinstance(time_order, dict):
+            raise ValueError("time_order must be a dictionary \n Example: time_order = {0: 'Day 1', 1: 'Day 2', 2: 'Day 3'}")
 
-        #chack time_in_number ditionary index must be match with time_.unique()
-        if set(time_in_number.keys()) != set(time_):
-            raise ValueError('time_in_number dictionary index must be match with time_')
+        #chack time_order ditionary index must be match with time_.unique()
+        if set(time_order.keys()) != set(time_):
+            raise ValueError('time_order dictionary index must be match with time_')
 
 
         #check time are not missing
@@ -1250,11 +1250,11 @@ class pca:
 
 
         df_scores_point.reset_index(inplace=True)
-        df_scores_point['Time point number'] = df_scores_point['Time point'].map(time_in_number)
+        df_scores_point['Time point number'] = df_scores_point['Time point'].map(time_order)
         df_scores_point.sort_values(by=['Group', 'Time point number'], inplace=True)
 
         err_df.reset_index(inplace=True)
-        err_df['Time point number'] = err_df['Time point'].map(time_in_number)
+        err_df['Time point number'] = err_df['Time point'].map(time_order)
         err_df.sort_values(by=['Group', 'Time point number'], inplace=True)
 
 
