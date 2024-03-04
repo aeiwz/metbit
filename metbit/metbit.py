@@ -55,7 +55,7 @@ class opls_da:
     from plotly.subplots import make_subplots
     import plotly.offline as pyo
     from .cross_validation import CrossValidation
-    import plotting
+    #import plotting
     from sklearn.linear_model import LinearRegression
     from sklearn.metrics import mean_squared_error
 
