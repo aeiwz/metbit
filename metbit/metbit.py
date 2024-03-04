@@ -446,7 +446,7 @@ class opls_da:
 
 
         
-        from pca_ellipse import confidence_ellipse
+        from .pca_ellipse import confidence_ellipse
         fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol, 
                     
                         symbol_map=symbol_dict,
@@ -700,7 +700,7 @@ class pca:
 
     from sklearn import decomposition
     from sklearn.preprocessing import scale
-    from pca_ellipse import confidence_ellipse
+    from .pca_ellipse import confidence_ellipse
 
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
@@ -859,7 +859,7 @@ class pca:
 
         from sklearn import decomposition
         from sklearn.preprocessing import scale
-        from pca_ellipse import confidence_ellipse
+        from .pca_ellipse import confidence_ellipse
 
         from sklearn.model_selection import train_test_split
         from sklearn.preprocessing import StandardScaler
@@ -1036,7 +1036,7 @@ class pca:
                         marker_size=35, marker_opacity=0.7,
                         text_ = None):
 
-        from pca_ellipse import confidence_ellipse
+        from .pca_ellipse import confidence_ellipse
 
         scale = self.scale
         df_scores_ = self.df_scores_
@@ -1198,7 +1198,7 @@ class pca:
                             marker_size=35, marker_opacity=0.7, ):
 
 
-        from pca_ellipse import confidence_ellipse
+        from .pca_ellipse import confidence_ellipse
 
 
         #check time_in_number must be a dictionary
