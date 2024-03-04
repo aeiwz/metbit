@@ -1,9 +1,9 @@
 """
 Orthogonal Projection on Latent Structure (O-PLS)
 """
-#import numpy as np
-#from numpy import linalg as la
-#from typing import Tuple, Any, Union
+import numpy as np
+from numpy import linalg as la
+from typing import Tuple, Any, Union
 #from .base import nipals
 
 
