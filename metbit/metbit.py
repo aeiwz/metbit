@@ -368,7 +368,7 @@ class opls_da:
 
 
 
-    def vip_plot(self, threshold = 2, size = 12, width = 1000, height = 500):
+    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500):
         
         
         # add scatter plot of VIP score
@@ -410,8 +410,8 @@ class opls_da:
         
         # add dashed line for threshold
         fig.add_shape(type="line",
-                    x0=0, y0=threshold, x1=10, y1=threshold,
-                    line=dict(color="red",width=2, dash="dash"))
+                    x0=0, y0=threshold, x1=x_range, y1=threshold,
+                    line=dict(color="red",width=2))
                     
         fig.update_layout(showlegend=False)
         
