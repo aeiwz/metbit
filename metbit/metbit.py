@@ -18,7 +18,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.offline as pyo
-from cross_validation import *
+from cross_validation import CrossValidation
 #import plotting
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
@@ -54,7 +54,7 @@ class opls_da:
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
     import plotly.offline as pyo
-    from cross_validation import *
+    from cross_validation import CrossValidation
     import plotting
     from sklearn.linear_model import LinearRegression
     from sklearn.metrics import mean_squared_error
@@ -266,7 +266,7 @@ class opls_da:
         pipeline = Pipeline([
                                 ('scale', ChemometricsScaler(scale_power=scale_power)),
                                 ('oplsda', PLSRegression(n_components=n_components)),
-                                ('opls', cross_validation.CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
+                                ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
                             ])
 
         self.pipeline = pipeline
