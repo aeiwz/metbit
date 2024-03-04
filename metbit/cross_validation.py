@@ -20,7 +20,7 @@ class CrossValidation:
     from .opls import OPLS
     from .pretreatment import Scaler
     import collections
-    import typingoo
+    import typing
     import numpy as np
     import numpy.linalg as la
 
@@ -48,7 +48,7 @@ class CrossValidation:
     CrossValidation object
 
     """
-    
+
     def __init__(self, estimator="opls", kfold=10, scaler="pareto") -> None:
         
         from .pls import PLS
