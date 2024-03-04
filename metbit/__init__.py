@@ -2,7 +2,7 @@
 
 from .metbit import opls_da, pca
 from .base import *
-from .boxplot import *
+
 from .cross_validation import *
 from .denoise_spec import *
 from .opls import *
