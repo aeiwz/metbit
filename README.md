@@ -32,7 +32,7 @@ data = pd.DataFrame(np.random.rand(500, 50000))
 class_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group')
 time = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point')
 
-dataset = pd.concat
+datasets = pd.concat([class_, time, data], axis=1)
 # Assign X and target
 X = datasets.iloc[:, 2:]
 y = datasets['Group']
