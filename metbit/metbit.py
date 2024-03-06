@@ -368,7 +368,7 @@ class opls_da:
 
 
 
-    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500):
+    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500, filter_ = False):
         
         
         # add scatter plot of VIP score
@@ -376,12 +376,14 @@ class opls_da:
         vips = self.vips
 
         #add threshold column to define cutoff for VIP score if >= treschold then 1 else 0
-        vips['trechold'] = np.where(vips['VIP'] >= threshold, "Pass", "Under cut off")
+        vips['threshold'] = np.where(vips['VIP'] >= threshold, "Pass", "Under cut off")
 
+        if filter_ == True:
+            vips = vips[vips['VIP'] >= threshold]
 
         fig = px.scatter(vips, x='Features', y='VIP', 
         text='Features', 
-        color='trechold', color_discrete_map={'Pass':'#FF7961', 'Under cut off':'#ECECEC'}, 
+        color='threshold', color_discrete_map={'Pass':'#FF7961', 'Under cut off':'#ECECEC'}, 
         height=height, width=width, 
         title='VIP score')
 
@@ -416,6 +418,8 @@ class opls_da:
         fig.update_layout(showlegend=False)
         
         return fig
+
+
 
 
 
