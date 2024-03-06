@@ -33,9 +33,6 @@ import os
 __auther__ = "aeiwz"
 
 
-
-
-
 class opls_da:
     
     
@@ -149,6 +146,8 @@ class opls_da:
         opls_da_model.plot_loading()
 
 
+        
+
     '''
     
 
@@ -240,9 +239,6 @@ class opls_da:
         
         
     def fit(self):
-        """
-        Fit the OPLS-DA model to the training data.
-        """
         
         X = self.X
         y = self.y
@@ -302,22 +298,10 @@ class opls_da:
 
 
     def permutation_test(self, n_permutations=500, cv=3, n_jobs=-1, verbose=10):
-        """
-        Perform a permutation test to assess the significance of the model.
 
-        Parameters:
-        - n_permutations (int): The number of permutations to perform (default: 500).
-        - cv (int): The number of cross-validation folds (default: 3).
-        - n_jobs (int): The number of parallel jobs to run (-1 means using all processors, default: -1).
-        - verbose (int): The verbosity level (default: 10).
 
-        Returns:
-        - acc_score (float): The accuracy score of the model.
-        - permutation_scores (array-like): The scores obtained from the permutation test.
-        - p_value (float): The p-value calculated from the permutation test.
-        """
         from sklearn.pipeline import Pipeline
-
+        
         self.cv = cv
         self.n_permutations = n_permutations
         oplsda = self.oplsda
@@ -341,28 +325,18 @@ class opls_da:
         
         
     
-    def vip_scores(self, model=None, features_name=None):
-        """
-        Calculate the Variable Importance in Projection (VIP) scores for the given model.
-
-        Parameters:
-            model (object, optional): The model for which to calculate VIP scores. If not provided, the default model (self.oplsda) will be used.
-            features_name (list, optional): The names of the features. If provided, the VIP scores will be associated with the corresponding feature names in the output DataFrame.
-
-        Returns:
-            None
-
-        Notes:
-            - The VIP scores are calculated based on the model's x_scores_, x_weights_, and y_loadings_ attributes.
-            - If features_name is provided, the output DataFrame will have two columns: 'VIP' and 'Features'. Otherwise, it will have only the 'VIP' column.
-            - The calculated VIP scores are stored in the self.vips attribute.
-        """
-        if model is None:
+    def vip_scores(self, model=None, features_name = None):
+        
+        
+        if model is None:   
             model = self.oplsda
         else:
             model = model
-
+            
+        
         features_name = self.features_name
+
+
 
         t = model.x_scores_
         w = model.x_weights_
@@ -372,15 +346,17 @@ class opls_da:
         s = np.diag(t.T @ t @ q.T @ q).reshape(h, -1)
         total_s = np.sum(s)
         for i in range(p):
-            weight = np.array([(w[i, j] / np.linalg.norm(w[:, j])) ** 2 for j in range(h)])
-            vips[i] = np.sqrt(p * (s.T @ weight) / total_s)
-
+            weight = np.array([ (w[i,j] / np.linalg.norm(w[:,j]))**2 for j in range(h) ])
+            vips[i] = np.sqrt(p*(s.T @ weight)/total_s)
+       
         if features_name is not None:
-            vips = pd.DataFrame(vips, columns=['VIP'])
+            vips = pd.DataFrame(vips, columns = ['VIP'])
             vips['Features'] = features_name
         else:
-            vips = pd.DataFrame(vips, columns=['VIP'])
+            vips = pd.DataFrame(vips, columns = ['VIP'])
             vips['Features'] = vips.index
+
+
 
         self.vips = vips
 
@@ -392,35 +368,8 @@ class opls_da:
 
 
 
-    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500, filter_ = False, label_text = None):
-
-        '''
-        Visualise VIP score
-
-        Parameters
-        ----------
-        x_range : int, default=9
-            Range of x-axis.
-        threshold : int, default=2
-            Threshold of VIP score.
-        size : int, default=12
-            Size of marker.
-        width : int, default=1000
-            Width of plot.
-        height : int, default=500
-            Height of plot.
-        filter_ : bool, default=False
-            Filter VIP score based on threshold.
-        label_text : str, default=None
-            Label type of x-axis ('Features' and 'VIP').
-            Label of x-axis.
-
-        '''
+    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500, filter_ = False):
         
-        if label_text is not None:
-            if label_text is not 'Features' and label_text is not 'VIP':
-                raise ValueError('label_text must be "Features" or "VIP"')
-
         
         # add scatter plot of VIP score
         import plotly.express as px
@@ -431,11 +380,6 @@ class opls_da:
 
         if filter_ == True:
             vips = vips[vips['VIP'] >= threshold]
-
-        if label_text is None:
-            label_text = None
-        else:
-            label_text = 'Features'
 
         fig = px.scatter(vips, x='Features', y='VIP', 
         text='Features', 
@@ -481,29 +425,6 @@ class opls_da:
 
     def plot_oplsda_scores(self, color_dict = None, symbol = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
                     marker_size = 35, marker_opacity = 0.7):
-
-        '''
-        Visualise OPLS-DA scores plot
-
-        Parameters
-        ----------
-        color_dict : dict, default=None
-            Dictionary of color for group.
-        symbol : str, default=None
-            Symbol for group.
-        symbol_dict : dict, default=None
-            Dictionary of symbol for group.
-        fig_height : int, default=900
-            Height of plot.
-        fig_width : int, default=1300
-            Width of plot.
-        marker_size : int, default=35
-            Size of marker.
-        marker_opacity : float, default=0.7
-            Opacity of marker.
-
-        '''
-
         
         #Visualise
         #check symbol dimension must be equal to y
@@ -614,39 +535,31 @@ class opls_da:
 
 
     def plot_hist(self, nbins_=50, height_=500, width_=1000):
-        """
-        Plot a histogram of permutation scores.
 
-        Parameters:
-        - nbins_ (int): Number of bins for the histogram. Default is 50.
-        - height_ (int): Height of the plot in pixels. Default is 500.
-        - width_ (int): Width of the plot in pixels. Default is 1000.
-
-        Returns:
-        - fig: The plotly figure object representing the histogram.
-
-        Raises:
-        - ValueError: If permutation test has not been performed first.
-        """
-
-        # Check if permutation model must be fitted
+        #check permutation model must be fitted
         if self.permutation_scores is None:
             raise ValueError('Permutation test must be performed first')
 
         permutation_scores = self.permutation_scores
 
-        # Histogram
-        # Plot histogram of permutation scores
+
+        #Histrogram
+        #Plot histogram of permutation scores
         fig = px.histogram(permutation_scores, nbins=nbins_, height=height_, width=width_, 
                         title='<b>Permutation scores<b>',
                         labels={'value': 'Accuracy score', 
                                 'count': 'Frequency'})
 
+
+
         fig.add_shape(type='line', yref='paper', y0=0, y1=1, 
                         xref='x', x0=self.acc_score, x1=self.acc_score, 
                         line=dict(dash='dash', color='red', width=3))
 
+
+
         fig.add_annotation(dict(font=dict(color="black",size=14),
+                                #x=x_loc,
                                 x=0,
                                 y=1.25,
                                 #y=1.18,
@@ -655,9 +568,11 @@ class opls_da:
                                 textangle=0,
                                 xref="paper",
                                 yref="paper"),
+                                # set alignment of text to left side of entry
                                 align="left")
 
         fig.add_annotation(dict(font=dict(color="black",size=14),
+                                #x=x_loc,
                                 x=0,
                                 y=1.18,
                                 showarrow=False,
@@ -665,9 +580,10 @@ class opls_da:
                                 textangle=0,
                                 xref="paper",
                                 yref="paper"),
+                                # set alignment of text to left side of entry
                                 align="left")
-
         fig.add_annotation(dict(font=dict(color="black",size=14),
+                                #x=x_loc,
                                 x=0,
                                 y=1.11,
                                 showarrow=False,
@@ -675,9 +591,13 @@ class opls_da:
                                 textangle=0,
                                 xref="paper",
                                 yref="paper"),
+                                # set alignment of text to left side of entry
                                 align="left")
 
+
+        
         fig.update_layout(showlegend=False)
+
         fig.update_layout(title_x=0.5)
 
         return fig
@@ -685,42 +605,34 @@ class opls_da:
 
 
     def plot_s_scores(self, height_=900, width_=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet'):
-        """
-        Plot the S-scores.
-
-        Parameters:
-        - height_ (int): The height of the plot in pixels. Default is 900.
-        - width_ (int): The width of the plot in pixels. Default is 2000.
-        - range_color_ (list): The range of colors for the plot. Default is [-0.05, 0.05].
-        - color_continuous_scale_ (str): The color scale for the plot. Default is 'jet'.
-
-        Returns:
-        - fig (plotly.graph_objects.Figure): The plotly figure object representing the S-plot.
-        """
 
         s_df_scores_ = self.s_df_scores_
+
 
         fig = px.scatter(s_df_scores_, x='covariance', y='correlation', color='covariance', range_color=range_color_,
                         color_continuous_scale=color_continuous_scale_, text=s_df_scores_.index, height=height_, width=width_,)
         fig.update_layout(title='<b>S-plot</b>', xaxis_title='Covariance', yaxis_title='Correlation')
 
-        # Add line of axis and set color to black and line width to 2 pixels
+
+        
+        #add line of axis and set color to black and line width to 2 pixel
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
 
-        # Add tick width to 2 pixels
+        #Add tick width to 2 pixel
         fig.update_xaxes(tickwidth=2)
         fig.update_yaxes(tickwidth=2)
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
         fig.update_yaxes(tickformat=",.0")
+        #fig.update_xaxes(tickformat=",.0")
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_layout(
             title={
-                'y': 1,
-                'x': 0.5,
+                'y':1,
+                'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
             font=dict(size=20))
@@ -732,18 +644,6 @@ class opls_da:
 
     
     def plot_loading(self, height_=900, width_=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet'):
-        """
-        Plots the loading spectra.
-
-        Parameters:
-        - height_ (int): The height of the plot in pixels. Default is 900.
-        - width_ (int): The width of the plot in pixels. Default is 2000.
-        - range_color_ (list): The range of colors for the color scale. Default is [-0.05, 0.05].
-        - color_continuous_scale_ (str): The color scale to use for the plot. Default is 'jet'.
-
-        Returns:
-        - fig: The plotly figure object representing the loading spectra plot.
-        """
 
         s_df_scores_ = self.s_df_scores_
 
@@ -781,86 +681,45 @@ class opls_da:
 
         return fig
 
-    
-    def clear_all(self):
-        """
-        Clear the OPLS-DA model and its attributes.
-        """
-        self.oplsda = None
-        self.cv = None
-        self.opls_permutation_cv = None
-        self.opls_permutation_cv_scores = None
-        self.opls_permutation_cv_score = None
-        self.opls_permutation_cv_score_std = None
-        self.acc_score = None
-        self.permutation_scores = None
-        self.p_value = None
-        self.vips = None
-        self.s_df_scores_ = None
-        self.df_opls_scores = None
-        self.R2Xcorr = None
-        self.R2y = None
-        self.q2 = None
-        return
 
 
 
 class pca:
-    """
-    Principal Component Analysis (PCA) model.
 
-    Parameters
-    ----------
-    X : array-like, shape (n_samples, n_features)
-        Training data, where n_samples is the number of samples and n_features is the number of features.
-    label : array-like, shape (n_samples,)
-        Target data, where n_samples is the number of samples.
-    features_name : array-like, shape (n_features,), default=None
-        Name of features.
-    n_components : int, default=2
-        Number of components to keep.
-    scale : str, default='pareto'
-        Method of scaling. 'pareto' for pareto scaling, 'mean' for mean centering, 'uv' for unitvarian scaling.
-    random_state : int, default=42
-        Random state for permutation test.
-    test_size : float, default=0.3
-        Size of test set.
-
-    Examples
-    --------
-    import pandas as pd
     import numpy as np
-    from metbit import pca
 
-    # Create a dataset
-    data = pd.DataFrame(np.random.rand(500, 50000))
-    class_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group')
-    time = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point')
+    from sklearn import preprocessing
+    import pandas as pd
+    import matplotlib.pyplot as plt
 
-    # Assign X and target
-    X = datasets.iloc[:, 2:]
-    y = datasets['Group']
-    time = datasets['Time point']
-    features_name = list(X.columns.astype(float))
+    from pyChemometrics.ChemometricsPCA import ChemometricsPCA
+    from pyChemometrics.ChemometricsScaler import ChemometricsScaler
 
-    ## Perform PCA model
-    pca_mod = pca(X=X, label=y, features_name=features_name, n_components=2, scale='pareto', random_state=42, test_size=0.3)
-    pca_mod.fit()
+    # Use to obtain same values as in the text
 
-    # Visualisation of PCA model
-    pca_mod.plot_observe_variance()
-    pca_mod.plot_cumulative_observed()
-    shape_ = {'1-wk': 'circle', '2-wk': 'square', '3-wk': 'diamond', '4-wk': 'cross'}
-    pca_mod.plot_pca_scores(symbol=time, symbol_dict=shape_)
-    pca_mod.plot_loading_()
-    pca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)
 
-    """
+    import os
+    import plotly.express as px
+    import plotly.graph_objects as go
+
+    from sklearn import decomposition
+    from sklearn.preprocessing import scale
+    from .pca_ellipse import confidence_ellipse
+
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.decomposition import PCA
+    from sklearn.metrics import r2_score
+    from lingress import unipair
+
 
     def __init__(self, X, label, features_name=None, n_components=2, scale='pareto', random_state=42, test_size=0.3):
-        """
-        Initialize the PCA model.
 
+        '''
+        
+
+        PCA model
+        
         Parameters
         ----------
         X : array-like, shape (n_samples, n_features)
@@ -877,8 +736,251 @@ class pca:
             Random state for permutation test.
         test_size : float, default=0.3
             Size of test set.
-        """
-        # Rest of the code...
+
+        Examples:
+        ----------
+        import pandas as pd
+        import numpy as np
+        from metbit import pca
+
+        # Create a dataset
+        data = pd.DataFrame(np.random.rand(500, 50000))
+        class_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group')
+        time = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point')
+
+
+        # Assign X and target
+        X = datasets.iloc[:, 2:]
+        y = datasets['Group']
+        time = datasets['Time point']
+        features_name = list(X.columns.astype(float))
+
+        ## Perform PCA model
+
+
+        pca_mod = pca(X = X, label = y, features_name=features_name, n_components=2, scale='pareto', random_state=42, test_size=0.3)
+        pca_mod.fit()
+
+
+        # Visualisation of PCA model
+        pca_mod.plot_observe_variance()
+
+        pca_mod.plot_cumulative_observed()
+
+        shape_ = {'1-wk': 'circle', '2-wk': 'square', '3-wk': 'diamond', '4-wk': 'cross'}
+
+        pca_mod.plot_pca_scores(symbol=time, symbol_dict=shape_)
+
+        pca_mod.plot_loading_()
+
+        pca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)
+
+
+
+
+        '''
+
+
+        if features_name is not None:
+            if not isinstance(features_name, (pd.Series, np.ndarray, list)):
+                raise ValueError('features_name must be a series, list or 1D array')
+            if len(features_name) != X.shape[1]:
+                raise ValueError('features_name must have the same number of features as X')
+
+        if not isinstance(X, (pd.DataFrame, np.ndarray)):
+            raise ValueError('X must be a dataframe or array')
+
+        if not isinstance(n_components, int):
+            raise ValueError('n_components must be an integer')
+
+        if not isinstance(scale, str):
+            raise ValueError('scale must be a string')
+
+        if not isinstance(random_state, int):
+            raise ValueError('random_state must be an integer')
+
+        if not isinstance(label, (pd.Series, np.ndarray, list)):
+            raise ValueError('label must be a series, list or array')
+        if len(label) != X.shape[0]:
+            raise ValueError('X and label must have the same number of samples')
+
+        self.features_name = features_name
+        if features_name is None:
+            if isinstance(X, pd.DataFrame):
+                self.features_name = X.columns
+            else:
+                self.features_name = np.arange(X.shape[1])
+        else:
+            self.features_name = features_name
+
+        
+        # Check missing values in X
+        if isinstance(X, pd.DataFrame):
+            if X.isnull().sum().sum() > 0:
+                raise ValueError('X contains missing values')
+        else:
+            if np.isnan(X).sum().sum() > 0:
+                raise ValueError('X contains missing values')
+
+        self.X = X
+        self.label = label
+        self.n_components = n_components
+        self.scale = scale
+        self.random_state = random_state
+
+        if scale == 'pareto':
+            scale_power_ = 0.5
+        elif scale == 'mean':
+            scale_power_ = 0
+        elif scale == 'uv':
+            scale_power_ = 1
+        elif scale == 'minmax':
+            scale_power_ = 0
+
+        self.scale_power_ = scale_power_
+        self.test_size = test_size
+
+
+
+    
+    def fit(self):
+
+        import numpy as np
+
+        from sklearn import preprocessing
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
+        from pyChemometrics.ChemometricsPCA import ChemometricsPCA
+        from pyChemometrics.ChemometricsScaler import ChemometricsScaler
+
+        # Use to obtain same values as in the text
+
+
+        import os
+        import plotly.express as px
+        import plotly.graph_objects as go
+
+        from sklearn import decomposition
+        from sklearn.preprocessing import scale
+        from .pca_ellipse import confidence_ellipse
+
+        from sklearn.model_selection import train_test_split
+        from sklearn.preprocessing import StandardScaler
+        from sklearn.decomposition import PCA
+        from sklearn.metrics import r2_score
+        from lingress import unipair
+
+        test_size=self.test_size
+
+        X = self.X
+        label = self.label
+        n_components = self.n_components
+        scale = self.scale
+        random_state = self.random_state
+        features_name = self.features_name
+        Y = pd.Categorical(label).codes
+        scale_power_ = self.scale_power_ 
+
+
+        model_scaler = ChemometricsScaler(scale_power=scale_power_)
+        model_scaler.fit(X)
+        model_X = model_scaler.transform(X)
+
+
+
+        pca_model = decomposition.PCA(n_components=n_components)
+        pca_model.fit(model_X)
+
+        self.scores_ = pca_model.transform(model_X)
+        self.loadings_ = pca_model.components_.T
+        
+
+        #Create dataframe for scores depending on the number of components
+        for i in range(n_components):
+            if i == 0:
+                df_scores_ = pd.DataFrame(self.scores_[:,i], columns=['PC{}'.format(i+1)])
+            else:
+                df_scores_['PC{}'.format(i+1)] = self.scores_[:,i]
+
+        df_scores_['Group'] = label
+
+        self.df_scores_ = df_scores_
+
+        #Create dataframe for loadings depending on the number of components
+        for i in range(n_components):
+            if i == 0:
+                df_loadings_ = pd.DataFrame(self.loadings_[:,i], index=features_name, columns=['PC{}'.format(i+1)])
+            else:
+                df_loadings_['PC{}'.format(i+1)] = self.loadings_[:,i]
+
+        df_loadings_['Features'] = features_name
+
+        self.df_loadings_ = df_loadings_
+
+        explained_variance_ = pca_model.explained_variance_ratio_
+        explained_variance_ = np.insert(explained_variance_, 0, 0)
+        cumulative_variance_ = np.cumsum(explained_variance_)
+
+
+        r2_index = ['']
+        for i in range(n_components):
+            r2_index.append('PC{}'.format(i+1))
+
+        df_explained_variance_ = pd.DataFrame(r2_index, columns=['PC'])
+        df_explained_variance_['Explained variance'] = explained_variance_
+        df_explained_variance_['Cumulative variance'] = cumulative_variance_
+
+
+
+        X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=test_size, random_state=random_state)
+        X_test = model_scaler.transform(X_test)
+        X_test_pca = pca_model.transform(X_test)
+
+            # Inverse transform the test set from the PCA space
+        X_test_reconstructed = pca_model.inverse_transform(X_test_pca)
+
+
+        # Calculate Q2 score for the test set
+        q2_test = r2_score(X_test, X_test_reconstructed)
+        
+
+        self.q2_test = q2_test
+        self.explained_variance_ = explained_variance_  
+        self.cumulative_variance_ = cumulative_variance_
+        self.df_explained_variance_ = df_explained_variance_
+        self.pca_model = pca_model
+        self.model_scaler = model_scaler
+        self.X_test = X_test
+        self.y_test = y_test
+        self.X_test_reconstructed = X_test_reconstructed
+        self.X_test_pca = X_test_pca
+        self.df_scores_
+        self.df_loadings_
+
+        return pca_model
+
+    def get_explained_variance(self):
+        df_explained_variance_ = self.df_explained_variance_
+        return df_explained_variance_
+
+    def get_scores(self):
+        df_scores_ = self.df_scores_
+        return df_scores_
+
+    def get_loadings(self):
+        df_loadings_ = self.df_loadings_
+        return df_loadings_
+
+    def get_q2_test(self):
+        q2_test = self.q2_test
+        return q2_test
+
+    def plot_observe_variance(self):
+
+        scale = self.scale
+        
+        df_explained_variance_ = self.df_explained_variance_
         
         fig = px.bar(df_explained_variance_, 
                 x='PC', y=df_explained_variance_['Explained variance'],
@@ -897,12 +999,7 @@ class pca:
 
 
     def plot_cumulative_observed(self):
-        """
-        Plots the Explained Variance and Cumulative Variance.
-
-        Returns:
-            fig (go.Figure): The plotly figure object.
-        """
+        
         df_explained_variance_ = self.df_explained_variance_
 
         fig = go.Figure()
@@ -942,27 +1039,6 @@ class pca:
                         fig_height=900, fig_width=1300,
                         marker_size=35, marker_opacity=0.7,
                         text_ = None):
-        """
-        Plots the PCA scores.
-
-        Parameters:
-        - pc (list): A list of two strings representing the principal components to plot.
-        - color_ (str): The column name in the scores dataframe to use for coloring the points. Default is None.
-        - color_dict (dict): A dictionary mapping values in the color_ column to specific colors. Default is None.
-        - symbol (str): The column name in the scores dataframe to use for symbolizing the points. Default is None.
-        - symbol_dict (dict): A dictionary mapping values in the symbol column to specific symbols. Default is None.
-        - fig_height (int): The height of the plot figure. Default is 900.
-        - fig_width (int): The width of the plot figure. Default is 1300.
-        - marker_size (int): The size of the markers representing the points. Default is 35.
-        - marker_opacity (float): The opacity of the markers representing the points. Default is 0.7.
-        - text_ (str): The column name in the scores dataframe to use for displaying text labels on the points. Default is None.
-
-        Returns:
-        - fig (plotly.graph_objects.Figure): The plotly figure object representing the PCA scores plot.
-        """
-
-
-        
 
         from .pca_ellipse import confidence_ellipse
 
@@ -1089,25 +1165,6 @@ class pca:
 
     def plot_loading_(self, pc=['PC1', 'PC2'], height_=600, width_=1800):
 
-        '''
-        Visualise loading plot
-
-        Parameters
-        ----------
-        pc : list, default=['PC1', 'PC2']
-            List of two strings representing the principal components to plot.
-        height_ : int, default=600
-            Height of plot.
-        width_ : int, default=1800
-            Width of plot.
-
-        Returns
-        -------
-        fig : plotly.graph_objects.Figure
-            The plotly figure object representing the loading plot.
-
-        '''
-
         df_loadings_ = self.df_loadings_
 
         loadings_label = self.features_name
@@ -1139,27 +1196,10 @@ class pca:
 
 
 
-    def plot_pca_trajectory(self, time_, time_order, stat_=['mean', 'sem'], pc=['PC1', 'PC2'],
-                            color_dict=None, symbol_dict=None, height_=900, width_=1300,
-                            marker_size=35, marker_opacity=0.7):
-        """
-        Plots the PCA trajectory based on the provided parameters.
-
-        Parameters:
-        - time_ (pandas.Series, np.ndarray, list): The time points for the trajectory analysis.
-        - time_order (dict): A dictionary mapping time points to their corresponding labels.
-        - stat_ (list): A list containing two strings representing the statistical measures to be used for the analysis. Default is ['mean', 'sem'].
-        - pc (list): A list containing two strings representing the principal components to be plotted. Default is ['PC1', 'PC2'].
-        - color_dict (dict): A dictionary mapping group labels to color codes. Default is None.
-        - symbol_dict (dict): A dictionary mapping time points to symbol codes. Default is None.
-        - height_ (int): The height of the plot in pixels. Default is 900.
-        - width_ (int): The width of the plot in pixels. Default is 1300.
-        - marker_size (int): The size of the markers in the plot. Default is 35.
-        - marker_opacity (float): The opacity of the markers in the plot. Default is 0.7.
-
-        Returns:
-        - fig (plotly.graph_objects.Figure): The generated PCA trajectory plot.
-        """
+    def plot_pca_trajectory(self,time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
+                            color_dict = None, symbol_dict = None, 
+                            height_=900, width_=1300,
+                            marker_size=35, marker_opacity=0.7, ):
 
 
         from .pca_ellipse import confidence_ellipse
@@ -1167,11 +1207,8 @@ class pca:
 
         #check time_order must be a dictionary
         if not isinstance(time_order, dict):
-            raise ValueError("time_order must be a dictionary \n Example: time_order = {0: 'Day 1', 1: 'Day 2', 2: 'Day 3'}")
+            raise ValueError("time_order must be a dictionary \n Example: time_order = {'Day 1': 0, 'Day 2': 1, 'Day 3': 2}")
 
-        #chack time_order ditionary index must be match with time_.unique()
-        if set(time_order.keys()) != set(time_):
-            raise ValueError('time_order dictionary index must be match with time_')
 
 
         #check time are not missing
@@ -1214,12 +1251,12 @@ class pca:
 
 
         df_scores_point.reset_index(inplace=True)
-        df_scores_point['Time point number'] = df_scores_point['Time point'].map(time_order)
-        df_scores_point.sort_values(by=['Group', 'Time point number'], inplace=True)
+        df_scores_point['Time order'] = df_scores_point['Time point'].map(time_order)
+        df_scores_point.sort_values(by=['Group', 'Time order'], inplace=True)
 
         err_df.reset_index(inplace=True)
-        err_df['Time point number'] = err_df['Time point'].map(time_order)
-        err_df.sort_values(by=['Group', 'Time point number'], inplace=True)
+        err_df['Time order'] = err_df['Time point'].map(time_order)
+        err_df.sort_values(by=['Group', 'Time order'], inplace=True)
 
 
 
@@ -1332,13 +1369,3 @@ class pca:
         
         
         return fig
-
-
-    def clear_model(self):
-        """
-        Clear the PCA model.
-        """
-        self.__dict__ = {}
-        return None
-
-
