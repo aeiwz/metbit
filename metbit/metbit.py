@@ -1283,8 +1283,8 @@ class pca:
 
 
         #new color_dict to match with unique label
-        color_dict = {df_scores_point['Group'].unique()[i]: list(color_dict.values())[i] for i in range(len(df_scores_point['Group'].unique()))}
-
+        group_unique = df_scores_point['Group'].unique()
+        color_dict_2 = {key: color_dict[key] for key in code_unique}
  
         n_group = df_scores_point['Group'].unique()
 
@@ -1292,7 +1292,7 @@ class pca:
 
         fig = px.line(df_scores_point, x=pc[0], y=pc[1], line_group='Time point', 
                         error_x=err_df[pc[0]], error_y=err_df[pc[1]],
-                        color='Group', color_discrete_map=color_dict,
+                        color='Group', color_discrete_map=color_dict_2,
                         symbol='Time point', symbol_map=symbol_dict,
                         title='<b>Principle component analysis ({})<b>'.format(self.scale), 
                         height=height_, width=width_,
@@ -1313,7 +1313,7 @@ class pca:
                 x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[i]].index), pc[0]], # x-coordinates of the line
                 y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[i]].index), pc[1]], # y-coordinates of the line
                 mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict[n_group[i]], width=2), # set the color and width of the line
+                line=dict(color=color_dict_2[n_group[i]], width=2), # set the color and width of the line
                 showlegend=False # hide the trace from the legend
             ))
 
