@@ -423,7 +423,7 @@ class opls_da:
 
 
 
-    def plot_oplsda_scores(self, color_dict = None, symbol = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
+    def plot_oplsda_scores(self, color_ = None, color_dict = None, symbol = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
                     marker_size = 35, marker_opacity = 0.7):
         
         #Visualise
@@ -446,6 +446,11 @@ class opls_da:
             color_dict = None
 
         df_opls_scores = self.df_opls_scores
+
+        if color_ is not None:
+            df_opls_scores['Group'] = color_
+        else:
+            df_opls_scores['Group'] = df_opls_scores['Group']
 
 
         
@@ -1207,6 +1212,7 @@ class pca:
         #check time_order must be a dictionary
         if not isinstance(time_order, dict):
             raise ValueError("time_order must be a dictionary \n Example: time_order = {'Day 1': 0, 'Day 2': 1, 'Day 3': 2}")
+
 
 
 
