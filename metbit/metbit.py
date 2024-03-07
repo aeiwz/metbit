@@ -902,6 +902,7 @@ class pca:
                 df_scores_ = pd.DataFrame(self.scores_[:,i], columns=['PC{}'.format(i+1)])
             else:
                 df_scores_['PC{}'.format(i+1)] = self.scores_[:,i]
+        df_scores_.index = label.index
 
         df_scores_['Group'] = label
 
