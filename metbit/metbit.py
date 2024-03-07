@@ -1286,7 +1286,6 @@ class pca:
         group_unique = df_scores_point['Group'].unique()
         color_dict_2 = {key: color_dict[key] for key in color_dict if key in group_unique}
  
-        n_group = df_scores_point['Group'].unique()
 
 
 
@@ -1307,13 +1306,13 @@ class pca:
 
 
 
-        for i in range(len(n_group)):
+        for connect_line in range(len(group_unique)):
             # create a new trace for the connecting line
             fig.add_trace(go.Scatter(
-                x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[i]].index), pc[0]], # x-coordinates of the line
-                y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[i]].index), pc[1]], # y-coordinates of the line
+                x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[0]], # x-coordinates of the line
+                y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[1]], # y-coordinates of the line
                 mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict_2[n_group[i]], width=2), # set the color and width of the line
+                line=dict(color=color_dict_2[n_group[connect_line]], width=2), # set the color and width of the line
                 showlegend=False # hide the trace from the legend
             ))
 
