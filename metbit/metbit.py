@@ -1278,14 +1278,15 @@ class pca:
 
 
         #If user not input color_dict then get unique of label and create color_dict
-        if color_dict is None:
-            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
-
-        else:
+        if color_dict is not None:
             if len(color_dict) != len(df_scores_point['Group'].unique()):
                 raise ValueError('color_dict must have the same number of unique label')
             else:
                 color_dict = color_dict
+        else:
+            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
+
+
                 
 
         #Change {0: '#636EFA', 1: '#EF553B', 2: '#00CC96'} to {'Group1': '#636EFA', 'Group2': '#EF553B', 'Group3': '#00CC96'}
