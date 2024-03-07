@@ -1281,8 +1281,15 @@ class pca:
         if color_dict is None:
             color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
 
+        else:
+            if len(color_dict) != len(df_scores_point['Group'].unique()):
+                raise ValueError('color_dict must have the same number of unique label')
+            else:
+                color_dict = color_dict
+                
+
         #Change {0: '#636EFA', 1: '#EF553B', 2: '#00CC96'} to {'Group1': '#636EFA', 'Group2': '#EF553B', 'Group3': '#00CC96'}
-        color_dict = {df_scores_point['Group'].unique()[i]: list(color_dict.values())[i] for i in range(len(df_scores_point['Group'].unique()))}
+        #color_dict = {df_scores_point['Group'].unique()[i]: list(color_dict.values())[i] for i in range(len(df_scores_point['Group'].unique()))}
         
         n_group = df_scores_point['Group'].unique()
 
