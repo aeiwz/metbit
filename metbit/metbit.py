@@ -1282,11 +1282,10 @@ class pca:
             color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
 
 
-                
+        #new color_dict to match with unique label
+        color_dict = {df_scores_point['Group'].unique()[i]: list(color_dict.values())[i] for i in range(len(df_scores_point['Group'].unique()))}
 
-        #Change {0: '#636EFA', 1: '#EF553B', 2: '#00CC96'} to {'Group1': '#636EFA', 'Group2': '#EF553B', 'Group3': '#00CC96'}
-        #color_dict = {df_scores_point['Group'].unique()[i]: list(color_dict.values())[i] for i in range(len(df_scores_point['Group'].unique()))}
-        
+ 
         n_group = df_scores_point['Group'].unique()
 
 
