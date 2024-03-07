@@ -441,8 +441,7 @@ class opls_da:
 
         #check color_dict must be a dictionary
         if color_dict is not None:
-            if not isinstance(color_dict, dict):
-                raise ValueError('color_dict must be a dictionary')
+            color_dict = color_dict
         else:
             color_dict = None
 
@@ -1078,8 +1077,7 @@ class pca:
 
         #check color_dict must be a dictionary
         if color_dict is not None:
-            if not isinstance(color_dict, dict):
-                raise ValueError('color_dict must be a dictionary')
+            color_dict = color_dict
         else:
             color_dict = None
 
@@ -1279,10 +1277,7 @@ class pca:
 
         #If user not input color_dict then get unique of label and create color_dict
         if color_dict is not None:
-            if len(color_dict) != len(df_scores_point['Group'].unique()):
-                raise ValueError('color_dict must have the same number of unique label')
-            else:
-                color_dict = color_dict
+            color_dict = color_dict
         else:
             color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
 
