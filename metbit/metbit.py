@@ -1286,7 +1286,7 @@ class pca:
             color_dict = color_dict
         else:
             color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
-
+            
 
         #new color_dict to match with unique label
         group_unique = df_scores_point['Group'].unique()
@@ -1318,7 +1318,7 @@ class pca:
                 x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[0]], # x-coordinates of the line
                 y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[1]], # y-coordinates of the line
                 mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict_2[n_group[connect_line]], width=2), # set the color and width of the line
+                line=dict(color=color_dict_2[group_unique[connect_line]], width=2), # set the color and width of the line
                 showlegend=False # hide the trace from the legend
             ))
 
