@@ -1518,8 +1518,11 @@ class pca:
 
         #new color_dict to match with unique label
         group_unique = df_scores_point['Group'].unique()
-        #color_dict_2 = {key: color_dict[key] for key in color_dict if key in group_unique}
-        color_dict_2 = color_dict
+        #change key of color_dict to match with unique label
+        color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
+        
+
+ 
  
 
 
