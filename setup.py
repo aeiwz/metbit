@@ -12,7 +12,7 @@ DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
 setup(
   name = 'metbit',      
   packages = ['metbit'], 
-  version = '1.4.89',  
+  version = '1.4.9',  
   license='MIT', 
   description = 'Metabolomics data analysis and visualization tools.',
   author = 'aeiwz',                 
@@ -22,7 +22,7 @@ setup(
   keywords = ['Omics', 'Chemometrics', 'Visualization', 'Data Analysis'],
   install_requires=[            
           'scikit-learn',
-          'pandas9
+          'pandas9',
           'numpy',
           'matplotlib',
           'seaborn',
@@ -30,7 +30,8 @@ setup(
           'statsmodels',
           'plotly',
           'dash',
-          'pyChemometrics'],
+          'pyChemometrics',
+          'lingress'],
   classifiers=[
     'Development Status :: 3 - Alpha',     
     'Intended Audience :: Education',     
