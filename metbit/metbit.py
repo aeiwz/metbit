@@ -327,6 +327,17 @@ class opls_da:
     
     def vip_scores(self, model=None, features_name = None):
         
+        '''
+        Get VIP score
+
+        Parameters
+        ----------
+        model : object, default=None
+            OPLS-DA model.
+        features_name : array-like, shape (n_features,), default=None
+            Name of features.
+
+        '''
         
         if model is None:   
             model = self.oplsda
@@ -362,18 +373,65 @@ class opls_da:
 
         return
 
-    def get_vip_scores(self):
+    def get_vip_scores(self, filter_=False, threshold=1):
+            
+        '''
+        Get VIP score
+
+        Parameters
+        ----------
+        filter_ : bool, default=False
+            If True, filter VIP score based on threshold.
+        threshold : int, default=1
+            Threshold of VIP score.
+
+        '''
+
         vips = self.vips
+        if filter_ == True:
+            vips = vips[vips['VIP'] >= threshold]
+
+        else:
+            vips = vips
+
         return vips
 
 
 
     def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500, filter_ = False):
+
+        '''
+        Plot VIP score
+
+        Parameters
+        ----------
+        x_range : int, default=9
+            Range of x-axis.
+        threshold : int, default=2
+            Threshold of VIP score.
+        size : int, default=12
+            Size of the marker.
+        width : int, default=1000
+            Width of the figure.
+        height : int, default=500
+            Height of the figure.
+        filter_ : bool, default=False
+            If True, filter VIP score based on threshold.
+
+        '''
+
+        s_df_scores_ = self.s_df_scores_
+
+        corr_ = s_df_scores_['correlation']
+        cov_ = s_df_scores_['covariance']
+
         
         
         # add scatter plot of VIP score
         import plotly.express as px
         vips = self.vips
+
+
 
         #add threshold column to define cutoff for VIP score if >= treschold then 1 else 0
         vips['threshold'] = np.where(vips['VIP'] >= threshold, "Pass", "Under cut off")
@@ -382,7 +440,10 @@ class opls_da:
             vips = vips[vips['VIP'] >= threshold]
 
         fig = px.scatter(vips, x='Features', y='VIP', 
-        text='Features', 
+        text={'VIP': vips['VIP'],
+              'Features': vips['Features'],
+              'Covalence': cov_,
+              'Correlation': corr_}, 
         color='threshold', color_discrete_map={'Pass':'#FF7961', 'Under cut off':'#ECECEC'}, 
         height=height, width=width, 
         title='VIP score')
@@ -414,6 +475,8 @@ class opls_da:
         fig.add_shape(type="line",
                     x0=0, y0=threshold, x1=x_range, y1=threshold,
                     line=dict(color="red",width=2))
+
+        
                     
         fig.update_layout(showlegend=False)
         
@@ -425,6 +488,31 @@ class opls_da:
 
     def plot_oplsda_scores(self, color_ = None, color_dict = None, symbol = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
                     marker_size = 35, marker_opacity = 0.7):
+
+        '''
+        Plot OPLS-DA scores plot
+
+        Parameters
+        ----------
+        color_ : array-like, shape (n_samples,), default=None
+            Color of the group. If None, color will be based on the group in y.
+        color_dict : dict, default=None
+            Dictionary of color for the group. If None, color will be based on the group in y.
+        symbol : array-like, shape (n_samples,), default=None
+            Symbol of the group. If None, symbol will be based on the group in y.
+        symbol_dict : dict, default=None
+            Dictionary of symbol for the group. If None, symbol will be based on the group in y.
+        fig_height : int, default=900
+            Height of the figure.
+        fig_width : int, default=1300
+            Width of the figure.
+        marker_size : int, default=35
+            Size of the marker.
+        marker_opacity : float, default=0.7
+            Opacity of the marker.
+
+        '''
+
         
         #Visualise
         #check symbol dimension must be equal to y
@@ -540,6 +628,21 @@ class opls_da:
 
     def plot_hist(self, nbins_=50, height_=500, width_=1000):
 
+        '''
+        Plot histogram of permutation scores
+
+        Parameters
+        ----------
+        nbins_ : int, default=50
+            Number of bins for histogram.
+        height_ : int, default=500
+            Height of the figure.
+        width_ : int, default=1000
+            Width of the figure.
+
+        '''
+
+
         #check permutation model must be fitted
         if self.permutation_scores is None:
             raise ValueError('Permutation test must be performed first')
@@ -610,6 +713,23 @@ class opls_da:
 
     def plot_s_scores(self, height_=900, width_=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet'):
 
+        '''
+        Plot S-plot
+
+        Parameters
+        ----------
+        height_ : int, default=900
+            Height of the figure.
+        width_ : int, default=2000
+            Width of the figure.
+        range_color_ : list, default=[-0.05,0.05]
+            Range of color for the plot.
+        color_continuous_scale_ : str, default='jet'
+            Color scale for the plot.
+
+        '''
+
+
         s_df_scores_ = self.s_df_scores_
 
 
@@ -648,6 +768,22 @@ class opls_da:
 
     
     def plot_loading(self, height_=900, width_=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet'):
+
+        '''
+        Plot loading plot
+
+        Parameters
+        ----------
+        height_ : int, default=900
+            Height of the figure.
+        width_ : int, default=2000
+            Width of the figure.
+        range_color_ : list, default=[-0.05,0.05]
+            Range of color for the plot.
+        color_continuous_scale_ : str, default='jet'
+            Color scale for the plot.
+
+        '''
 
         s_df_scores_ = self.s_df_scores_
 
@@ -690,6 +826,67 @@ class opls_da:
 
 class pca:
 
+    '''
+    
+    PCA model
+    
+    Parameters
+    ----------
+    X : array-like, shape (n_samples, n_features)
+        Training data, where n_samples is the number of samples and n_features is the number of features.
+    label : array-like, shape (n_samples,)
+        Target data, where n_samples is the number of samples.
+    features_name : array-like, shape (n_features,), default=None
+        Name of features.
+    n_components : int, default=2
+        Number of components to keep.
+    scale : str, default='pareto'
+        Method of scaling. 'pareto' for pareto scaling, 'mean' for mean centering, 'uv' for unitvarian scaling.
+    random_state : int, default=42
+        Random state for permutation test.
+    test_size : float, default=0.3
+        Size of test set.
+
+    Examples:
+    ----------
+    import pandas as pd
+    import numpy as np
+    from metbit import pca
+
+    # Create a dataset
+    data = pd.DataFrame(np.random.rand(500, 50000))
+    class_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group')
+    time = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point')
+
+
+    # Assign X and target
+    X = datasets.iloc[:, 2:]
+    y = datasets['Group']
+    time = datasets['Time point']
+    features_name = list(X.columns.astype(float))
+
+    ## Perform PCA model
+
+
+    pca_mod = pca(X = X, label = y, features_name=features_name, n_components=2, scale='pareto', random_state=42, test_size=0.3)
+    pca_mod.fit()
+
+
+    # Visualisation of PCA model
+    pca_mod.plot_observe_variance()
+
+    pca_mod.plot_cumulative_observed()
+
+    shape_ = {'1-wk': 'circle', '2-wk': 'square', '3-wk': 'diamond', '4-wk': 'cross'}
+
+    pca_mod.plot_pca_scores(symbol=time, symbol_dict=shape_)
+
+    pca_mod.plot_loading_()
+
+    pca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)
+
+    '''
+
     import numpy as np
 
     from sklearn import preprocessing
@@ -719,70 +916,7 @@ class pca:
 
     def __init__(self, X, label, features_name=None, n_components=2, scale='pareto', random_state=42, test_size=0.3):
 
-        '''
-        
 
-        PCA model
-        
-        Parameters
-        ----------
-        X : array-like, shape (n_samples, n_features)
-            Training data, where n_samples is the number of samples and n_features is the number of features.
-        label : array-like, shape (n_samples,)
-            Target data, where n_samples is the number of samples.
-        features_name : array-like, shape (n_features,), default=None
-            Name of features.
-        n_components : int, default=2
-            Number of components to keep.
-        scale : str, default='pareto'
-            Method of scaling. 'pareto' for pareto scaling, 'mean' for mean centering, 'uv' for unitvarian scaling.
-        random_state : int, default=42
-            Random state for permutation test.
-        test_size : float, default=0.3
-            Size of test set.
-
-        Examples:
-        ----------
-        import pandas as pd
-        import numpy as np
-        from metbit import pca
-
-        # Create a dataset
-        data = pd.DataFrame(np.random.rand(500, 50000))
-        class_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group')
-        time = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point')
-
-
-        # Assign X and target
-        X = datasets.iloc[:, 2:]
-        y = datasets['Group']
-        time = datasets['Time point']
-        features_name = list(X.columns.astype(float))
-
-        ## Perform PCA model
-
-
-        pca_mod = pca(X = X, label = y, features_name=features_name, n_components=2, scale='pareto', random_state=42, test_size=0.3)
-        pca_mod.fit()
-
-
-        # Visualisation of PCA model
-        pca_mod.plot_observe_variance()
-
-        pca_mod.plot_cumulative_observed()
-
-        shape_ = {'1-wk': 'circle', '2-wk': 'square', '3-wk': 'diamond', '4-wk': 'cross'}
-
-        pca_mod.plot_pca_scores(symbol=time, symbol_dict=shape_)
-
-        pca_mod.plot_loading_()
-
-        pca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)
-
-
-
-
-        '''
 
 
         if features_name is not None:
@@ -983,6 +1117,16 @@ class pca:
 
     def plot_observe_variance(self):
 
+        '''
+        Visualise explained variance plot
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Explained variance plot.
+
+        '''
+
         scale = self.scale
         
         df_explained_variance_ = self.df_explained_variance_
@@ -1045,6 +1189,40 @@ class pca:
                         marker_size=35, marker_opacity=0.7,
                         text_ = None):
 
+        '''
+        Visualise PCA scores plot
+
+        Parameters
+        ----------
+        pc : list, default=['PC1', 'PC2']
+            List of principal components to plot.
+        color_ : array-like, shape (n_samples,), default=None
+            Target data, where n_samples is the number of samples.
+        color_dict : dict, default=None
+            Dictionary of color mapping.
+        symbol : array-like, shape (n_samples,), default=None
+            Target data, where n_samples is the number of samples.
+        symbol_dict : dict, default=None
+            Dictionary of symbol mapping.
+        fig_height : int, default=900
+            Height of figure.
+        fig_width : int, default=1300
+            Width of figure.
+        marker_size : int, default=35
+            Size of marker.
+        marker_opacity : float, default=0.7
+            Opacity of marker.
+        text_ : array-like, shape (n_samples,), default=None
+            Text to display on each point.
+
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            PCA scores plot.
+
+        '''
+
         from .pca_ellipse import confidence_ellipse
 
         scale = self.scale
@@ -1063,10 +1241,6 @@ class pca:
             color_ = df_scores_['Group']
         else:
             color_ = color_
-            
-
-
-
 
         #check symbol dimension must be equal to y
         if symbol is not None:
@@ -1169,6 +1343,26 @@ class pca:
 
     def plot_loading_(self, pc=['PC1', 'PC2'], height_=600, width_=1800):
 
+        '''
+        Visualise PCA loadings
+
+        Parameters
+        ----------
+        pc : list, default=['PC1', 'PC2']
+            Principle component to plot.
+        height_ : int, default=600
+            Height of figure.
+        width_ : int, default=1800
+            Width of figure.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Plotly figure.
+
+        ----------
+        '''
+
         df_loadings_ = self.df_loadings_
 
         loadings_label = self.features_name
@@ -1204,6 +1398,40 @@ class pca:
                             color_dict = None, symbol_dict = None, 
                             height_=900, width_=1300,
                             marker_size=35, marker_opacity=0.7, ):
+
+        '''
+
+        Visualise PCA trajectory
+
+        Parameters
+        ----------
+        time_ : array-like, shape (n_samples,)
+            Time point of samples.
+        time_order : dictionary
+            Order of time point.
+        stat_ : list, default=['mean', 'sem']  
+            Statistic to calculate. First element is mean or median, second element is sem or std.
+        pc : list, default=['PC1', 'PC2']
+            Principle component to plot.
+        color_dict : dictionary, default=None
+            Dictionary of color for each group.
+        symbol_dict : dictionary, default=None
+            Dictionary of symbol for each time point.
+        height_ : int, default=900
+            Height of figure.
+        width_ : int, default=1300
+            Width of figure.
+        marker_size : int, default=35
+            Size of marker.
+        marker_opacity : float, default=0.7
+            Opacity of marker.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Plotly figure.
+
+        '''
 
 
         from .pca_ellipse import confidence_ellipse
