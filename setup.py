@@ -22,7 +22,7 @@ setup(
   keywords = ['Omics', 'Chemometrics', 'Visualization', 'Data Analysis'],
   install_requires=[            
           'scikit-learn',
-          'pandas9',
+          'pandas',
           'numpy',
           'matplotlib',
           'seaborn',
