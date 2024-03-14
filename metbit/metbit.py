@@ -444,10 +444,10 @@ class opls_da:
 
         if vip_trans_form == True:
             vips['VIP'] = vips['VIP'] * np.sign(np.ravel(corr_['correlation']))
-            vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}",np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", "Under cut off"), "Under cut off") 
-
+            vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {Y.unique()[1]}", 
+                                np.where(vips['VIP'] <= -threshold, f"High in {Y.unique()[0]}", 
+                                "Under cut off"))
         else:
-
             #add threshold column to define cutoff for VIP score if >= treschold then 1 else 0
             vips['threshold'] = np.where(vips['VIP'] >= threshold, "Pass", "Under cut off")
 
