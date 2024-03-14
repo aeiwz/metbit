@@ -565,7 +565,7 @@ class opls_da:
         df_opls_scores = self.df_opls_scores
 
         if color_ is not None:
-            df_opls_scores['Group'] = color
+            df_opls_scores['Group'] = color_
         else:
             df_opls_scores['Group'] = df_opls_scores['Group']
 
@@ -1211,7 +1211,7 @@ class pca:
 
     def plot_pca_scores(self, pc=['PC1', 'PC2'], 
                         color_=None, color_dict=None, 
-                        symbol=None, symbol_dict=None, 
+                        symbol_=None, symbol_dict=None, 
                         fig_height=900, fig_width=1300,
                         marker_size=35, marker_opacity=0.7,
                         text_ = None):
