@@ -433,8 +433,8 @@ class opls_da:
 
         s_df_scores_ = self.s_df_scores_
 
-        corr_ = s_df_scores_['correlation']
-        cov_ = s_df_scores_['covariance']
+        corr_ = pd.DataFrame(s_df_scores_['correlation'])
+        cov_ = pd.DataFrame(s_df_scores_['covariance'])
 
         
         
@@ -443,8 +443,8 @@ class opls_da:
         vips = self.vips
 
         if vip_trans_form == True:
-            vips['VIP'] = vips['VIP'] * np.sign(corr_)
-            vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}", "Under cut off"), np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", "Under cut off")
+            vips['VIP'] = vips['VIP'] * np.sign(np.ravel(corr_['correlation']))
+            vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}",np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", "Under cut off"), "Under cut off") 
 
         else:
 
