@@ -546,7 +546,7 @@ class opls_da:
         #Visualise
         #check symbol_ dimension must be equal to y
         if symbol_ is not None:
-            if len(symbol) != len(self.y):
+            if len(symbol_) != len(self.y):
                 raise ValueError('symbol_ must have the same number of samples as y')
 
         #check symbol_dict must be a dictionary
@@ -1261,7 +1261,7 @@ class pca:
             if color_ not in self.label:
                 raise ValueError('color_ must be in y')
         if symbol_ is not None:
-            if len(symbol) != len(self.label):
+            if len(symbol_) != len(self.label):
                 raise ValueError('symbol_ must have the same number of samples as y')
 
         if color_ is None:
@@ -1271,7 +1271,7 @@ class pca:
 
         #check symbol_ dimension must be equal to y
         if symbol_ is not None:
-            if len(symbol) != len(self.label):
+            if len(symbol_) != len(self.label):
                 raise ValueError('symbol_ must have the same number of samples as y')
 
         #check symbol_dict must be a dictionary
