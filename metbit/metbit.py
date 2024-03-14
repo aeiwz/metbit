@@ -543,10 +543,8 @@ class opls_da:
 
         
         from .pca_ellipse import confidence_ellipse
-        fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol, 
-                    
+        fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol,     
                         symbol_map=symbol_dict,
-                    
                         color='Group', 
                         color_discrete_map=color_dict, 
                         title='<b>OPLS-DA Scores Plot<b>', 
