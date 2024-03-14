@@ -283,7 +283,7 @@ class opls_da:
 
         else:
             pass
-        
+
         oplsda.fit(X, pd.Categorical(y).codes)
         
         s_df_scores_ = pd.DataFrame({'correlation': cv.correlation,'covariance': cv.covariance}, index=features_name)
@@ -515,7 +515,7 @@ class opls_da:
 
 
 
-    def plot_oplsda_scores(self, color = None, color_dict = None, symbol = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
+    def plot_oplsda_scores(self, color_ = None, color_dict = None, symbol_ = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
                     marker_size = 35, marker_opacity = 0.7):
 
         '''
@@ -523,14 +523,14 @@ class opls_da:
 
         Parameters
         ----------
-        color : array-like, shape (n_samples,), default=None
-            Color of the group. If None, color will be based on the group in y.
+        color_ : array-like, shape (n_samples,), default=None
+            color_ of the group. If None, color_ will be based on the group in y.
         color_dict : dict, default=None
-            Dictionary of color for the group. If None, color will be based on the group in y.
-        symbol : array-like, shape (n_samples,), default=None
-            Symbol of the group. If None, symbol will be based on the group in y.
+            Dictionary of color_ for the group. If None, color_ will be based on the group in y.
+        symbol_ : array-like, shape (n_samples,), default=None
+            symbol_ of the group. If None, symbol_ will be based on the group in y.
         symbol_dict : dict, default=None
-            Dictionary of symbol for the group. If None, symbol will be based on the group in y.
+            Dictionary of symbol_ for the group. If None, symbol_ will be based on the group in y.
         fig_height : int, default=900
             Height of the figure.
         fig_width : int, default=1300
@@ -544,10 +544,10 @@ class opls_da:
 
         
         #Visualise
-        #check symbol dimension must be equal to y
-        if symbol is not None:
+        #check symbol_ dimension must be equal to y
+        if symbol_ is not None:
             if len(symbol) != len(self.y):
-                raise ValueError('symbol must have the same number of samples as y')
+                raise ValueError('symbol_ must have the same number of samples as y')
 
         #check symbol_dict must be a dictionary
         if symbol_dict is not None:
@@ -564,7 +564,7 @@ class opls_da:
 
         df_opls_scores = self.df_opls_scores
 
-        if color is not None:
+        if color_ is not None:
             df_opls_scores['Group'] = color
         else:
             df_opls_scores['Group'] = df_opls_scores['Group']
@@ -750,9 +750,9 @@ class opls_da:
         width_ : int, default=2000
             Width of the figure.
         range_color: list, default=[-0.05,0.05]
-            Range of color for the plot.
+            Range of color_ for the plot.
         color_continuous_scale_ : str, default='jet'
-            Color scale for the plot.
+            color_ scale for the plot.
 
         '''
 
@@ -766,7 +766,7 @@ class opls_da:
 
 
         
-        #add line of axis and set color to black and line width to 2 pixel
+        #add line of axis and set color_ to black and line width to 2 pixel
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
 
@@ -806,9 +806,9 @@ class opls_da:
         width_ : int, default=2000
             Width of the figure.
         range_color: list, default=[-0.05,0.05]
-            Range of color for the plot.
+            Range of color_ for the plot.
         color_continuous_scale_ : str, default='jet'
-            Color scale for the plot.
+            color_ scale for the plot.
 
         '''
 
@@ -1226,11 +1226,11 @@ class pca:
         color: array-like, shape (n_samples,), default=None
             Target data, where n_samples is the number of samples.
         color_dict : dict, default=None
-            Dictionary of color mapping.
-        symbol : array-like, shape (n_samples,), default=None
+            Dictionary of color_ mapping.
+        symbol_ : array-like, shape (n_samples,), default=None
             Target data, where n_samples is the number of samples.
         symbol_dict : dict, default=None
-            Dictionary of symbol mapping.
+            Dictionary of symbol_ mapping.
         fig_height : int, default=900
             Height of figure.
         fig_width : int, default=1300
@@ -1257,22 +1257,22 @@ class pca:
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
         
-        if color is not None:
-            if color not in self.label:
-                raise ValueError('color must be in y')
-        if symbol is not None:
+        if color_ is not None:
+            if color_ not in self.label:
+                raise ValueError('color_ must be in y')
+        if symbol_ is not None:
             if len(symbol) != len(self.label):
-                raise ValueError('symbol must have the same number of samples as y')
+                raise ValueError('symbol_ must have the same number of samples as y')
 
-        if color is None:
-            color = df_scores_['Group']
+        if color_ is None:
+            color_ = df_scores_['Group']
         else:
-            color = color_
+            color_ = color_
 
-        #check symbol dimension must be equal to y
-        if symbol is not None:
+        #check symbol_ dimension must be equal to y
+        if symbol_ is not None:
             if len(symbol) != len(self.label):
-                raise ValueError('symbol must have the same number of samples as y')
+                raise ValueError('symbol_ must have the same number of samples as y')
 
         #check symbol_dict must be a dictionary
         if symbol_dict is not None:
@@ -1441,9 +1441,9 @@ class pca:
         pc : list, default=['PC1', 'PC2']
             Principle component to plot.
         color_dict : dictionary, default=None
-            Dictionary of color for each group.
+            Dictionary of color_ for each group.
         symbol_dict : dictionary, default=None
-            Dictionary of symbol for each time point.
+            Dictionary of symbol_ for each time point.
         height_ : int, default=900
             Height of figure.
         width_ : int, default=1300
@@ -1577,7 +1577,7 @@ class pca:
                 x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[0]], # x-coordinates of the line
                 y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[1]], # y-coordinates of the line
                 mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict_2[group_unique[connect_line]], width=2), # set the color and width of the line
+                line=dict(color=color_dict_2[group_unique[connect_line]], width=2), # set the color_ and width of the line
                 showlegend=False # hide the trace from the legend
             ))
 
