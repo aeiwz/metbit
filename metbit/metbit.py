@@ -278,7 +278,7 @@ class opls_da:
         cv = pipeline.named_steps['opls']
         cv.fit(X.values, y)
 
-        if auto_ncomo == False:
+        if auto_ncomp == False:
             cv.reset_optimal_num_component(n_components)
 
         else:
