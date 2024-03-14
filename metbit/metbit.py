@@ -153,7 +153,7 @@ class opls_da:
 
         
     
-    def __init__(self, X, y,features_name=None, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42):
+    def __init__(self, X, y, features_name=None, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42):
         
 
 
@@ -249,6 +249,7 @@ class opls_da:
         random_state = self.random_state
         kfold = self.kfold
         estimator = self.estimator
+
         
         if scale == 'pareto':
             scale_power = 0.5
@@ -275,6 +276,7 @@ class opls_da:
         cv = pipeline.named_steps['opls']
         cv.fit(X.values, y)
 
+
         oplsda.fit(X, pd.Categorical(y).codes)
         
         s_df_scores_ = pd.DataFrame({'correlation': cv.correlation,'covariance': cv.covariance}, index=features_name)
@@ -294,6 +296,8 @@ class opls_da:
         
         self.oplsda = oplsda
         self.cv = cv
+
+        return oplsda, cv
     
 
 
@@ -398,7 +402,7 @@ class opls_da:
 
 
 
-    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500, filter_ = False):
+    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500, filter_ = False, vip_trans_form = False):
 
         '''
         Plot VIP score
@@ -431,10 +435,14 @@ class opls_da:
         import plotly.express as px
         vips = self.vips
 
+        if vip_trans_form == True:
+            vips['VIP'] = vips['VIP'] * np.sign(corr_)
+            vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}", "Under cut off"), np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", "Under cut off")
 
+        else:
 
-        #add threshold column to define cutoff for VIP score if >= treschold then 1 else 0
-        vips['threshold'] = np.where(vips['VIP'] >= threshold, "Pass", "Under cut off")
+            #add threshold column to define cutoff for VIP score if >= treschold then 1 else 0
+            vips['threshold'] = np.where(vips['VIP'] >= threshold, "Pass", "Under cut off")
 
         if filter_ == True:
             vips = vips[vips['VIP'] >= threshold]
@@ -444,7 +452,10 @@ class opls_da:
               'Features': vips['Features'],
               'Covalence': cov_,
               'Correlation': corr_}, 
-        color='threshold', color_discrete_map={'Pass':'#FF7961', 'Under cut off':'#ECECEC'}, 
+        color='threshold', color_discrete_map={'Pass':'#FF7961', 
+                                                'Under cut off':'#ECECEC',
+                                                f'High in {self.y.unique()[1]}':'#B80F0A',
+                                                f'High in {self.y.unique()[0]}':'#03045E'}, 
         height=height, width=width, 
         title='VIP score')
 
@@ -471,10 +482,21 @@ class opls_da:
         # reverse the x-axis
         fig.update_xaxes(autorange="reversed")
         
-        # add dashed line for threshold
-        fig.add_shape(type="line",
-                    x0=0, y0=threshold, x1=x_range, y1=threshold,
-                    line=dict(color="red",width=2))
+
+        if vip_trans_form == True:
+                fig.add_shape(type="line",
+                                x0=0, y0=threshold, x1=x_range, y1=threshold,
+                                line=dict(color="red",width=2))
+
+                fig.add_shape(type="line",
+                                x0=0, y0=-threshold, x1=x_range, y1=-threshold,
+                                line=dict(color="blue",width=2))
+
+        else:
+            fig.add_shape(type="line",
+                            x0=0, y0=threshold, x1=x_range, y1=threshold,
+                            line=dict(color="red",width=2))
+
 
         
                     
@@ -486,7 +508,7 @@ class opls_da:
 
 
 
-    def plot_oplsda_scores(self, color_ = None, color_dict = None, symbol = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
+    def plot_oplsda_scores(self, color = None, color_dict = None, symbol = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
                     marker_size = 35, marker_opacity = 0.7):
 
         '''
@@ -494,7 +516,7 @@ class opls_da:
 
         Parameters
         ----------
-        color_ : array-like, shape (n_samples,), default=None
+        color : array-like, shape (n_samples,), default=None
             Color of the group. If None, color will be based on the group in y.
         color_dict : dict, default=None
             Dictionary of color for the group. If None, color will be based on the group in y.
@@ -535,8 +557,8 @@ class opls_da:
 
         df_opls_scores = self.df_opls_scores
 
-        if color_ is not None:
-            df_opls_scores['Group'] = color_
+        if color is not None:
+            df_opls_scores['Group'] = color
         else:
             df_opls_scores['Group'] = df_opls_scores['Group']
 
@@ -720,7 +742,7 @@ class opls_da:
             Height of the figure.
         width_ : int, default=2000
             Width of the figure.
-        range_color_ : list, default=[-0.05,0.05]
+        range_color: list, default=[-0.05,0.05]
             Range of color for the plot.
         color_continuous_scale_ : str, default='jet'
             Color scale for the plot.
@@ -776,7 +798,7 @@ class opls_da:
             Height of the figure.
         width_ : int, default=2000
             Width of the figure.
-        range_color_ : list, default=[-0.05,0.05]
+        range_color: list, default=[-0.05,0.05]
             Range of color for the plot.
         color_continuous_scale_ : str, default='jet'
             Color scale for the plot.
@@ -1194,7 +1216,7 @@ class pca:
         ----------
         pc : list, default=['PC1', 'PC2']
             List of principal components to plot.
-        color_ : array-like, shape (n_samples,), default=None
+        color: array-like, shape (n_samples,), default=None
             Target data, where n_samples is the number of samples.
         color_dict : dict, default=None
             Dictionary of color mapping.
@@ -1228,17 +1250,17 @@ class pca:
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
         
-        if color_ is not None:
-            if color_ not in self.label:
+        if color is not None:
+            if color not in self.label:
                 raise ValueError('color must be in y')
         if symbol is not None:
             if len(symbol) != len(self.label):
                 raise ValueError('symbol must have the same number of samples as y')
 
-        if color_ is None:
-            color_ = df_scores_['Group']
+        if color is None:
+            color = df_scores_['Group']
         else:
-            color_ = color_
+            color = color_
 
         #check symbol dimension must be equal to y
         if symbol is not None:
