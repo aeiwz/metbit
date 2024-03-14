@@ -455,10 +455,7 @@ class opls_da:
             vips = vips[vips['VIP'] >= threshold]
 
         fig = px.scatter(vips, x='Features', y='VIP', 
-        text={'VIP': vips['VIP'],
-              'Features': vips['Features'],
-              'Covalence': cov_,
-              'Correlation': corr_}, 
+        text='Features', 
         color='threshold', color_discrete_map={'Pass':'#FF7961', 
                                                 'Under cut off':'#ECECEC',
                                                 f'High in {self.y.unique()[1]}':'#B80F0A',
