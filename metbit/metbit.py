@@ -153,10 +153,10 @@ class opls_da:
 
         
     
-    def __init__(self, X, y, features_name=None, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42):
+    def __init__(self, X, y, features_name=None, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42, auto_ncomp=True):
         
 
-
+        self.auto_ncomp = auto_ncomp
         #check X and y must be dataframe or array
         if not isinstance(X, (pd.DataFrame, np.ndarray)):
             raise ValueError('X must be a dataframe or array')
@@ -240,6 +240,8 @@ class opls_da:
         
     def fit(self):
         
+
+        
         X = self.X
         y = self.y
         features_name = self.features_name
@@ -249,7 +251,7 @@ class opls_da:
         random_state = self.random_state
         kfold = self.kfold
         estimator = self.estimator
-
+        auto_ncomp = self.auto_ncomp
         
         if scale == 'pareto':
             scale_power = 0.5
@@ -276,7 +278,12 @@ class opls_da:
         cv = pipeline.named_steps['opls']
         cv.fit(X.values, y)
 
+        if auto_ncomo == False:
+            cv.reset_optimal_num_component(n_components)
 
+        else:
+            pass
+        
         oplsda.fit(X, pd.Categorical(y).codes)
         
         s_df_scores_ = pd.DataFrame({'correlation': cv.correlation,'covariance': cv.covariance}, index=features_name)
