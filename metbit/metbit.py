@@ -572,7 +572,7 @@ class opls_da:
 
         
         from .pca_ellipse import confidence_ellipse
-        fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol,     
+        fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol_,     
                         symbol_map=symbol_dict,
                         color='Group', 
                         color_discrete_map=color_dict, 
@@ -1307,7 +1307,7 @@ class pca:
 
 
         fig = px.scatter(df_scores_, x=pc[0], y=pc[1], color=color_,
-                        symbol=symbol, 
+                        symbol=symbol_, 
                         color_discrete_map=color_dict, 
                         symbol_map=symbol_dict, 
                         title=f'<b>PCA Scores Plot<b> {scale} scaling', 
