@@ -1429,10 +1429,11 @@ class pca:
 
 
 
-    def plot_pca_trajectory(self,time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
-                            color_dict = None, symbol_dict = None, 
+    def plot_pca_trajectory(self, time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
+                            color_dict = None, 
+                            symbol_dict = None, 
                             height_=900, width_=1300,
-                            marker_size=35, marker_opacity=0.7, ):
+                            marker_size=35, marker_opacity=0.7):
 
         '''
 
