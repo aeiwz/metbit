@@ -512,8 +512,10 @@ class opls_da:
 
 
 
-    def plot_oplsda_scores(self, color_ = None, color_dict = None, symbol_ = None, symbol_dict = None, fig_height = 900, fig_width = 1300,
-                    marker_size = 35, marker_opacity = 0.7):
+    def plot_oplsda_scores(self, color_ = None, color_dict = None, 
+                           symbol_ = None, symbol_dict = None, 
+                           fig_height = 900, fig_width = 1300,
+                           marker_size = 35, marker_opacity = 0.7):
 
         '''
         Plot OPLS-DA scores plot
@@ -538,7 +540,12 @@ class opls_da:
             Opacity of the marker.
 
         '''
-
+        if color_ is not None:
+            if len(color_) != len(self.y):
+                raise ValueError('color_ must have the same number of samples as y')
+            else:
+                color_ = color_
+            
         
         #Visualise
         #check symbol_ dimension must be equal to y
@@ -1255,8 +1262,12 @@ class pca:
         q2_test = self.q2_test
         
         if color_ is not None:
-            if color_ not in self.label:
-                raise ValueError('color_ must be in y')
+            if len(color_) != len(self.label):
+                raise ValueError('color_ must have the same number of samples as y')
+            else:
+                color_ = color_
+                
+                
         if symbol_ is not None:
             if len(symbol_) != len(self.label):
                 raise ValueError('symbol_ must have the same number of samples as y')
