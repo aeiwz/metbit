@@ -318,6 +318,9 @@ class opls_da:
 
 
         from sklearn.pipeline import Pipeline
+        import time
+        
+        T1 = time.time()
         
         self.cv = cv
         self.n_permutations = n_permutations
@@ -333,12 +336,27 @@ class opls_da:
 
         # Permutation test to assess the significance of the model
         acc_score, permutation_scores, p_value = permutation_test_score(
-        pipeline.named_steps['oplsda'], X, pd.Categorical(y).codes, cv=3, n_permutations=n_permutations, n_jobs=n_jobs, random_state=randomstate, verbose=verbose)
+                                                                        pipeline.named_steps['oplsda'], 
+                                                                        X, pd.Categorical(y).codes, cv=3, 
+                                                                        n_permutations=n_permutations, n_jobs=n_jobs, 
+                                                                        random_state=randomstate, verbose=verbose)
 
-
+        T2 = time.time()
+        duration = T2 - T1
+        if duration > 60:
+            duration = duration/60
+            unit = 'minutes'
+        else:
+            duration = duration
+            unit = 'seconds'
+            
+            
+        
         self.acc_score = acc_score
         self.permutation_scores = permutation_scores
         self.p_value = p_value
+        
+        return print(f'Permutation test is performed in {duration} {unit}')
         
         
     
@@ -415,7 +433,11 @@ class opls_da:
 
 
 
-    def vip_plot(self, x_range = 9, threshold = 2, size = 12, width = 1000, height = 500, filter_ = False, vip_trans_form = False):
+    def vip_plot(self, x_range = 9, threshold = 2, marker_size = 12, 
+                 fig_width = 1000, fig_height = 500, 
+                 filter_ = False, vip_trans_form = False,
+                 font_size = 20, title_font_size = 20,
+                 xaxis_direction = 'reversed'):
 
         '''
         Plot VIP score
@@ -467,12 +489,13 @@ class opls_da:
                              'Under cut off':'#ECECEC',
                              f'High in {self.y.unique()[1]}':'#B80F0A',
                              f'High in {self.y.unique()[0]}':'#03045E'}, 
-                         height=height, width=width, 
+                         height=fig_height, width=fig_width, 
                          title='VIP score',
                          hover_data={'Features':True, 'VIP':True, 'threshold':True})
+        
               
 
-        fig.update_traces(marker=dict(size=size))
+        fig.update_traces(marker=dict(size=marker_size))
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
@@ -490,10 +513,10 @@ class opls_da:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            font=dict(size=20))
+            font=dict(size=title_font_size))
 
         # reverse the x-axis
-        fig.update_xaxes(autorange="reversed")
+        fig.update_xaxes(autorange=xaxis_direction)
         
 
         if vip_trans_form == True:
@@ -524,7 +547,9 @@ class opls_da:
     def plot_oplsda_scores(self, color_ = None, color_dict = None, 
                            symbol_ = None, symbol_dict = None, 
                            fig_height = 900, fig_width = 1300,
-                           marker_size = 35, marker_opacity = 0.7):
+                           marker_size = 35, marker_opacity = 0.7, 
+                           font_size = 20, title_font_size = 21,
+                           legend_name = 'Group'):
 
         '''
         Plot OPLS-DA scores plot
@@ -585,7 +610,7 @@ class opls_da:
         if symbol_ is not None:
             df_opls_scores['symbol'] = symbol_
             
-        df_opls_scores['Features'] = self.features_name
+        df_opls_scores['Index'] = df_opls_scores.index
         
         from .pca_ellipse import confidence_ellipse
         fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol_,     
@@ -598,8 +623,8 @@ class opls_da:
                             't_pred': 't<sub>predict</sub>',
                             't_ortho': 't<sub>orthogonal</sub>',
                             't_scores': 't<sub>scores</sub>',
-                            'Group': 'Group'},
-                        hover_data={'t_scores':True, 't_ortho':True, 't_pred':True, 'Group':True, 'Features':True}
+                            'Group': legend_name},
+                        hover_data={'t_scores':True, 't_ortho':True, 't_pred':True, 'Group':True, 'Index':True}
         )
 
         
@@ -609,7 +634,7 @@ class opls_da:
                             line=dict(width=2, color='DarkSlateGrey')))
 
 
-        fig.add_annotation(dict(font=dict(color="black",size=20),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
                                 y=1.04+0.05,
@@ -622,7 +647,7 @@ class opls_da:
                                 align="left")
 
 
-        fig.add_annotation(dict(font=dict(color="black",size=20),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
                                 y=1.0+0.05,
@@ -635,7 +660,7 @@ class opls_da:
                                 align="left")
 
 
-        fig.add_annotation(dict(font=dict(color="black",size=20),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
                                 y=1.08+0.05,
@@ -665,14 +690,14 @@ class opls_da:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            font=dict(size=20))
+            font=dict(size=title_font_size))
         fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
 
         return fig
 
 
 
-    def plot_hist(self, nbins_=50, height_=500, width_=1000):
+    def plot_hist(self, nbins_=50, fig_height=500, fig_width=1000, font_size=14, title_font_size=20):
 
         '''
         Plot histogram of permutation scores
@@ -681,9 +706,9 @@ class opls_da:
         ----------
         nbins_ : int, default=50
             Number of bins for histogram.
-        height_ : int, default=500
+        fig_height : int, default=500
             Height of the figure.
-        width_ : int, default=1000
+        fig_width : int, default=1000
             Width of the figure.
 
         '''
@@ -698,7 +723,7 @@ class opls_da:
 
         #Histrogram
         #Plot histogram of permutation scores
-        fig = px.histogram(permutation_scores, nbins=nbins_, height=height_, width=width_, 
+        fig = px.histogram(permutation_scores, nbins=nbins_, height=fig_height, width=fig_width, 
                         title='<b>Permutation scores<b>',
                         labels={'value': 'Accuracy score', 
                                 'count': 'Frequency'})
@@ -711,7 +736,7 @@ class opls_da:
 
 
 
-        fig.add_annotation(dict(font=dict(color="black",size=14),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
                                 y=1.25,
@@ -724,7 +749,7 @@ class opls_da:
                                 # set alignment of text to left side of entry
                                 align="left")
 
-        fig.add_annotation(dict(font=dict(color="black",size=14),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
                                 y=1.18,
@@ -735,7 +760,7 @@ class opls_da:
                                 yref="paper"),
                                 # set alignment of text to left side of entry
                                 align="left")
-        fig.add_annotation(dict(font=dict(color="black",size=14),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
                                 y=1.11,
@@ -757,16 +782,16 @@ class opls_da:
 
 
 
-    def plot_s_scores(self, height_=900, width_=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet'):
+    def plot_s_scores(self, fig_height=900, fig_width=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet', marker_size=14, font_size=20, title_font_size=20):
 
         '''
         Plot S-plot
 
         Parameters
         ----------
-        height_ : int, default=900
+        fig_height : int, default=900
             Height of the figure.
-        width_ : int, default=2000
+        fig_width : int, default=2000
             Width of the figure.
         range_color: list, default=[-0.05,0.05]
             Range of color_ for the plot.
@@ -784,11 +809,11 @@ class opls_da:
         fig = px.scatter(s_df_scores_, x='covariance', y='correlation', 
                          color='covariance', range_color=range_color_,
                          color_continuous_scale=color_continuous_scale_,
-                         height=height_, width=width_,
+                         height=fig_height, width=fig_width,
                          hover_data={'covariance':True, 'correlation':True, 'Features':True})
+        
         fig.update_layout(title='<b>S-plot</b>', xaxis_title='Covariance', yaxis_title='Correlation')
 
-        
         
         #add line of axis and set color_ to black and line width to 2 pixel
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
@@ -810,24 +835,25 @@ class opls_da:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            font=dict(size=20))
+            font=dict(size=title_font_size))
 
-        fig.update_traces(marker=dict(size=14))
+        fig.update_traces(marker=dict(size=marker_size))
 
         return fig
 
 
     
-    def plot_loading(self, height_=900, width_=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet'):
+    def plot_loading(self, fig_height=900, fig_width=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet', 
+                     marker_size=5, font_size=20, title_font_size=20, xaxis_direction='reversed', xaxis_title='𝛿<sub>H</sub> in ppm'):
 
         '''
         Plot loading plot
 
         Parameters
         ----------
-        height_ : int, default=900
+        fig_height : int, default=900
             Height of the figure.
-        width_ : int, default=2000
+        fig_width : int, default=2000
             Width of the figure.
         range_color: list, default=[-0.05,0.05]
             Range of color_ for the plot.
@@ -854,12 +880,12 @@ class opls_da:
                             color='covariance', 
                             color_continuous_scale=color_continuous_scale_, 
                             range_color=range_color_, 
-                            height=height_, width=width_,
+                            height=fig_height, width=fig_width,
                             hover_data={'covariance':True, 'correlation':True, 'Features':True})
 
-        fig.update_traces(marker=dict(size=5))
-        fig.update_xaxes(autorange="reversed")
-        fig.update_layout(title='<b>Loading spectra</b>', xaxis_title='𝛿<sub>H</sub> in ppm', yaxis_title='Correlation')
+        fig.update_traces(marker=dict(size=marker_size))
+        fig.update_xaxes(autorange=xaxis_direction)
+        fig.update_layout(title='<b>Loading spectra</b>', xaxis_title=xaxis_title, yaxis_title='Correlation')
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
 
@@ -872,7 +898,7 @@ class opls_da:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            font=dict(size=20))
+            font=dict(size=font_size))
 
         return fig
 
@@ -1074,8 +1100,18 @@ class pca:
         features_name = self.features_name
         Y = pd.Categorical(label).codes
         scale_power_ = self.scale_power_ 
+        
+        if isinstance(features_name, list):
+            features_name = list(features_name)
+        
+        if not isinstance(X, pd.DataFrame):
+            X = pd.DataFrame(X, columns=features_name)
+        
+        if not isinstance(label, pd.Series):
+            label = pd.Series(label)
 
 
+            
         model_scaler = ChemometricsScaler(scale_power=scale_power_)
         model_scaler.fit(X)
         model_X = model_scaler.transform(X)
@@ -1170,7 +1206,7 @@ class pca:
         q2_test = self.q2_test
         return q2_test
 
-    def plot_observe_variance(self):
+    def plot_observe_variance(self, fig_height=600, fig_width=800, font_size=15):
 
         '''
         Visualise explained variance plot
@@ -1189,7 +1225,7 @@ class pca:
         fig = px.bar(df_explained_variance_, 
                 x='PC', y=df_explained_variance_['Explained variance'],
                 text=np.round(df_explained_variance_['Explained variance'], decimals=3),
-                width=800, height=600,
+                width=fig_width, height=fig_height,
                 title='Explained Variance ({} scaling)'.format(scale))
         fig.update_layout(
             title={
@@ -1197,12 +1233,22 @@ class pca:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            font=dict(size=15))
+            font=dict(size=font_size))
         fig.update_traces(texttemplate='%{text:.3f}', textposition='outside')
         return fig
 
 
-    def plot_cumulative_observed(self):
+    def plot_cumulative_observed(self, fig_height=600, fig_width=800, font_size=15, marker_size=10):
+
+        '''
+        Visualise cumulative variance plot
+        
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            Cumulative variance plot.
+
+        '''
         
         df_explained_variance_ = self.df_explained_variance_
 
@@ -1212,7 +1258,7 @@ class pca:
             go.Scatter(
                 x=df_explained_variance_['PC'],
                 y=df_explained_variance_['Cumulative variance'],
-                marker=dict(size=15, color="LightSeaGreen"),
+                marker=dict(size=marker_size, color="LightSeaGreen"),
                 name='R<sup>2</sup>X (Cum)'
             ))
 
@@ -1224,14 +1270,15 @@ class pca:
                 name='R<sup>2</sup>X',
                 text=np.round(df_explained_variance_['Explained variance'], decimals=3)
             ))
-        fig.update_layout(width=800, height=600,
+        fig.update_layout(width=fig_width, height=fig_height,
                         title='Explained Variance and Cumulative Variance')
         fig.update_layout(
             title={
                 'y':0.9,
                 'x':0.5,
                 'xanchor': 'center',
-                'yanchor': 'top'})
+                'yanchor': 'top'},
+            font=dict(size=font_size))
 
         return fig
 
@@ -1242,7 +1289,8 @@ class pca:
                         symbol_=None, symbol_dict=None, 
                         fig_height=900, fig_width=1300,
                         marker_size=35, marker_opacity=0.7,
-                        text_ = None):
+                        text_ = None, font_size=20, title_font_size=21,
+                        ellips_indiv=True):
 
         '''
         Visualise PCA scores plot
@@ -1338,10 +1386,23 @@ class pca:
         df_scores_['Index'] = df_scores_.index
 
 
+        #If user not input color_dict then get unique of label and create color_dict
+        if color_dict is not None:
+            color_dict = color_dict
+        else:
+            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_['Group'].unique()))}
+            
+
+        #new color_dict to match with unique label
+        group_unique = df_scores_['Group'].unique()
+        #change key of color_dict to match with unique label
+        color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
+        
+
 
         fig = px.scatter(df_scores_, x=pc[0], y=pc[1], color=color_,
                         symbol=symbol_, 
-                        color_discrete_map=color_dict, 
+                        color_discrete_map=color_dict_2, 
                         symbol_map=symbol_dict, 
                         title=f'<b>PCA Scores Plot<b> {scale} scaling', 
                         height=fig_height, width=fig_width,
@@ -1356,7 +1417,7 @@ class pca:
                             line=dict(width=2, color='DarkSlateGrey')))
 
 
-        fig.add_annotation(dict(font=dict(color="black",size=20),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=1.0,
                                 y=0.05,
@@ -1368,7 +1429,7 @@ class pca:
                                 # set alignment of text to left side of entry
                                 align="left")
 
-        fig.add_annotation(dict(font=dict(color="black",size=20),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=1.0,
                                 y=0.01,
@@ -1380,8 +1441,15 @@ class pca:
                                 # set alignment of text to left side of entry
                                 align="left")
 
-        fig.add_shape(type='path',
-                path=confidence_ellipse(df_scores_[pc[0]], df_scores_[pc[1]]))
+        if ellips_indiv == True:
+            for circle_ in df_scores_['Group'].unique():
+                
+                fig.add_shape(type='path',
+                    path=confidence_ellipse(df_scores_[df_scores_['Group']==circle_][pc[0]], df_scores_[df_scores_['Group']==circle_][pc[1]]),
+                    line=dict(color=color_dict_2[circle_], width=2))
+        else:
+            fig.add_shape(type='path',
+                    path=confidence_ellipse(df_scores_[pc[0]], df_scores_[pc[1]]))
 
 
 
@@ -1395,14 +1463,14 @@ class pca:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            font=dict(size=20))
+            font=dict(size=title_font_size))
         fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
 
         return fig
 
 
 
-    def plot_loading_(self, pc=['PC1', 'PC2'], height_=600, width_=1800):
+    def plot_loading_(self, pc=['PC1', 'PC2'], fig_height=600, fig_width=1800, font_size=20, title_font_size=20, marker_size=1, x_axis_title='𝛿<sub>H</sub> in ppm', xaxis_direction = "reversed"):
 
         '''
         Visualise PCA loadings
@@ -1411,9 +1479,9 @@ class pca:
         ----------
         pc : list, default=['PC1', 'PC2']
             Principle component to plot.
-        height_ : int, default=600
+        fig_height : int, default=600
             Height of figure.
-        width_ : int, default=1800
+        fig_width : int, default=1800
             Width of figure.
 
         Returns
@@ -1431,7 +1499,7 @@ class pca:
 
 
         fig = px.line(df_loadings_, x=loadings_label, y=pc,
-                                height=height_, width=width_,
+                                height=fig_height, width=fig_width,
                                 title='Loadings plot',
                                 hover_data={'Features':True, pc[0]:True, pc[1]:True},)
 
@@ -1441,12 +1509,12 @@ class pca:
                                 'x':0.5,
                                 'xanchor': 'center',
                                 'yanchor': 'top'},
-                        font=dict(size=20))
+                        font=dict(size=title_font_size))
         
-        fig.update_layout(scene={'xaxis': {'autorange': 'reversed'}})
+        fig.update_layout(xaxis = dict(autorange=xaxis_direction))
                 
-        fig.update_traces(marker=dict(size=1))
-        fig.update_layout(xaxis_title="𝛿<sub>H</sub> in ppm")
+        fig.update_traces(marker=dict(size=marker_size))
+        fig.update_layout(xaxis_title=x_axis_title)
         
         
         return fig
@@ -1459,8 +1527,9 @@ class pca:
     def plot_pca_trajectory(self, time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
                             color_dict = None, 
                             symbol_dict = None, 
-                            height_=900, width_=1300,
-                            marker_size=35, marker_opacity=0.7):
+                            fig_height=900, fig_width=1300,
+                            marker_size=35, marker_opacity=0.7,
+                            title_font_size=20, font_size=20):
 
         '''
 
@@ -1480,9 +1549,9 @@ class pca:
             Dictionary of color_ for each group.
         symbol_dict : dictionary, default=None
             Dictionary of symbol_ for each time point.
-        height_ : int, default=900
+        fig_height : int, default=900
             Height of figure.
-        width_ : int, default=1300
+        fig_width : int, default=1300
             Width of figure.
         marker_size : int, default=35
             Size of marker.
@@ -1585,17 +1654,12 @@ class pca:
         color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
         
 
- 
- 
-
-
-
         fig = px.line(df_scores_point, x=pc[0], y=pc[1], line_group='Time point', 
                         error_x=err_df[pc[0]], error_y=err_df[pc[1]],
                         color='Group', color_discrete_map=color_dict_2,
                         symbol='Time point', symbol_map=symbol_dict,
                         title='<b>Principle component analysis ({})<b>'.format(self.scale), 
-                        height=height_, width=width_,
+                        height=fig_height, width=fig_width,
                         labels={
                             pc[0]: "{} R<sup>2</sup>X: {} %".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                             pc[1]: "{} R<sup>2</sup>X: {} %".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2)),
@@ -1619,7 +1683,7 @@ class pca:
 
 
 
-        fig.add_annotation(dict(font=dict(color="black",size=20),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=1.0,
                                 y=0.05,
@@ -1631,7 +1695,7 @@ class pca:
                                 # set alignment of text to left side of entry
                                 align="left")
 
-        fig.add_annotation(dict(font=dict(color="black",size=20),
+        fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=1.0,
                                 y=0.01,
@@ -1663,12 +1727,18 @@ class pca:
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
-            font=dict(size=20))
+            font=dict(size=title_font_size))
 
 
-        fig.update_traces(marker=dict(size=marker_size, opacity=marker_opacity, line=dict(width=2, color='DarkSlateGrey')))
+        fig.update_traces(marker=dict(size=marker_size, 
+                                      opacity=marker_opacity, 
+                                      line=dict(width=2, 
+                                                color='DarkSlateGrey')))
 
         fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
         
         
         return fig
+    
+    
+    
