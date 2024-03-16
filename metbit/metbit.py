@@ -240,7 +240,9 @@ class opls_da:
         
     def fit(self):
         
-
+        import time
+        
+        T1 = time.time()
         
         X = self.X
         y = self.y
@@ -303,8 +305,12 @@ class opls_da:
         
         self.oplsda = oplsda
         self.cv = cv
+        
+        T2 = time.time()
+        
+        duration = T2 - T1
 
-        return oplsda, cv
+        return print(f'OPLS-DA model is fitted in {duration} seconds')
     
 
 
@@ -454,14 +460,23 @@ class opls_da:
         if filter_ == True:
             vips = vips[vips['VIP'] >= threshold]
 
-        fig = px.scatter(vips, x='Features', y='VIP', 
-        text='Features', 
-        color='threshold', color_discrete_map={'Pass':'#FF7961', 
-                                                'Under cut off':'#ECECEC',
-                                                f'High in {self.y.unique()[1]}':'#B80F0A',
-                                                f'High in {self.y.unique()[0]}':'#03045E'}, 
-        height=height, width=width, 
-        title='VIP score')
+        fig = px.scatter(vips, x='Features', y='VIP',
+                         color='threshold',
+                         color_discrete_map={
+                             'Pass':'#FF7961',
+                             'Under cut off':'#ECECEC',
+                             f'High in {self.y.unique()[1]}':'#B80F0A',
+                             f'High in {self.y.unique()[0]}':'#03045E'}, 
+                         height=height, width=width, 
+                         title='VIP score',
+                         hover_data={'Features':True, 'VIP':True, 'threshold':True})
+              
+        fig.update_traces(hovertemplate="<br>".join([
+                        "Threshold: %{customdata[2]}",
+                        "VIP: %{customdata[1]}",
+                        "Features: %{customdata[0]}"
+                        # Add more custom data here if needed
+                ]))
 
         fig.update_traces(marker=dict(size=size))
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
@@ -573,7 +588,10 @@ class opls_da:
         else:
             df_opls_scores['Group'] = df_opls_scores['Group']
 
-
+        if symbol_ is not None:
+            df_opls_scores['symbol'] = symbol_
+            
+        df_opls_scores['Features'] = self.features_name
         
         from .pca_ellipse import confidence_ellipse
         fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol_,     
@@ -586,9 +604,21 @@ class opls_da:
                             't_pred': 't<sub>predict</sub>',
                             't_ortho': 't<sub>orthogonal</sub>',
                             't_scores': 't<sub>scores</sub>',
-                            'Group': 'Group'}
+                            'Group': 'Group'},
+                        hover_data={'t_scores':True, 't_ortho':True, 't_pred':True, 'Group':True, 'Features':True}
         )
 
+
+        fig.update_traces(hovertemplate="<br>".join([
+                        "t<sub>scores</sub>: %{customdata[0]}",
+                        "t<sub>ortho</sub>: %{customdata[1]}",
+                        "t<sub>predict</sub>: %{customdata[2]}",
+                        "Group: %{customdata[3]}",
+                        "Features: %{customdata[4]}"
+                        # Add more custom data here if needed
+                ]))
+        
+        
         fig.update_traces(marker=dict(size=marker_size, 
                             opacity=marker_opacity, 
                             line=dict(width=2, color='DarkSlateGrey')))
@@ -762,13 +792,18 @@ class opls_da:
 
 
         s_df_scores_ = self.s_df_scores_
+        
+        s_df_scores_['Features'] = self.features_name
 
 
-        fig = px.scatter(s_df_scores_, x='covariance', y='correlation', color='covariance', range_color=range_color_,
-                        color_continuous_scale=color_continuous_scale_, text=s_df_scores_.index, height=height_, width=width_,)
+        fig = px.scatter(s_df_scores_, x='covariance', y='correlation', 
+                         color='covariance', range_color=range_color_,
+                         color_continuous_scale=color_continuous_scale_,
+                         height=height_, width=width_,
+                         hover_data={'covariance':True, 'correlation':True, 'Features':True})
         fig.update_layout(title='<b>S-plot</b>', xaxis_title='Covariance', yaxis_title='Correlation')
 
-
+        
         
         #add line of axis and set color_ to black and line width to 2 pixel
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
@@ -827,11 +862,15 @@ class opls_da:
 
         s_df_scores_ = self.s_df_scores_
         features_name = self.features_name
+        
+        s_df_scores_['Features'] = features_name
 
         fig = px.scatter(s_df_scores_, x=features_name, y=X2, 
-                            color='covariance', color_continuous_scale=color_continuous_scale_, range_color=range_color_,
-                            text=s_df_scores_.index, 
-                            height=height_, width=width_)
+                            color='covariance', 
+                            color_continuous_scale=color_continuous_scale_, 
+                            range_color=range_color_, 
+                            height=height_, width=width_,
+                            hover_data={'covariance':True, 'correlation':True, 'Features':True})
 
         fig.update_traces(marker=dict(size=5))
         fig.update_xaxes(autorange="reversed")
@@ -1311,6 +1350,7 @@ class pca:
         df_scores_ = self.df_scores_
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
+        df_scores_['Index'] = df_scores_.index
 
 
 
@@ -1323,7 +1363,16 @@ class pca:
                         labels={'Group': 'Group',
                                 pc[0]: "{} R<sup>2</sup>X: {}%".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                                 pc[1]: "{} R<sup>2</sup>X: {}%".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2))},
-                        text=text_)
+                        hover_data={'Group':True, 'Index':True})
+        
+        fig.update_traces(hovertemplate="<br>".join([
+                f"{pc[0]}: %{{x:.2f}}",
+                f"{pc[1]}: %{{y:.2f}}",
+                "Group: %{customdata[0]}",
+                "Index: %{customdata[1]}"
+                # Add more custom data here if needed
+        ]))
+        
 
         fig.update_traces(marker=dict(size=marker_size, 
                             opacity=marker_opacity, 
@@ -1406,7 +1455,7 @@ class pca:
         fig = px.line(df_loadings_, x=loadings_label, y=pc,
                                 height=height_, width=width_,
                                 title='Loadings plot',
-                                text=loadings_label)
+                                hover_data={'Features':True, })
 
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
