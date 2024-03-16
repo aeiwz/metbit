@@ -544,12 +544,13 @@ class opls_da:
 
 
 
-    def plot_oplsda_scores(self, color_ = None, color_dict = None, 
+    def plot_oplsda_scores(self,x_ = 't_scores', y_ = 't_ortho', color_ = None, color_dict = None, 
                            symbol_ = None, symbol_dict = None, 
                            fig_height = 900, fig_width = 1300,
                            marker_size = 35, marker_opacity = 0.7, 
                            font_size = 20, title_font_size = 21,
-                           legend_name = 'Group'):
+                           legend_name = 'Group',
+                           ellips_indiv = False):
 
         '''
         Plot OPLS-DA scores plot
@@ -612,11 +613,26 @@ class opls_da:
             
         df_opls_scores['Index'] = df_opls_scores.index
         
+        
+        #If user not input color_dict then get unique of label and create color_dict
+        if color_dict is not None:
+            color_dict = color_dict
+        else:
+            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_opls_scores['Group'].unique()))}
+            
+
+        #new color_dict to match with unique label
+        group_unique = df_opls_scores['Group'].unique()
+        #change key of color_dict to match with unique label
+        color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
+        
+
+        
         from .pca_ellipse import confidence_ellipse
-        fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol_,     
+        fig = px.scatter(df_opls_scores, x=x_, y=y_, symbol=symbol_,     
                         symbol_map=symbol_dict,
                         color='Group', 
-                        color_discrete_map=color_dict, 
+                        color_discrete_map=color_dict_2, 
                         title='<b>OPLS-DA Scores Plot<b>', 
                         height=fig_height, width=fig_width,
                         labels={
@@ -673,8 +689,16 @@ class opls_da:
                                 align="left")
 
                         
-        fig.add_shape(type='path',
-                path=confidence_ellipse(df_opls_scores['t_scores'], df_opls_scores['t_ortho']))
+        if ellips_indiv == True:
+            for circle_ in df_opls_scores['Group'].unique():
+                
+                fig.add_shape(type='path',
+                    path=confidence_ellipse(df_opls_scores[df_opls_scores['Group']==circle_][x_], df_opls_scores[df_opls_scores['Group']==circle_][y_]),
+                    line=dict(color=color_dict_2[circle_], width=2))
+        else:
+            fig.add_shape(type='path',
+                    path=confidence_ellipse(df_opls_scores[x_], df_opls_scores[y_]))
+
 
 
         fig.update_yaxes(tickformat=",.0")
