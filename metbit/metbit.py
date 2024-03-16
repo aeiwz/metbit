@@ -471,12 +471,6 @@ class opls_da:
                          title='VIP score',
                          hover_data={'Features':True, 'VIP':True, 'threshold':True})
               
-        fig.update_traces(hovertemplate="<br>".join([
-                        "Threshold: %{customdata[2]}",
-                        "VIP: %{customdata[1]}",
-                        "Features: %{customdata[0]}"
-                        # Add more custom data here if needed
-                ]))
 
         fig.update_traces(marker=dict(size=size))
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
@@ -608,15 +602,6 @@ class opls_da:
                         hover_data={'t_scores':True, 't_ortho':True, 't_pred':True, 'Group':True, 'Features':True}
         )
 
-
-        fig.update_traces(hovertemplate="<br>".join([
-                        "t<sub>scores</sub>: %{customdata[0]}",
-                        "t<sub>ortho</sub>: %{customdata[1]}",
-                        "t<sub>predict</sub>: %{customdata[2]}",
-                        "Group: %{customdata[3]}",
-                        "Features: %{customdata[4]}"
-                        # Add more custom data here if needed
-                ]))
         
         
         fig.update_traces(marker=dict(size=marker_size, 
@@ -1363,15 +1348,7 @@ class pca:
                         labels={'Group': 'Group',
                                 pc[0]: "{} R<sup>2</sup>X: {}%".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                                 pc[1]: "{} R<sup>2</sup>X: {}%".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2))},
-                        hover_data={'Group':True, 'Index':True})
-        
-        fig.update_traces(hovertemplate="<br>".join([
-                f"{pc[0]}: %{{x:.2f}}",
-                f"{pc[1]}: %{{y:.2f}}",
-                "Group: %{customdata[0]}",
-                "Index: %{customdata[1]}"
-                # Add more custom data here if needed
-        ]))
+                        hover_data={'Group':True, 'Index':True, pc[0]:True, pc[1]:True, 'Features':True})
         
 
         fig.update_traces(marker=dict(size=marker_size, 
