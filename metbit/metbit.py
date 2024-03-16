@@ -1428,10 +1428,9 @@ class pca:
 
         loadings_label = self.features_name
         df_loadings_['Features'] = loadings_label
-        
 
 
-        fig = px.line(df_loadings_, x='Features', y=pc,
+        fig = px.line(df_loadings_, x=loadings_label, y=pc,
                                 height=height_, width=width_,
                                 title='Loadings plot',
                                 hover_data={'Features':True, pc[0]:True, pc[1]:True},)
@@ -1451,6 +1450,10 @@ class pca:
         
         
         return fig
+
+
+
+
 
 
     def plot_pca_trajectory(self, time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
