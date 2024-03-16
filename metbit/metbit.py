@@ -1348,7 +1348,7 @@ class pca:
                         labels={'Group': 'Group',
                                 pc[0]: "{} R<sup>2</sup>X: {}%".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                                 pc[1]: "{} R<sup>2</sup>X: {}%".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2))},
-                        hover_data={'Group':True, 'Index':True, pc[0]:True, pc[1]:True, 'Features':True})
+                        hover_data={'Group':True, 'Index':True, pc[0]:True, pc[1]:True, 'Index':True})
         
 
         fig.update_traces(marker=dict(size=marker_size, 
@@ -1427,12 +1427,14 @@ class pca:
         df_loadings_ = self.df_loadings_
 
         loadings_label = self.features_name
+        df_loadings_['Features'] = loadings_label
+        
 
 
-        fig = px.line(df_loadings_, x=loadings_label, y=pc,
+        fig = px.line(df_loadings_, x='Features', y=pc,
                                 height=height_, width=width_,
                                 title='Loadings plot',
-                                hover_data={'Features':True, })
+                                hover_data={'Features':True, pc[0]:True, pc[1]:True},)
 
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
@@ -1449,10 +1451,6 @@ class pca:
         
         
         return fig
-
-
-
-
 
 
     def plot_pca_trajectory(self, time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
