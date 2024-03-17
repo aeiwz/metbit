@@ -435,7 +435,7 @@ class opls_da:
 
     def vip_plot(self, x_range = 9, threshold = 2, marker_size = 12, 
                  fig_width = 1000, fig_height = 500, 
-                 filter_ = False, vip_trans_form = False,
+                 filter_ = False, vip_transform = True,
                  font_size = 20, title_font_size = 20,
                  xaxis_direction = 'reversed'):
 
@@ -469,7 +469,7 @@ class opls_da:
         import plotly.express as px
         vips = self.vips
 
-        if vip_trans_form == True:
+        if vip_transform == True:
             vips['VIP'] = vips['VIP'] * np.sign(np.ravel(s_df_scores_['correlation']))
             vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}", 
                                 np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", 
@@ -511,7 +511,7 @@ class opls_da:
         
         fig.update_layout(
             title={
-                'y':1,
+                'y':0.95,
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
@@ -521,7 +521,7 @@ class opls_da:
         fig.update_xaxes(autorange=xaxis_direction)
         
 
-        if vip_trans_form == True:
+        if vip_transform == True:
                 fig.add_shape(type="line",
                                 x0=0, y0=threshold, x1=x_range, y1=threshold,
                                 line=dict(color="red",width=2))
@@ -552,7 +552,7 @@ class opls_da:
                            marker_size = 35, marker_opacity = 0.7, 
                            font_size = 20, title_font_size = 21,
                            legend_name = 'Group',
-                           ellips_indiv = False):
+                           individual_ellipse = True):
 
         '''
         Plot OPLS-DA scores plot
@@ -691,7 +691,7 @@ class opls_da:
                                 align="left")
 
                         
-        if ellips_indiv == True:
+        if individual_ellipse == True:
             for circle_ in df_opls_scores['Group'].unique():
                 
                 fig.add_shape(type='path',
@@ -712,7 +712,7 @@ class opls_da:
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_layout(
             title={
-                'y':1,
+                'y':0.95,
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
@@ -857,7 +857,7 @@ class opls_da:
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_layout(
             title={
-                'y':1,
+                'y':0.95,
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
@@ -920,7 +920,7 @@ class opls_da:
         #fig.update_xaxes(tickformat=",.0")
         fig.update_layout(
             title={
-                'y':1,
+                'y':0.95,
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
@@ -1255,7 +1255,7 @@ class pca:
                 title='Explained Variance ({} scaling)'.format(scale))
         fig.update_layout(
             title={
-                'y':0.9,
+                'y':0.95,
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
@@ -1300,7 +1300,7 @@ class pca:
                         title='Explained Variance and Cumulative Variance')
         fig.update_layout(
             title={
-                'y':0.9,
+                'y':0.95,
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
@@ -1316,7 +1316,7 @@ class pca:
                         fig_height=900, fig_width=1300,
                         marker_size=35, marker_opacity=0.7,
                         text_ = None, font_size=20, title_font_size=21,
-                        ellips_indiv=True):
+                        individual_ellipse=True):
 
         '''
         Visualise PCA scores plot
@@ -1467,7 +1467,7 @@ class pca:
                                 # set alignment of text to left side of entry
                                 align="left")
 
-        if ellips_indiv == True:
+        if individual_ellipse == True:
             for circle_ in df_scores_['Group'].unique():
                 
                 fig.add_shape(type='path',
@@ -1485,7 +1485,7 @@ class pca:
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_layout(
             title={
-                'y':1,
+                'y':0.95,
                 'x':0.5,
                 'xanchor': 'center',
                 'yanchor': 'top'},
