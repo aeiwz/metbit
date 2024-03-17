@@ -125,13 +125,13 @@ Perform OPLS-DA model
 .. code:: python
 
 
-   opls_da_mod = opls_da(X=X, y=y,features_name=features_name, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42):
+   opls_da_model = opls_da(X=X, y=y,features_name=features_name, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42):
            
-   opls_da.fit()
+   opls_da_model.fit()
 
-   opls.permutation_test(n_permutataion=1000,cv=3, n_jobs=-1, verbose=10)
+   opls_da_model.permutation_test(n_permutataion=1000,cv=3, n_jobs=-1, verbose=10)
 
-   opls_da.vip_scores()
+   opls_da_model.vip_scores()
 
 Isualiseation of OPLs-DA model
 ------------------------------
