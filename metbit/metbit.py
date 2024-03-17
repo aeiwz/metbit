@@ -461,8 +461,7 @@ class opls_da:
 
         s_df_scores_ = self.s_df_scores_
 
-        corr_ = pd.DataFrame(s_df_scores_['correlation'])
-        cov_ = pd.DataFrame(s_df_scores_['covariance'])
+        
 
         
         
@@ -471,7 +470,7 @@ class opls_da:
         vips = self.vips
 
         if vip_trans_form == True:
-            vips['VIP'] = vips['VIP'] * np.sign(np.ravel(corr_['correlation']))
+            vips['VIP'] = vips['VIP'] * np.sign(np.ravel(s_df_scores_['correlation']))
             vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}", 
                                 np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", 
                                 "Under cut off"))
@@ -481,6 +480,9 @@ class opls_da:
 
         if filter_ == True:
             vips = vips[vips['VIP'] >= threshold]
+        
+        vips['Correlation'] = s_df_scores_['correlation']
+        vips['Covariance'] = s_df_scores_['covariance']
 
         fig = px.scatter(vips, x='Features', y='VIP',
                          color='threshold',
@@ -491,7 +493,7 @@ class opls_da:
                              f'High in {self.y.unique()[0]}':'#03045E'}, 
                          height=fig_height, width=fig_width, 
                          title='VIP score',
-                         hover_data={'Features':True, 'VIP':True, 'threshold':True})
+                         hover_data={'Features':True, 'VIP':True, 'threshold':True, 'Correlation':True, 'Covariance':True})
         
               
 
