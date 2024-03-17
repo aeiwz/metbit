@@ -1,13 +1,6 @@
 metbit
 ======
 
-Metbit is an python package to analyse metabolomics
-
-.. _metbit-1:
-
-metbit
-======
-
 Metbit is a Python package designed for the analysis of metabolomics
 data. It provides a range of tools and functions to process, visualize,
 and interpret metabolomics datasets. With Metbit, you can perform
