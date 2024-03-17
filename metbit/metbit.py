@@ -493,7 +493,7 @@ class opls_da:
                              f'High in {self.y.unique()[0]}':'#03045E'}, 
                          height=fig_height, width=fig_width, 
                          title='VIP score',
-                         hover_data={'Features':True, 'VIP':True, 'threshold':True, 'Correlation':True, 'Covariance':True})
+                         hover_data={'Features':True, 'VIP':True, 'threshold':True})
         
               
 
@@ -551,7 +551,7 @@ class opls_da:
                            fig_height = 900, fig_width = 1300,
                            marker_size = 35, marker_opacity = 0.7, 
                            font_size = 20, title_font_size = 21,
-                           legend_name = 'Group',
+                           legend_name = ['Group', 'Time point'],
                            individual_ellipse = True):
 
         '''
@@ -641,7 +641,7 @@ class opls_da:
                             't_pred': 't<sub>predict</sub>',
                             't_ortho': 't<sub>orthogonal</sub>',
                             't_scores': 't<sub>scores</sub>',
-                            'Group': legend_name},
+                            'Group': legend_name[0], 'symbol': legend_name[1]},
                         hover_data={'t_scores':True, 't_ortho':True, 't_pred':True, 'Group':True, 'Index':True}
         )
 
@@ -808,7 +808,8 @@ class opls_da:
 
 
 
-    def plot_s_scores(self, fig_height=900, fig_width=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet', marker_size=14, font_size=20, title_font_size=20):
+    def plot_s_scores(self, fig_height=900, fig_width=2000, range_color_=[-0.05,0.05], 
+                      color_continuous_scale_='jet', marker_size=14, font_size=20, title_font_size=20):
 
         '''
         Plot S-plot
@@ -870,7 +871,8 @@ class opls_da:
 
     
     def plot_loading(self, fig_height=900, fig_width=2000, range_color_=[-0.05,0.05], color_continuous_scale_='jet', 
-                     marker_size=5, font_size=20, title_font_size=20, xaxis_direction='reversed', xaxis_title='𝛿<sub>H</sub> in ppm'):
+                     marker_size=5, font_size=20, title_font_size=20,
+                     xaxis_direction='reversed', xaxis_title='𝛿<sub>H</sub> in ppm'):
 
         '''
         Plot loading plot
@@ -1315,8 +1317,9 @@ class pca:
                         symbol_=None, symbol_dict=None, 
                         fig_height=900, fig_width=1300,
                         marker_size=35, marker_opacity=0.7,
-                        text_ = None, font_size=20, title_font_size=21,
-                        individual_ellipse=True):
+                        font_size=20, title_font_size=21,
+                        individual_ellipse=True,
+                        legend_name=['Group', 'Time point']):
 
         '''
         Visualise PCA scores plot
@@ -1371,9 +1374,9 @@ class pca:
                 raise ValueError('symbol_ must have the same number of samples as y')
 
         if color_ is None:
-            color_ = df_scores_['Group']
+            df_scores_['Group'] = color_
         else:
-            color_ = color_
+            df_scores_['Group'] = df_scores_['Group']
 
         #check symbol_ dimension must be equal to y
         if symbol_ is not None:
@@ -1387,11 +1390,6 @@ class pca:
         else:
             symbol_dict = None
 
-        #check color_dict must be a dictionary
-        if color_dict is not None:
-            color_dict = color_dict
-        else:
-            color_dict = None
 
         # pc must be a list of 2
         if not isinstance(pc, list):
@@ -1426,16 +1424,17 @@ class pca:
         
 
 
-        fig = px.scatter(df_scores_, x=pc[0], y=pc[1], color=color_,
+        fig = px.scatter(df_scores_, x=pc[0], y=pc[1], color='Group',
                         symbol=symbol_, 
                         color_discrete_map=color_dict_2, 
                         symbol_map=symbol_dict, 
                         title=f'<b>PCA Scores Plot<b> {scale} scaling', 
                         height=fig_height, width=fig_width,
-                        labels={'Group': 'Group',
+                        labels={'color': legend_name[0], 'symbol': legend_name[1],
+                                'Group': legend_name[0],
                                 pc[0]: "{} R<sup>2</sup>X: {}%".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                                 pc[1]: "{} R<sup>2</sup>X: {}%".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2))},
-                        hover_data={'Group':True, 'Index':True, pc[0]:True, pc[1]:True, 'Index':True})
+                        hover_data={'Group':True, 'Index':True, pc[0]:True, pc[1]:True})
         
 
         fig.update_traces(marker=dict(size=marker_size, 
@@ -1496,7 +1495,9 @@ class pca:
 
 
 
-    def plot_loading_(self, pc=['PC1', 'PC2'], fig_height=600, fig_width=1800, font_size=20, title_font_size=20, marker_size=1, x_axis_title='𝛿<sub>H</sub> in ppm', xaxis_direction = "reversed"):
+    def plot_loading_(self, pc=['PC1', 'PC2'], fig_height=600, fig_width=1800, 
+                      font_size=20, title_font_size=20, marker_size=1, 
+                      x_axis_title='𝛿<sub>H</sub> in ppm', xaxis_direction = "reversed"):
 
         '''
         Visualise PCA loadings
@@ -1555,7 +1556,8 @@ class pca:
                             symbol_dict = None, 
                             fig_height=900, fig_width=1300,
                             marker_size=35, marker_opacity=0.7,
-                            title_font_size=20, font_size=20):
+                            title_font_size=20, font_size=20,
+                            legend_name=['Group', 'Time point']):
 
         '''
 
@@ -1689,7 +1691,8 @@ class pca:
                         labels={
                             pc[0]: "{} R<sup>2</sup>X: {} %".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
                             pc[1]: "{} R<sup>2</sup>X: {} %".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2)),
-                            'Group': 'Group'
+                            'Group': legend_name[0],
+                            'Time point': legend_name[1],
                             })
 
 
