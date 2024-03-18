@@ -604,7 +604,7 @@ class opls_da:
         if color_ is not None:
             df_opls_scores['Group'] = color_
         else:
-            df_opls_scores['Group'] = df_opls_scores['Group']
+            pass
 
         if symbol_ is not None:
             df_opls_scores['symbol'] = symbol_
@@ -1372,7 +1372,7 @@ class pca:
         if color_ is None:
             df_scores_['Group'] = color_
         else:
-            df_scores_['Group'] = df_scores_['Group']
+            pass
 
         #check symbol_ dimension must be equal to y
         if symbol_ is not None:
@@ -1826,7 +1826,7 @@ class pca:
         if color_ is None:
             df_scores_['Group'] = color_
         else:
-            df_scores_['Group'] = df_scores_['Group']
+            pass
 
         #check symbol_ dimension must be equal to y
         if symbol_ is not None:
