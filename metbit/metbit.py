@@ -225,13 +225,16 @@ class opls_da:
                      
         self.X = X
         self.y = y
+        self.features_name = features_name
         self.n_components = n_components
         self.scale = scale
-        self.random_state = random_state
-        self.opls_model = opls_model
         self.kfold = kfold
         self.estimator = estimator
-        
+        self.random_state = random_state
+        self.auto_ncomp = auto_ncomp
+
+
+
         
     def fit(self):
         
@@ -396,8 +399,6 @@ class opls_da:
         else:
             vips = pd.DataFrame(vips, columns = ['VIP'])
             vips['Features'] = vips.index
-
-
 
         self.vips = vips
 
