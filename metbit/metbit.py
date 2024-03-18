@@ -1213,8 +1213,8 @@ class pca:
         self.y_test = y_test
         self.X_test_reconstructed = X_test_reconstructed
         self.X_test_pca = X_test_pca
-        self.df_scores_
-        self.df_loadings_
+        self.df_scores_ = df_scores_
+        self.df_loadings_ = df_loadings_
 
         return pca_model
 
@@ -1376,7 +1376,7 @@ class pca:
         if color_ is None:
             df_scores_['Group'] = color_
         else:
-            df_scores_['Group'] = df_scores_['Group']
+            print('color in label')
 
         #check symbol_ dimension must be equal to y
         if symbol_ is not None:
@@ -1404,7 +1404,7 @@ class pca:
 
         
 
-        df_scores_ = self.df_scores_
+        
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
         df_scores_['Index'] = df_scores_.index
