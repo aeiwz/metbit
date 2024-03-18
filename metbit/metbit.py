@@ -228,12 +228,7 @@ class opls_da:
         self.n_components = n_components
         self.scale = scale
         self.random_state = random_state
-        self.opls_model = None
-        self.opls_cv = None
-        self.opls_permutation_cv = None
-        self.opls_permutation_cv_scores = None
-        self.opls_permutation_cv_score = None
-        self.opls_permutation_cv_score_std = None
+        self.opls_model = opls_model
         self.kfold = kfold
         self.estimator = estimator
         
@@ -277,24 +272,24 @@ class opls_da:
         self.pipeline = pipeline
 
         oplsda = pipeline.named_steps['oplsda']
-        cv = pipeline.named_steps['opls']
-        cv.fit(X.values, y)
+        cv_model = pipeline.named_steps['opls']
+        cv_model.fit(X.values, y)
 
         if auto_ncomp == False:
-            cv.reset_optimal_num_component(n_components)
+            cv_model.reset_optimal_num_component(n_components)
 
         else:
             pass
 
         oplsda.fit(X, pd.Categorical(y).codes)
         
-        s_df_scores_ = pd.DataFrame({'correlation': cv.correlation,'covariance': cv.covariance}, index=features_name)
-        df_opls_scores = pd.DataFrame({'t_scores': cv.scores, 't_ortho': cv.orthogonal_score, 't_pred': cv.predictive_score, 'Group': y})
+        s_df_scores_ = pd.DataFrame({'correlation': cv_model.correlation,'covariance': cv_model.covariance}, index=features_name)
+        df_opls_scores = pd.DataFrame({'t_scores': cv_model.scores, 't_ortho': cv_model.orthogonal_score, 't_pred': cv_model.predictive_score, 'Group': y})
 
 
-        R2Xcorr = cv.R2Xcorr
-        R2y = cv.R2y
-        q2 = cv.q2
+        R2Xcorr = cv_model.R2Xcorr
+        R2y = cv_model.R2y
+        q2 = cv_model.q2
 
         self.R2Xcorr = R2Xcorr
         self.R2y = R2y
@@ -304,7 +299,7 @@ class opls_da:
         self.df_opls_scores = df_opls_scores
         
         self.oplsda = oplsda
-        self.cv = cv
+        self.cv_model = cv_model
         
         T2 = time.time()
         
