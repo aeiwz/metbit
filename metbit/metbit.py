@@ -1369,7 +1369,7 @@ class pca:
             if len(symbol_) != len(self.label):
                 raise ValueError('symbol_ must have the same number of samples as y')
 
-        if color_ is None:
+        if color_ is not None:
             df_scores_['Group'] = color_
         else:
             pass
@@ -1823,7 +1823,7 @@ class pca:
             if len(symbol_) != len(self.label):
                 raise ValueError('symbol_ must have the same number of samples as y')
 
-        if color_ is None:
+        if color_ is not None:
             df_scores_['Group'] = color_
         else:
             pass
