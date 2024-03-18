@@ -1372,7 +1372,7 @@ class pca:
         if color_ is None:
             df_scores_['Group'] = color_
         else:
-            print('color in label')
+            df_scores_['Group'] = df_scores_['Group']
 
         #check symbol_ dimension must be equal to y
         if symbol_ is not None:
@@ -1765,5 +1765,139 @@ class pca:
         
         return fig
     
-    
+
+    def plot_3d_pca(self, pc=['PC1', 'PC2', 'PC3'], color_=None, color_dict=None, 
+                    symbol_=None, symbol_dict=None, fig_height=900, fig_width=1300,
+                    marker_size=35, marker_opacity=0.7, font_size=20, title_font_size=20,
+                    legend_name=['Group', 'Time point']):
+        import plotly.express as px
+        '''
+        Visualise 3D PCA scores plot
+
+        Parameters
+        ----------
+        pc : list, default=['PC1', 'PC2', 'PC3']
+            List of principal components to plot.
+        color: array-like, shape (n_samples,), default=None
+            Target data, where n_samples is the number of samples.
+        color_dict : dict, default=None
+            Dictionary of color_ mapping.
+        symbol_ : array-like, shape (n_samples,), default=None
+            Target data, where n_samples is the number of samples.
+        symbol_dict : dict, default=None
+            Dictionary of symbol_ mapping.
+        fig_height : int, default=900
+            Height of figure.
+        fig_width : int, default=1300
+            Width of figure.
+        marker_size : int, default=35
+            Size of marker.
+        marker_opacity : float, default=0.7
+            Opacity of marker.
+        text_ : array-like, shape (n_samples,), default=None
+            Text to display on each point.
+
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            PCA scores plot.
+
+        '''
+
+
+
+        scale = self.scale
+        df_scores_ = self.df_scores_
+        r2 = self.df_explained_variance_
+        q2_test = self.q2_test
+        
+        if color_ is not None:
+            if len(color_) != len(self.label):
+                raise ValueError('color_ must have the same number of samples as y')
+            else:
+                color_ = color_
+                
+                
+        if symbol_ is not None:
+            if len(symbol_) != len(self.label):
+                raise ValueError('symbol_ must have the same number of samples as y')
+
+        if color_ is None:
+            df_scores_['Group'] = color_
+        else:
+            df_scores_['Group'] = df_scores_['Group']
+
+        #check symbol_ dimension must be equal to y
+        if symbol_ is not None:
+            if len(symbol_) != len(self.label):
+                raise ValueError('symbol_ must have the same number of samples as y')
+
+        #check symbol_dict must be a dictionary
+        if symbol_dict is not None:
+            if not isinstance(symbol_dict, dict):
+                raise ValueError('symbol_dict must be a dictionary')
+        else:
+            symbol_dict = None
+
+
+        # pc must be a list of 3
+        if not isinstance(pc, list):
+            raise ValueError("pc must be a list of string \n Example: pc=['PC1', 'PC2', 'PC3']")
+        if len(pc) != 3:
+            raise ValueError('pc must be a list of 3')
+        # pc must be match with columns of df_scores_
+        if pc[0] not in self.df_scores_.columns:
+            raise ValueError("pc must be in df_scores_ columns \n Example: pc=['PC1', 'PC2', 'PC3']")
+        if pc[1] not in self.df_scores_.columns:
+            raise ValueError("pc must be in df_scores_ columns \n Example: pc=[\'PC1\', \'PC2\', \'PC3\']")
+        if pc[2] not in self.df_scores_.columns:
+            raise ValueError("pc must be in df_scores_ columns \n Example: pc=[\'PC1\', \'PC2\', \'PC3\']")
+
+        r2 = self.df_explained_variance_
+        q2_test = self.q2_test
+        df_scores_['Index'] = df_scores_.index
+
+
+        #If user not input color_dict then get unique of label and create color_dict
+        if color_dict is not None:
+            color_dict = color_dict
+        else:
+            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_['Group'].unique()))}
+
+        #new color_dict to match with unique label
+        group_unique = df_scores_['Group'].unique()
+        #change key of color_dict to match with unique label
+        color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
+
+
+        fig = px.scatter_3d(df_scores_, x=pc[0], y=pc[1], z=pc[2], color='Group', symbol=symbol_, 
+                            color_discrete_map=color_dict_2, symbol_map=symbol_dict, 
+                            title=f'<b>PCA Scores Plot<b> {scale} scaling', 
+                            height=fig_height, width=fig_width,
+                            labels={'color': legend_name[0], 'symbol': legend_name[1],
+                                    'Group': legend_name[0],
+                                    pc[0]: "{} R<sup>2</sup>X: {}%".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
+                                    pc[1]: "{} R<sup>2</sup>X: {}%".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2)),
+                                    pc[2]: "{} R<sup>2</sup>X: {}%".format(pc[2], np.round(r2.loc[r2.loc[r2['PC']==pc[2]].index, 'Explained variance'].values[0]*100, decimals=2))},
+                            hover_data={'Group':True, 'Index':True, pc[0]:True, pc[1]:True, pc[2]:True})
+
+        fig.update_traces(marker=dict(size=marker_size,
+                            opacity=marker_opacity,
+                            line=dict(width=2, color='DarkSlateGrey')))
+
+        fig.add_annotation(dict(font=dict(color="black",size=font_size), x=1.0, y=0.05, showarrow=False,
+                                text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2.loc[r2['PC']==pc[2]].index, 'Cumulative variance'].values[0]*100, decimals=2)}%<b>",
+                                textangle=0, xref="paper", yref="paper"), align="left")
+
+        fig.add_annotation(dict(font=dict(color="black",size=font_size), x=1.0, y=0.01, showarrow=False, 
+                                text=f"<b>Q<sup>2</sup>X (Cum): {np.round(q2_test*100, decimals=2)}%<b>",
+                                textangle=0, xref="paper", yref="paper"), align="left")
+
+        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
+
+        return fig
+
+        
+
     

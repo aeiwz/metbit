@@ -12,13 +12,13 @@ DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
 setup(
   name = 'metbit',      
   packages = ['metbit'], 
-  version = '1.8.5',  
+  version = '2.0.0',  
   license='MIT', 
   description = 'Metabolomics data analysis and visualization tools.',
   author = 'aeiwz',                 
   author_email = 'theerayut_aeiw_123@hotmail.com',   
   url = 'https://github.com/aeiwz/metbit.git',  
-  download_url = 'https://github.com/aeiwz/metbit/archive/refs/tags/V1.8.5.tar.gz',  
+  download_url = 'https://github.com/aeiwz/metbit/archive/refs/tags/V2.0.0.tar.gz',  
   keywords = ['Omics', 'Chemometrics', 'Visualization', 'Data Analysis'],
   install_requires=[            
           'scikit-learn',
