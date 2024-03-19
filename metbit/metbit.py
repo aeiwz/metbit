@@ -1670,14 +1670,19 @@ class pca:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
+            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_scores_['Group'].unique())}
             
 
-        #new color_dict to match with unique label
-        group_unique = df_scores_point['Group'].unique()
-        #change key of color_dict to match with unique label
-        color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
-        
+        # Create a new color dictionary to match with unique labels
+        color_dict_2 = {}
+        for group in df_scores_['Group'].unique():
+            if group in color_dict:
+                color_dict_2[group] = color_dict[group]
+            else:
+                # Assign a default color if the label is not found in the original color_dict
+                color_dict_2[group] = px.colors.qualitative.Plotly[len(color_dict_2) % len(px.colors.qualitative.Plotly)]
+
+
 
         fig = px.line(df_scores_point, x=pc[0], y=pc[1], line_group='Time point', 
                         error_x=err_df[pc[0]], error_y=err_df[pc[1]],
