@@ -1723,12 +1723,13 @@ class pca:
 
 
         for connect_line in range(len(group_unique)):
+            group_unique_ = group_unique[connect_line]
             # create a new trace for the connecting line
             fig.add_trace(go.Scatter(
                 x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[0]], # x-coordinates of the line
                 y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[1]], # y-coordinates of the line
                 mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict_2[group_unique[connect_line]], width=2), # set the color_ and width of the line
+                line=dict(color=color_dict_2[group_unique_], width=2), # set the color_ and width of the line
                 showlegend=False # hide the trace from the legend
             ))
 
