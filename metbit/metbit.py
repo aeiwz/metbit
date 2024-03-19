@@ -1407,12 +1407,12 @@ class pca:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_opls_scores['Group'].unique())}
+            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_scores_['Group'].unique())}
             
 
         # Create a new color dictionary to match with unique labels
         color_dict_2 = {}
-        for group in df_opls_scores['Group'].unique():
+        for group in df_scores_['Group'].unique():
             if group in color_dict:
                 color_dict_2[group] = color_dict[group]
             else:
@@ -1865,12 +1865,12 @@ class pca:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_opls_scores['Group'].unique())}
+            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_scores_['Group'].unique())}
             
 
         # Create a new color dictionary to match with unique labels
         color_dict_2 = {}
-        for group in df_opls_scores['Group'].unique():
+        for group in df_scores_['Group'].unique():
             if group in color_dict:
                 color_dict_2[group] = color_dict[group]
             else:
