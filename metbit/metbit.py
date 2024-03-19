@@ -1649,15 +1649,6 @@ class pca:
             err_df = df_scores_.groupby(['Group', 'Time point']).std()
 
 
-        df_scores_point.reset_index(inplace=True)
-        df_scores_point['Time order'] = df_scores_point['Time point'].map(time_order)
-        df_scores_point.sort_values(by=['Group', 'Time order'], inplace=True)
-
-        err_df.reset_index(inplace=True)
-        err_df['Time order'] = err_df['Time point'].map(time_order)
-        err_df.sort_values(by=['Group', 'Time order'], inplace=True)
-
-
 
         #check color_dict must be a dictionary
         if color_dict is not None:
@@ -1699,6 +1690,17 @@ class pca:
             color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_scores_['Group'].unique())}
         if symbol_dict is None:
             symbol_dict = {time_point: i for i, time_point in enumerate(df_scores_['Time point'].unique())}
+
+
+
+        df_scores_point.reset_index(inplace=True)
+        df_scores_point['Time order'] = df_scores_point['Time point'].map(time_order)
+        df_scores_point.sort_values(by=['Group', 'Time order'], inplace=True)
+
+        err_df.reset_index(inplace=True)
+        err_df['Time order'] = err_df['Time point'].map(time_order)
+        err_df.sort_values(by=['Group', 'Time order'], inplace=True)
+
 
 
 
