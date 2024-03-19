@@ -1682,7 +1682,6 @@ class pca:
             color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_scores_['Group'].unique())}
             
 
-        # Create a new color dictionary to match with unique labels
         color_dict_2 = {}
         for group in df_scores_['Group'].unique():
             if group in color_dict:
@@ -1690,6 +1689,16 @@ class pca:
             else:
                 # Assign a default color if the label is not found in the original color_dict
                 color_dict_2[group] = px.colors.qualitative.Plotly[len(color_dict_2) % len(px.colors.qualitative.Plotly)]
+
+        # If symbol_dict is None, create a symbol dictionary
+        if symbol_dict is None:
+            symbol_dict = {time_point: i for i, time_point in enumerate(df_scores_['Time point'].unique())}
+
+        # Ensure color_dict has colors for both groups and time points
+        if color_dict is None:
+            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_scores_['Group'].unique())}
+        if symbol_dict is None:
+            symbol_dict = {time_point: i for i, time_point in enumerate(df_scores_['Time point'].unique())}
 
 
 
