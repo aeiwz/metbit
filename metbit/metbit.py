@@ -1549,8 +1549,8 @@ class pca:
 
 
     def plot_pca_trajectory(self, time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
-                            color_dict = None, 
-                            symbol_dict = None, 
+                            color_dict = None, color_ = None,
+                            symbol_dict = None,
                             fig_height=900, fig_width=1300,
                             marker_size=35, marker_opacity=0.7,
                             title_font_size=20, font_size=20,
@@ -1618,6 +1618,15 @@ class pca:
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
         df_scores_['Time point'] = time_
+
+        if color_ is not None:
+            if len(color_) != len(self.label):
+                raise ValueError('color_ must have the same number of samples as y')
+            else:
+                df_scores_['Group'] = color_
+        else:
+            pass
+        group_unique = df_scores_['Group'].unique()
         
 
 
