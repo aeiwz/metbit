@@ -593,18 +593,14 @@ class opls_da:
         else:
             symbol_dict = None
 
-        #check color_dict must be a dictionary
-        if color_dict is not None:
-            color_dict = color_dict
-        else:
-            color_dict = None
+
 
         df_opls_scores = self.df_opls_scores
 
         if color_ is not None:
             df_opls_scores['Group'] = color_
         else:
-            pass
+            df_opls_scores['Group'] = self.y
 
         if symbol_ is not None:
             df_opls_scores['symbol'] = symbol_
@@ -1418,7 +1414,6 @@ class pca:
         #change key of color_dict to match with unique label
         color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
         
-
 
         fig = px.scatter(df_scores_, x=pc[0], y=pc[1], color='Group',
                         symbol=symbol_, 
