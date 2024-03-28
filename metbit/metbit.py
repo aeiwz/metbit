@@ -1371,10 +1371,7 @@ class pca:
         else:
             pass
 
-        #check symbol_ dimension must be equal to y
-        if symbol_ is not None:
-            if len(symbol_) != len(self.label):
-                raise ValueError('symbol_ must have the same number of samples as y')
+
 
         #check symbol_dict must be a dictionary
         if symbol_dict is not None:
@@ -1856,10 +1853,7 @@ class pca:
         else:
             pass
 
-        #check symbol_ dimension must be equal to y
-        if symbol_ is not None:
-            if len(symbol_) != len(self.label):
-                raise ValueError('symbol_ must have the same number of samples as y')
+
 
         #check symbol_dict must be a dictionary
         if symbol_dict is not None:
