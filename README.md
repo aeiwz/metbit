@@ -15,7 +15,7 @@ pip install metbit
 
 ```python
 
-from metbit import opls_da, pca
+from metbit import pca
 import pandas as pd
 import numpy as np
 ```
@@ -67,7 +67,7 @@ pca_mod.plot_pca_trajectory(time_=time, time_in_number={'1-wk': 0, '2-wk': 1, '3
 
 ```python
 
-from metbit import opls_da, pca
+from metbit import opls_da
 import pandas as pd
 import numpy as np
 ```
