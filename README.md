@@ -105,7 +105,7 @@ opls_da_model.vip_scores()
 ```
 
 
-## Isualiseation of OPLs-DA model
+## Visualisation of OPLS-DA model
 
 
 ```python
