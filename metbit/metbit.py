@@ -1895,4 +1895,7 @@ class pca:
 
         
 
-    
+class pls_regression:
+
+    def __init__(self):
+        
