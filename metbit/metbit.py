@@ -62,7 +62,6 @@ class opls_da:
     import warnings
     warnings.filterwarnings('ignore')
 
-    from pyChemometrics import ChemometricsScaler
 
     import os
 
@@ -994,7 +993,7 @@ class pca:
     import pandas as pd
     import matplotlib.pyplot as plt
 
-    from pyChemometrics.ChemometricsPCA import ChemometricsPCA
+
     from pyChemometrics.ChemometricsScaler import ChemometricsScaler
 
     # Use to obtain same values as in the text
@@ -1090,7 +1089,7 @@ class pca:
         import pandas as pd
         import matplotlib.pyplot as plt
 
-        from pyChemometrics.ChemometricsPCA import ChemometricsPCA
+
         from pyChemometrics.ChemometricsScaler import ChemometricsScaler
 
         # Use to obtain same values as in the text
