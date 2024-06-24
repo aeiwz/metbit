@@ -26,7 +26,7 @@ from sklearn.metrics import mean_squared_error
 import warnings
 warnings.filterwarnings('ignore')
 
-from scaler import Scaler
+from .scaler import Scaler
 
 import os
 
@@ -994,7 +994,7 @@ class pca:
     import matplotlib.pyplot as plt
 
 
-    from scaler import Scaler
+    from .scaler import Scaler
 
     # Use to obtain same values as in the text
 
@@ -1093,7 +1093,7 @@ class pca:
         import matplotlib.pyplot as plt
 
 
-        from scaler import Scaler
+        from .scaler import Scaler
 
         # Use to obtain same values as in the text
 
