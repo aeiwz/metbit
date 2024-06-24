@@ -360,6 +360,11 @@ class Normality_distribution:
     def __init__(self, data: pd.DataFrame):
         self.data = data
 
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import numpy as np
+        import scipy.stats as stats
+        import pandas as pd
 
         """
         This function takes in a dataframe and a feature and returns the histogram and Q-Q plot of the feature.
@@ -390,6 +395,12 @@ class Normality_distribution:
         return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
     def plot_distribution(self, feature):
+
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        import numpy as np
+        import scipy.stats as stats
+        import pandas as pd
         
         data = self.data
 
