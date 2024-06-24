@@ -510,7 +510,12 @@ class Normalise:
         return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
 
-    def pqn_normalise(self):
+    def pqn_normalise(self, plot: bool = True):
+
+        import numpy as np
+        import pandas as pd
+        import matplotlib.pyplot as plt
+
         """
         This function returns the normalised dataframe using the PQN method.
         Parameters
@@ -532,6 +537,26 @@ class Normalise:
 
         norm_df.columns = features
         norm_df.index = data.index
+
+        if plot:
+            plt.figure()
+            plt.hist(1/pqn_coef, bins=25)
+            plt.xlabel("1/PQN Coefficient")
+            plt.ylabel('Counts')
+            plt.title("Distribution of Normalisation factors")
+            plt.show()
+
+            #Truncate extreme values to narrow histogram range
+            sample_to_plot = np.random.randint(0, data.shape[0])
+            idx_to_plot = ((foldChangeMatrix.iloc[sample_to_plot, :] <= 5) & (foldChangeMatrix.iloc[sample_to_plot, :] >= -5 ))
+
+
+            plt.figure()
+            plt.title('Fold change to reference for sample: {0}'.format(sample_to_plot))
+            plt.xlabel("Fold Change to median")
+            plt.ylabel("Counts")
+            plt.hist(foldChangeMatrix.loc[sample_to_plot, idx_to_plot], bins=100)
+            plt.show()
 
         return norm_df
 
