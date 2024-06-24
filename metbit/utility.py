@@ -451,3 +451,104 @@ class Normality_distribution:
 
         return plt
         
+
+class Normalise:
+
+    import pandas as pd
+    import numpy as np
+
+    def __init__(self, data: pd.DataFrame):
+        """
+        This function takes in a dataframe and returns the normalised dataframe.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        Normalise(data).normalise()
+        """
+        # Predict missing values using KNN
+        from sklearn.impute import KNNImputer
+        imputer = KNNImputer(n_neighbors=2)
+        data = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
+        self.data = data
+
+    def pqn_normalise(self):
+        """
+        This function returns the normalised dataframe using the PQN method.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        Normalise(data).pqn_normalise()
+        """
+        data = self.data
+
+        # PQN normalisation with median
+        data = data.div(data.median(axis=0), axis=0)
+
+        return data
+
+    def decimal_place_normalisation(self, decimals: int = 2):
+        """
+        This function returns the dataframe with values rounded to a specified number of decimal places.
+        Parameters
+        ----------
+        decimals: int
+            The number of decimal places to round to.
+        """
+        data = self.data.round(decimals)
+        return data
+
+
+    def z_score_normalisation(self):
+        """
+        This function returns the dataframe normalized using Z-Score.
+        """
+        from scipy.stats import zscore
+        data = self.data.apply(zscore)
+
+        return data
+
+    def linear_normalisation(self):
+        """
+        This function returns the dataframe normalized using Min-Max (linear normalization).
+        """
+        data = self.data
+        data = (data - data.min()) / (data.max() - data.min())
+        
+        return data
+
+    def normalize_to_100(self):
+        """
+        This function returns the dataframe with values normalized to 100.
+        """
+        data = self.data
+        data = (data / data.sum()) * 100
+        
+        return data
+
+    def clipping_normalisation(self, lower: float, upper: float):
+        """
+        This function returns the dataframe with values clipped to the specified range.
+        Parameters
+        ----------
+        lower: float
+            The lower bound for clipping.
+        upper: float
+            The upper bound for clipping.
+        """
+        data = self.data.clip(lower, upper)
+        
+        return data
+
+    def standard_deviation_normalisation(self):
+        """
+        This function returns the dataframe normalized using Standard Deviation.
+        """
+        data = self.data
+        mean = data.mean()
+        std = data.std()
+        data = (data - mean) / std
+        
+        return data
+
