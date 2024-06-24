@@ -26,7 +26,7 @@ from sklearn.metrics import mean_squared_error
 import warnings
 warnings.filterwarnings('ignore')
 
-from pyChemometrics import ChemometricsScaler
+from scaler import Scaler
 
 import os
 
@@ -266,7 +266,7 @@ class opls_da:
             
         # Create a pipeline with data preprocessing and OPLS-DA model
         pipeline = Pipeline([
-                                ('scale', ChemometricsScaler(scale_power=scale_power)),
+                                ('scale', Scaler(scale_power=scale_power)),
                                 ('oplsda', PLSRegression(n_components=n_components)),
                                 ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
                             ])
@@ -994,7 +994,7 @@ class pca:
     import matplotlib.pyplot as plt
 
 
-    from pyChemometrics.ChemometricsScaler import ChemometricsScaler
+    from scaler import Scaler
 
     # Use to obtain same values as in the text
 
@@ -1014,7 +1014,7 @@ class pca:
     from lingress import unipair
 
 
-    def __init__(self, X, label, features_name=None, n_components=2, scale='pareto', random_state=42, test_size=0.3):
+    def __init__(self, X: pd.DataFrame, label: list = None, features_name: list = None, n_components=2, scale='pareto', random_state=42, test_size=0.3):
 
 
 
@@ -1024,6 +1024,9 @@ class pca:
                 raise ValueError('features_name must be a series, list or 1D array')
             if len(features_name) != X.shape[1]:
                 raise ValueError('features_name must have the same number of features as X')
+        
+        if label is None:
+            label = ["data" for x in range(X.shape[0])]
 
         if not isinstance(X, (pd.DataFrame, np.ndarray)):
             raise ValueError('X must be a dataframe or array')
@@ -1090,7 +1093,7 @@ class pca:
         import matplotlib.pyplot as plt
 
 
-        from pyChemometrics.ChemometricsScaler import ChemometricsScaler
+        from scaler import Scaler
 
         # Use to obtain same values as in the text
 
@@ -1131,7 +1134,7 @@ class pca:
 
 
             
-        model_scaler = ChemometricsScaler(scale_power=scale_power_)
+        model_scaler = Scaler(scale_power=scale_power_)
         model_scaler.fit(X)
         model_X = model_scaler.transform(X)
 
@@ -1894,7 +1897,4 @@ class pca:
 
         
 
-class pls_regression:
-
-    def __init__(self):
         

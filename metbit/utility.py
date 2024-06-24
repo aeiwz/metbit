@@ -349,4 +349,94 @@ class oplsda_path:
 
 
 
+class Normality_distribution:
 
+    import matplotlib.pyplot as plt
+    import seaborn as sns
+    import numpy as np
+    import scipy.stats as stats
+    import pandas as pd
+
+    def __init__(self, data: pd.DataFrame, feature):
+        self.data = data
+        self.feature = feature
+
+        """
+        This function takes in a dataframe and a feature and returns the histogram and Q-Q plot of the feature.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        feature: str
+            The feature to be used.
+        Normality_distribution(data, feature).plot_distribution()
+
+        """
+        n_features = data.shape[1]
+        n_rows = dara.shape[0]
+        # check memory size for data
+        def memory_size(X: pd.DataFrame) -> None:
+            
+            # unit of size
+            size = ['B', 'KB', 'MB', 'GB', 'TB']
+            X = X.memory_usage().sum()
+            for i in range(len(size)):
+                if X < 1024:
+                    return f'{X:.2f} {size[i]}'
+                X /= 1024
+            return X
+        sizes = memory_size(data)
+
+        return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
+
+    def plot_distribution(self, data, feature):
+        
+        data = self.data
+        feature = self.feature
+
+        plt.figure(figsize=(12, 6))
+        plt.subplot(1, 2, 1)
+        sns.histplot(data[feature], kde=True)
+        plt.title(f'Histogram of {feature}')
+
+        plt.subplot(1, 2, 2)
+        stats.probplot(data[feature], dist="norm", plot=plt)
+        plt.title(f'Q-Q plot of {feature}')
+        plt.show()
+
+        return plt
+
+    def pca_distributions(data):
+        
+        import matplotlib.pyplot as plt
+        import seaborn as sns
+        """
+        This function takes in a dataframe and a list of features and returns the histogram and Q-Q plot of the features.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        features: list
+            The list of features to be used.
+        Normality_distribution.pca_distributions(data, features)
+        """
+
+
+        from metbit import pca
+
+        pca = pca(data , label = ["data" for x in range(df.shape[0])])
+        pca.fit()
+        scores = pca.get_scores()
+        for feature in scores.columns[:2]:
+            plt.figure(figsize=(12, 6))
+            plt.subplot(1, 2, 1)
+            sns.histplot(scores[feature], kde=True)
+            plt.title(f'Histogram of {feature}')
+
+            plt.subplot(1, 2, 2)
+            stats.probplot(scores[feature], dist="norm", plot=plt)
+            plt.title(f'Q-Q plot of {feature}')
+            plt.show()
+
+        return plt
+        
