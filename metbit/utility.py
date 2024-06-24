@@ -520,11 +520,20 @@ class Normalise:
         Normalise(data).pqn_normalise()
         """
         data = self.data
+        features = data.columns
 
+        median_spectra = data.median(axis=0)
+
+        foldChangeMatrix = data.div(median_spectra, axis=1)
         # PQN normalisation with median
-        data = data.div(data.median(axis=1), axis=0)
+        pqn_coef = foldChangeMatrix.median(axis=1)
 
-        return data
+        norm_df = df.div(pqn_coef, axis=0)
+
+        norm_df.columns = features
+        norm_df.index = data.index
+
+        return norm_df
 
     def decimal_place_normalisation(self, decimals: int = 2):
         """
