@@ -357,9 +357,9 @@ class Normality_distribution:
     import scipy.stats as stats
     import pandas as pd
 
-    def __init__(self, data: pd.DataFrame, feature):
+    def __init__(self, data: pd.DataFrame):
         self.data = data
-        self.feature = feature
+
 
         """
         This function takes in a dataframe and a feature and returns the histogram and Q-Q plot of the feature.
@@ -389,10 +389,21 @@ class Normality_distribution:
 
         return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
-    def plot_distribution(self, data, feature):
+    def plot_distribution(self, feature):
         
         data = self.data
-        feature = self.feature
+
+        """
+        This function takes in a dataframe and a feature and returns the histogram and Q-Q plot of the feature.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        feature: str
+
+        Normality_distribution(data).plot_distribution(feature)
+        """
+
 
         plt.figure(figsize=(12, 6))
         plt.subplot(1, 2, 1)
