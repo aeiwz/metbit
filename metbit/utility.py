@@ -432,6 +432,9 @@ class Normality_distribution:
         
         import matplotlib.pyplot as plt
         import seaborn as sns
+        import numpy as np
+        import scipy.stats as stats
+        import pandas as pd
         """
         This function takes in a dataframe and a list of features and returns the histogram and Q-Q plot of the features.
         Parameters
