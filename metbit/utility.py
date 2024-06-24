@@ -373,7 +373,7 @@ class Normality_distribution:
 
         """
         n_features = data.shape[1]
-        n_rows = dara.shape[0]
+        n_rows = data.shape[0]
         # check memory size for data
         def memory_size(X: pd.DataFrame) -> None:
             
@@ -457,7 +457,7 @@ class Normalise:
     import pandas as pd
     import numpy as np
 
-    def __init__(self, data: pd.DataFrame):
+    def __init__(self, data: pd.DataFrame, compute_missing: bool = True):
         """
         This function takes in a dataframe and returns the normalised dataframe.
         Parameters
@@ -465,12 +465,35 @@ class Normalise:
         data: pandas dataframe
             The dataframe to be used.
         Normalise(data).normalise()
+        
         """
-        # Predict missing values using KNN
-        from sklearn.impute import KNNImputer
-        imputer = KNNImputer(n_neighbors=2)
-        data = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
-        self.data = data
+        
+        if compute_missing:
+            # Predict missing values using KNN
+            from sklearn.impute import KNNImputer
+            imputer = KNNImputer(n_neighbors=2)
+            data = pd.DataFrame(imputer.fit_transform(data), columns=data.columns)
+            self.data = data
+        else:
+            self.data = data
+        
+        n_features = data.shape[1]
+        n_rows = data.shape[0]
+        # check memory size for data
+        def memory_size(X: pd.DataFrame) -> None:
+            
+            # unit of size
+            size = ['B', 'KB', 'MB', 'GB', 'TB']
+            X = X.memory_usage().sum()
+            for i in range(len(size)):
+                if X < 1024:
+                    return f'{X:.2f} {size[i]}'
+                X /= 1024
+            return X
+        sizes = memory_size(data)
+
+        return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
+
 
     def pqn_normalise(self):
         """
