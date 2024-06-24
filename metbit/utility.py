@@ -522,7 +522,7 @@ class Normalise:
         data = self.data
 
         # PQN normalisation with median
-        data = data.div(data.median(axis=0), axis=0)
+        data = data.div(data.median(axis=1), axis=0)
 
         return data
 
