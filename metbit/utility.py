@@ -446,7 +446,7 @@ class Normality_distribution:
 
         from metbit import pca
 
-        pca = pca(data , label = ["data" for x in range(df.shape[0])])
+        pca = pca(data , label = ["data" for x in range(data.shape[0])])
         pca.fit()
         scores = pca.get_scores()
         for feature in scores.columns[:2]:
@@ -461,6 +461,29 @@ class Normality_distribution:
             plt.show()
 
         return plt
+
+    def features_distributions(self):
+
+        data = self.data
+
+        """
+        This function takes in a dataframe and a list of features and returns the histogram and Q-Q plot of the features.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        features: list
+            The list of features to be used.
+        Normality_distribution.features_distributions(data, features)
+        """
+
+        features = data.columns
+
+        #box plot with all features in horizontal
+        #using plotly
+        import plotly.express as px
+        fig = px.box(data, orientation='h', points='all')
+        fig.show()
         
 
 class Normalise:
