@@ -462,28 +462,6 @@ class Normality_distribution:
 
         return plt
 
-    def features_distributions(self):
-
-        data = self.data
-
-        """
-        This function takes in a dataframe and a list of features and returns the histogram and Q-Q plot of the features.
-        Parameters
-        ----------
-        data: pandas dataframe
-            The dataframe to be used.
-        features: list
-            The list of features to be used.
-        Normality_distribution.features_distributions(data, features)
-        """
-
-        features = data.columns
-
-        #box plot with all features in horizontal
-        #using plotly
-        import plotly.express as px
-        fig = px.box(data, orientation='h', points='all')
-        fig.show()
         
 
 class Normalise:
