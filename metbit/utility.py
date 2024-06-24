@@ -428,7 +428,7 @@ class Normality_distribution:
 
         return plt
 
-    def pca_distributions(data):
+    def pca_distributions(self):
         
         import matplotlib.pyplot as plt
         import seaborn as sns
@@ -442,7 +442,7 @@ class Normality_distribution:
             The list of features to be used.
         Normality_distribution.pca_distributions(data, features)
         """
-
+        data = self.data
 
         from metbit import pca
 
