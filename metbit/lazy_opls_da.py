@@ -212,24 +212,33 @@ class lazy_opls_da:
                                     auto_ncomp = self.auto_ncomp)
             oplsda_mod.fit()
 
-            #Score plot
-            oplsda_mod.plot_oplsda_scores(color_dict=marker_color).write_html(path['score_plot'] + name + '_score_plot.html')
-            oplsda_mod.plot_oplsda_scores(color_dict=marker_color).write_image(path['score_plot'] + name + '_score_plot.png')
 
+            if len(df) <= 100:
+                marker_pca_size = 35
+            else:
+                marker_pca_size = 16
+            #Score plot
+            oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_pca_size).write_html(path['score_plot'] + name + '_score_plot.html')
+            oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_pca_size).write_image(path['score_plot'] + name + '_score_plot.png')
+
+            if len(feature_names) >= 100:
+                marker_load_size = 5
+            else:
+                marker_load_size = 20
             #Loading plot
-            oplsda_mod.plot_loading().write_html(path['loading_plot'] + name + '_loading_plot.html')
-            oplsda_mod.plot_loading().write_image(path['loading_plot'] + name + '_loading_plot.png')
+            oplsda_mod.plot_loading(xaxis_title='Features', marker_size=marker_load_size).write_html(path['loading_plot'] + name + '_loading_plot.html')
+            oplsda_mod.plot_loading(xaxis_title='Features', marker_size=marker_load_size).write_image(path['loading_plot'] + name + '_loading_plot.png')
 
             #S plot
-            oplsda_mod.plot_s_scores().write_html(path['s_plot'] + name + '_s_plot.html')
-            oplsda_mod.plot_s_scores().write_image(path['s_plot'] + name + '_s_plot.png')
+            oplsda_mod.plot_s_scores(marker_size=marker_load_size).write_html(path['s_plot'] + name + '_s_plot.html')
+            oplsda_mod.plot_s_scores(marker_size=marker_load_size).write_image(path['s_plot'] + name + '_s_plot.png')
 
             #VIP score plot
             if self.VIP == True:
                 oplsda_mod.vip_scores()
                 oplsda_mod.get_vip_scores().to_csv(path['VIP_scores'] + name + '_VIP_scores.csv')
-                oplsda_mod.vip_plot(threshold=self.VIP_threshold).write_html(path['VIP_score_plot'] + name + '_VIP_score_plot.html')
-                oplsda_mod.vip_plot(threshold=self.VIP_threshold).write_image(path['VIP_score_plot'] + name + '_VIP_score_plot.png')
+                oplsda_mod.vip_plot(threshold=self.VIP_threshold, marker_size=marker_load_size).write_html(path['VIP_score_plot'] + name + '_VIP_score_plot.html')
+                oplsda_mod.vip_plot(threshold=self.VIP_threshold, marker_size=marker_load_size).write_image(path['VIP_score_plot'] + name + '_VIP_score_plot.png')
             else:
                 pass
 
