@@ -140,7 +140,7 @@ class lazy_opls_da:
         for i in dir:
             path[i.split('/')[-2]] = i
 
-        self.color_map = color_map
+
         self.path = path
 
         #Print summary model as table text format
