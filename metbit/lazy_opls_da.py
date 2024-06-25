@@ -21,6 +21,8 @@ class lazy_opls_da:
                     VIP: bool = True, 
                     linear_regression: bool = True) -> None:
 
+
+        from .utility import project_name_generator
         """
         This function takes in a dataframe and a list of y values and returns the project_name model.
         Parameters
