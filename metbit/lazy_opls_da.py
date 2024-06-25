@@ -182,7 +182,6 @@ class lazy_opls_da:
         data = self.data
         n_components = self.n_components
         path = self.path
-        color_map = self.color_map
         scale = self.scale
 
         marker_color = marker_color
