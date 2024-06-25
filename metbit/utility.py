@@ -622,49 +622,47 @@ class Normalise:
         return data
 
 
-class project_name_generator:
+def project_name_generator():
+    #random project name
+    #get random time
+    import random
+    import time
+    # Get local time
+    current_time = time.localtime()
+    # Set format for time
+    time_format = time.strftime('%Y-%m-%d %H:%M:%S', current_time)
+    project_names = [
+                    "QuantumQuest",
+                    "NebulaNet",
+                    "StellarSync",
+                    "AeroPulse",
+                    "CyberCircuit",
+                    "TerraTrack",
+                    "HoloHive",
+                    "PyroPixel",
+                    "LunarLoom",
+                    "ZenithZero",
+                    "BlazeBeacon",
+                    "AquaArise",
+                    "EchoEclipse",
+                    "FusionForge",
+                    "OrbitOpus",
+                    "PrismPortal",
+                    "NimbusNexus",
+                    "AstroArc",
+                    "VoltVoyage",
+                    "OmniOrbit",
+                    "PulsePioneer",
+                    "VortexVoyage",
+                    "GalacticGrid",
+                    "SolarSpectrum",
+                    "Satternlite",
+                    "StarSpectrum",
+                    "SpaceSpectrum",
+                    "GalacticSpectrum"
+                    ]
 
-    def __init__():
-        #random project name
-        #get random time
-        import random
-        import time
-        # Get local time
-        current_time = time.localtime()
-        # Set format for time
-        time_format = time.strftime('%Y-%m-%d %H:%M:%S', current_time)
-        project_names = [
-                        "QuantumQuest",
-                        "NebulaNet",
-                        "StellarSync",
-                        "AeroPulse",
-                        "CyberCircuit",
-                        "TerraTrack",
-                        "HoloHive",
-                        "PyroPixel",
-                        "LunarLoom",
-                        "ZenithZero",
-                        "BlazeBeacon",
-                        "AquaArise",
-                        "EchoEclipse",
-                        "FusionForge",
-                        "OrbitOpus",
-                        "PrismPortal",
-                        "NimbusNexus",
-                        "AstroArc",
-                        "VoltVoyage",
-                        "OmniOrbit",
-                        "PulsePioneer",
-                        "VortexVoyage",
-                        "GalacticGrid",
-                        "SolarSpectrum",
-                        "Satternlite",
-                        "StarSpectrum",
-                        "SpaceSpectrum",
-                        "GalacticSpectrum"
-                        ]
-
-        project_name = time_format + '_' + random.choice(project_names)
-        return project_name
+    project_name = time_format + '_' + random.choice(project_names)
+    return project_name
 
 
