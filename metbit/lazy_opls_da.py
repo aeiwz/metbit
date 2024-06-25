@@ -21,8 +21,16 @@ class lazy_opls_da:
                     VIP: bool = True, 
                     linear_regression: bool = True) -> None:
 
+        import os
+        from glob import glob
+        import pandas as pd
+        import numpy as np
+        import random
+        from metbit import opls_da
 
         from .utility import project_name_generator
+        from .utility import lazypair
+
         """
         This function takes in a dataframe and a list of y values and returns the project_name model.
         Parameters
@@ -162,6 +170,13 @@ class lazy_opls_da:
         from .metbit import opls_da
         from lingress import lin_regression
         from .utility import lazypair
+
+        from glob import glob
+        import pandas as pd
+        import numpy as np
+        import random
+
+
 
      
         data = self.data
