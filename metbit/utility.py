@@ -5,7 +5,7 @@ import pandas as pd
 
 __author__ = "aeiwz"
 
-class unipair:
+class lazypair:
 
     def __init__(self, dataset, column_name):
         
@@ -100,23 +100,22 @@ class unipair:
         #Create object attribute
         self.list_of_df = list_of_df
         return list_of_df
-        
-
-
-
-
-
-import sys
-import os
-import re
-import shutil
-from glob import glob
-import pandas as pd
-
-
-
 
 class gen_page:
+
+
+
+
+
+    import sys
+    import os
+    import re
+    import shutil
+    from glob import glob
+    import pandas as pd
+
+
+
 
     def __init__(self, data_path):
         '''
@@ -464,8 +463,7 @@ class Normality_distribution:
             plt.show()
 
         return plt
-
-        
+      
 
 class Normalise:
 
@@ -511,7 +509,6 @@ class Normalise:
 
 
     def pqn_normalise(self, plot: bool = True):
-
         import numpy as np
         import pandas as pd
         import matplotlib.pyplot as plt
@@ -522,7 +519,8 @@ class Normalise:
         ----------
         data: pandas dataframe
             The dataframe to be used.
-        Normalise(data).pqn_normalise()
+        plot: bool, optional
+            Whether to plot the histograms of normalization factors and fold changes.
         """
         data = self.data
         features = data.columns
@@ -533,31 +531,30 @@ class Normalise:
         # PQN normalisation with median
         pqn_coef = foldChangeMatrix.median(axis=1)
 
-        norm_df = df.div(pqn_coef, axis=0)
+        norm_df = data.div(pqn_coef, axis=0)
 
         norm_df.columns = features
-        norm_df.index = data.index
+        norm_df.index = data.index   
 
         if plot:
             plt.figure()
             plt.hist(1/pqn_coef, bins=25)
             plt.xlabel("1/PQN Coefficient")
-            plt.ylabel('Counts')
+            plt.ylabel('Frequency')
             plt.title("Distribution of Normalisation factors")
             plt.show()
 
-            #Truncate extreme values to narrow histogram range
+            # Truncate extreme values to narrow histogram range
             sample_to_plot = np.random.randint(0, data.shape[0])
             idx_to_plot = ((foldChangeMatrix.iloc[sample_to_plot, :] <= 5) & (foldChangeMatrix.iloc[sample_to_plot, :] >= -5 ))
 
-
             plt.figure()
-            plt.title('Fold change to reference for sample: {0}'.format(sample_to_plot))
+            plt.title(f'Fold change to reference for sample: {sample_to_plot}')
             plt.xlabel("Fold Change to median")
-            plt.ylabel("Counts")
+            plt.ylabel("Frequency")
             plt.hist(foldChangeMatrix.loc[sample_to_plot, idx_to_plot], bins=100)
             plt.show()
-
+        
         return norm_df
 
     def decimal_place_normalisation(self, decimals: int = 2):
@@ -623,4 +620,287 @@ class Normalise:
         data = (data - mean) / std
         
         return data
+
+
+class project_name_generator:
+
+    def __init__():
+        #random project name
+        #get random time
+        import random
+        import time
+        # Get local time
+        current_time = time.localtime()
+        # Set format for time
+        time_format = time.strftime('%Y-%m-%d %H:%M:%S', current_time)
+        project_names = [
+                        "QuantumQuest",
+                        "NebulaNet",
+                        "StellarSync",
+                        "AeroPulse",
+                        "CyberCircuit",
+                        "TerraTrack",
+                        "HoloHive",
+                        "PyroPixel",
+                        "LunarLoom",
+                        "ZenithZero",
+                        "BlazeBeacon",
+                        "AquaArise",
+                        "EchoEclipse",
+                        "FusionForge",
+                        "OrbitOpus",
+                        "PrismPortal",
+                        "NimbusNexus",
+                        "AstroArc",
+                        "VoltVoyage",
+                        "OmniOrbit",
+                        "PulsePioneer",
+                        "VortexVoyage",
+                        "GalacticGrid",
+                        "SolarSpectrum",
+                        "Satternlite",
+                        "StarSpectrum",
+                        "SpaceSpectrum",
+                        "GalacticSpectrum"
+                        ]
+
+        project_name = time_format + '_' + random.choice(project_names)
+        return project_name
+
+
+class lazy_opls_da:
+
+    
+    import os
+    from glob import glob
+    import pandas as pd
+    import numpy as np
+    import random
+    from metbit import opls_da
+
+    from metbit import project_name_generator
+    
+
+    def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, n_components: int = 2, scaling: str = 'pareto', 
+                    estimator: str = 'opls', kfold: int = 3, random_state: int = 94, auto_ncomp: bool = True,  
+                    permutation: bool = True, 
+                    VIP: bool = True, 
+                    linear_regression: bool = True) -> None:
+
+        """
+        This function takes in a dataframe and a list of y values and returns the project_name model.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        y: list
+            The list of y values.
+
+        n_components: int
+            The number of components to use.
+        lazy_opls_da(data, y, n_components).fit()
+        """
+
+
+        self.groups = groups
+        self.n_components = n_components
+        self.working_dir = working_dir
+
+        self.random_state = random_state        
+        self.estimator = estimator
+        self.scale = scaling
+        self.kfold = kfold
+        self.auto_ncomp = auto_ncomp
+        
+
+        data['Class'] = groups
+        self.data = data
+
+        self.permutation = permutation
+        if permutation == True:
+            self.n_permutataion = int(input('Enter the number of permutation: '))
+            self.n_jobs = int(input('Enter the number of jobs: '))
+        else:
+            pass
+        
+        self.VIP = VIP
+        if VIP == True:
+            self.VIP_threshold = float(input('Enter the VIP threshold: '))
+
+        self.linear_regression = linear_regression
+        if linear_regression == True:
+            self.FC_threshold = float(input('Enter the fold change threshold: '))
+            self.p_val_threshold = float(input('Enter the p-value threshold: '))
+
+        """
+        This function takes in a dataframe and a list of y values and returns the project_name model.
+        Parameters
+        ----------
+        data: pandas dataframe
+            The dataframe to be used.
+        y: list
+            The list of y values.
+        n_components: int
+            The number of components to use.
+        lazy_opls_da(data, y, n_components).fit()
+        """
+        
+        project_name = project_name_generator()
+        
+
+        #Remove last / from working_dir
+        if working_dir[-1] == '/':
+            working_dir = working_dir[:-1]
+        else:
+            working_dir = working_dir
+
+        #Replace \ with / for windows
+        working_dir = working_dir.replace('\\', '/')
+
+
+        if os.path.exists(working_dir + '/' + project_name + '/element'):
+            print('Directory already exist')
+        else:
+            folder_name_plot = ['loading_plot', 's_plot', 'score_plot']
+            folder_name_data = []
+            if permutation == True:
+                folder_name_plot.append('hist_plot')
+            else:
+                pass
+            if VIP == True:
+                folder_name_plot.append('VIP_score_plot')
+                folder_name_data.append('VIP_scores')
+            else:
+                pass
+            if linear_regression == True:
+                folder_name_plot.append('Volcano_plot')
+                folder_name_data.append('Lingress_data')
+            else:
+                pass
+
+
+
+            os.makedirs(working_dir+'/' + project_name + '/element', exist_ok=True)
+            for i in folder_name_plot:
+                os.makedirs(working_dir+'/' + project_name + '/element/plots/' + i, exist_ok=True)
+            for i in folder_name_data:
+                os.makedirs(working_dir+'/' + project_name + '/element/data/' + i, exist_ok=True)
+
+            os.makedirs(working_dir+'/' + project_name + '/main')
+
+        #Create dictionary to store the path
+        dir = glob(working_dir + '/' + project_name + '/element/*/*/')
+
+        #Create dictionary to store the path
+        path = {}
+        for i in dir:
+            path[i.split('/')[-2]] = i
+
+        self.color_map = color_map
+        self.path = path
+
+        #Print summary model as table text format
+        Summary = f"""
+        Project Name: {project_name}
+        Number of groups: {len(data['Class'].unique())}
+        Number of samples: {len(data)}
+        Number of features: {len(data.columns) - 1}
+        Number of components: {n_components}
+        Estimator: {estimator}
+        Scaling: {scaling}
+        Kfold: {kfold}
+        Random state: {random_state}
+        Auto ncomp: {auto_ncomp}
+        Working directory: {working_dir}
+        Permutation: {permutation}
+        VIP: {VIP}
+        Linear regression: {linear_regression}
+        """
+
+        return print(Summary)
+
+
+
+    def fit(self, marker_color: dict = None) -> None:
+
+        from metbit import opls_da
+        from lingress import lin_regression
+        from metbit import lazypair
+
+     
+        data = self.data
+        n_components = self.n_components
+        path = self.path
+        color_map = self.color_map
+        scale = self.scale
+
+        marker_color = marker_color
+
+
+        #Create object attribute
+        lazy = lazypair(data, 'Class')
+        data_list = lazy.get_dataset()
+        name_save = lazy.get_name()
+
+        for i in range(len(data_list)):
+            
+            df = data_list[i]
+            name = name_save[i]
+
+            X = df.drop('Class', axis=1)
+            y = df['Class']
+            feature_names = X.columns
+            # Check if feature names can be converted to float
+            try:
+                feature_names = feature_names(float).tolist()
+            except:
+                feature_names = feature_names.tolist()
+
+            #OPLS-DA
+            oplsda_mod = opls_da(X=X, y=y, features_name = feature_names, n_components=n_components, scale=scale, 
+                                    estimator=self.estimator, kfold=self.kfold, random_state=self.random_state, 
+                                    auto_ncomp = self.auto_ncomp)
+            oplsda_mod.fit()
+
+            #Score plot
+            oplsda_mod.plot_oplsda_scores(color_dict=marker_color).write_html(path['score_plot'] + name + '_score_plot.html')
+            oplsda_mod.plot_oplsda_scores(color_dict=marker_color).write_image(path['score_plot'] + name + '_score_plot.png')
+
+            #Loading plot
+            oplsda_mod.plot_loading().write_html(path['loading_plot'] + name + '_loading_plot.html')
+            oplsda_mod.plot_loading().write_image(path['loading_plot'] + name + '_loading_plot.png')
+
+            #S plot
+            oplsda_mod.plot_s_scores().write_html(path['s_plot'] + name + '_s_plot.html')
+            oplsda_mod.plot_s_scores().write_image(path['s_plot'] + name + '_s_plot.png')
+
+            #VIP score plot
+            if self.VIP == True:
+                oplsda_mod.vip_scores()
+                oplsda_mod.get_vip_scores().to_csv(path['VIP_scores'] + name + '_VIP_scores.csv')
+                oplsda_mod.vip_plot(threshold=self.VIP_threshold).write_html(path['VIP_score_plot'] + name + '_VIP_score_plot.html')
+                oplsda_mod.vip_plot(threshold=self.VIP_threshold).write_image(path['VIP_score_plot'] + name + '_VIP_score_plot.png')
+            else:
+                pass
+
+            #Permutation test
+            if self.permutation == True:
+                oplsda_mod.permutation_test(n_permutations=self.n_permutataion, n_jobs=self.n_jobs)
+                oplsda_mod.plot_hist().write_html(path['hist_plot'] + name + '_hist_plot.html')
+                oplsda_mod.plot_hist().write_image(path['hist_plot'] + name + '_hist_plot.png')
+            else:
+                pass
+
+            #Linear regression
+            if self.linear_regression == True:
+                lin_ = lin_regression(x=X, target=y, label=y, features_name=feature_names)
+                lin_.create_dataset()
+                lin_.fit_model(adj_method='fdr_bh')
+                lin_.volcano_plot(fc_cut_off=self.FC_threshold, p_val_cut_off=self.p_val_threshold).write_html(path['Volcano_plot'] + name + '_Volcano_plot.html')
+                lin_.volcano_plot(fc_cut_off=self.FC_threshold, p_val_cut_off=self.p_val_threshold).write_image(path['Volcano_plot'] + name + '_Volcano_plot.png')
+                lin_.report().to_csv(path['Lingress_data'] + name + '_Lingress_data.csv', index=False)
+            else:
+                pass
+        
+        return print('Model has been fitted successfully')
 
