@@ -1511,17 +1511,17 @@ class pca:
 
         ----------
         '''
-
+        pc = pc
         df_loadings_ = self.df_loadings_
 
         loadings_label = self.features_name
         df_loadings_['Features'] = loadings_label
 
 
-        fig = px.line(df_loadings_, x=loadings_label, y=pc,
+        fig = px.scatter(df_loadings_, x='Features', y=pc,
                                 height=fig_height, width=fig_width,
                                 title='Loadings plot',
-                                hover_data={'Features':True, pc[0]:True, pc[1]:True},)
+                                hover_data={'Features':True, pc[0]:True, pc[1]:True})
 
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
