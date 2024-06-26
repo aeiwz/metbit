@@ -1,4 +1,4 @@
-# --*-- co
+# -*- coding: utf-8 -*-
 
 
 class lazy_opls_da:
