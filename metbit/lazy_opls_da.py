@@ -62,7 +62,7 @@ class lazy_opls_da:
 
         self.permutation = permutation
         if permutation == True:
-            self.n_permutataion = int(input('Enter the number of permutation: '))
+            self.n_permutation = int(input('Enter the number of permutation: '))
             self.n_jobs = int(input('Enter the number of jobs: '))
         else:
             pass
@@ -157,9 +157,14 @@ class lazy_opls_da:
         Auto ncomp: {auto_ncomp}
         Working directory: {working_dir}
         Permutation: {permutation}
+        Number of permutation: {n_permutation if permutation else 'None'}
         VIP: {VIP}
+        VIP threshold: {VIP_threshold if VIP else 'None'}
         Linear regression: {linear_regression}
+        Fold change threshold: {FC_threshold if linear_regression else 'None'}
+        P-value threshold: {p_val_threshold if linear_regression else 'None'}
         """
+
 
         return print(Summary)
 
@@ -244,7 +249,7 @@ class lazy_opls_da:
 
             #Permutation test
             if self.permutation == True:
-                oplsda_mod.permutation_test(n_permutations=self.n_permutataion, n_jobs=self.n_jobs)
+                oplsda_mod.permutation_test(n_permutations=self.n_permutation, n_jobs=self.n_jobs)
                 oplsda_mod.plot_hist().write_html(path['hist_plot'] + name + '_hist_plot.html')
                 oplsda_mod.plot_hist().write_image(path['hist_plot'] + name + '_hist_plot.png')
             else:
