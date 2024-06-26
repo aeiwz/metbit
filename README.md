@@ -56,7 +56,7 @@ pca_mod.fit()
 ```python
 pca_mod.plot_pca_scores(pc=["PC1", "PC2"], symbol_=symbol_).write_html("pca_scores[PC1-PC2].html")
 ```
-![plot](https://github.com/aeiwz/metbit/blob/main/src/img/pca_scores%5BPC1-PC2%5D.html)
+![score plot 1](./src/img/)
 
 
 # OPLS-DA model
