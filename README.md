@@ -104,7 +104,7 @@ pca_mod.plot_3d_pca(marker_size=10, symbol_=symbol_).write_image("3d_pca.svg")
 ```
 Output:
 
-[3D plot](./src/img/3d_pca.svg)
+![3D plot](./src/img/3d_pca.svg)
 
 To observe time series of PCA you can perform times trajectory plot use function plot_trajectory
 
