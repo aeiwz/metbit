@@ -1520,8 +1520,7 @@ class pca:
 
         fig = px.scatter(df_loadings_, x='Features', y=pc,
                                 height=fig_height, width=fig_width,
-                                title='Loadings plot',
-                                hover_data={'Features':True, pc[0]:True, pc[1]:True})
+                                title='Loadings plot')
 
         fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
         fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
