@@ -56,7 +56,7 @@ pca_mod.fit()
 ```python
 pca_mod.plot_pca_scores(pc=["PC1", "PC2"], symbol_=symbol_).write_html("pca_scores[PC1-PC2].html")
 ```
-![score plot 1](./src/img/)
+![score plot 1](./src/img/pca_scores[PC1-PC2].svg)
 
 
 # OPLS-DA model
