@@ -91,7 +91,7 @@ pca_mod.plot_pca_scores(pc=["PC1", "PC2"], symbol_=symbol_)
 Output:
 ![PCA scores plot](./src/img/pca_scores[PC1-PC2].svg)
 
-
+```python
 pca_mod.plot_pca_scores(pc=["PC1", "PC3"], symbol_=symbol_).write_image("pca_scores[PC1-PC3].svg")
 ```
 Output:
