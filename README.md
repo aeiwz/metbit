@@ -58,9 +58,13 @@ Output:
 ## **Assign object to perform PCA**
 
 X: data frame of features to test
+
 features_name: features name of X data frame
+
 color_: series of group to label with color
+
 symbol_: series of time point to label with symbol
+
 time_order: assign order of symbol
 
 ``` python
@@ -92,7 +96,7 @@ Output:
 ![PCA scores plot](./src/img/pca_scores[PC1-PC2].svg)
 
 ```python
-pca_mod.plot_pca_scores(pc=["PC1", "PC3"], symbol_=symbol_).write_image("pca_scores[PC1-PC3].svg")
+pca_mod.plot_pca_scores(pc=["PC1", "PC3"], symbol_=symbol_)
 ```
 Output:
 
@@ -100,7 +104,7 @@ Output:
 
 
 ``` python
-pca_mod.plot_3d_pca(marker_size=10, symbol_=symbol_).write_image("3d_pca.svg")
+pca_mod.plot_3d_pca(marker_size=10, symbol_=symbol_)
 ```
 Output:
 
