@@ -158,12 +158,12 @@ class lazy_opls_da:
         Working directory: {working_dir}
         Output directory: {working_dir}/{project_name}
         Permutation: {permutation}
-        Number of permutation: {n_permutation if permutation else 'None'}
+        Number of permutation: {self.n_permutation if permutation else 'None'}
         VIP: {VIP}
-        VIP threshold: {VIP_threshold if VIP else 'None'}
+        VIP threshold: {self.VIP_threshold if VIP else 'None'}
         Linear regression: {linear_regression}
-        Fold change threshold: {FC_threshold if linear_regression else 'None'}
-        P-value threshold: {p_val_threshold if linear_regression else 'None'}
+        Fold change threshold: {self.FC_threshold if linear_regression else 'None'}
+        P-value threshold: {self.p_val_threshold if linear_regression else 'None'}
         """
 
 
