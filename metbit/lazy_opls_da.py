@@ -156,6 +156,7 @@ class lazy_opls_da:
         Random state: {random_state}
         Auto ncomp: {auto_ncomp}
         Working directory: {working_dir}
+        Output directory: {working_dir}/{project_name}
         Permutation: {permutation}
         Number of permutation: {n_permutation if permutation else 'None'}
         VIP: {VIP}
