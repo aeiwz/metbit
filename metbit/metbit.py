@@ -308,6 +308,38 @@ class opls_da:
         duration = T2 - T1
 
         return print(f'OPLS-DA model is fitted in {duration} seconds')
+
+    def get_oplsda_scores(self):
+            
+        '''
+        Get OPLS-DA scores
+        '''
+        df_opls_scores = self.df_opls_scores
+        return df_opls_scores
+    
+    def get_s_scores(self):
+                
+        '''
+        Get S scores
+        '''
+        s_df_scores_ = self.s_df_scores_
+        return s_df_scores_
+
+    def get_oplsda_model(self):
+        
+        '''
+        Get OPLS-DA model
+        '''
+        oplsda = self.oplsda
+        return oplsda
+
+    def get_cv_model(self):
+
+        '''
+        Get cross-validation model
+        '''
+        cv_model = self.cv_model
+        return cv_model
     
 
 
@@ -355,7 +387,13 @@ class opls_da:
         
         return print(f'Permutation test is performed in {duration} {unit}')
         
+    def get_permutation_scores(self):
         
+        '''
+        Get permutation scores
+        '''
+        permutation_scores = self.permutation_scores
+        return permutation_scores
     
     def vip_scores(self, model=None, features_name = None):
         

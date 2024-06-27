@@ -106,9 +106,12 @@ class lazy_opls_da:
             print('Directory already exist')
         else:
             folder_name_plot = ['loading_plot', 's_plot', 'score_plot']
-            folder_name_data = []
+
+            folder_name_data = ['Score_data', 'Loading_data']
+
             if permutation == True:
                 folder_name_plot.append('hist_plot')
+                folder_name_data.append('Permutation_scores')
             else:
                 pass
             if VIP == True:
@@ -227,6 +230,9 @@ class lazy_opls_da:
             oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_pca_size).write_html(path['score_plot'] + name + '_score_plot.html')
             oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_pca_size).write_image(path['score_plot'] + name + '_score_plot.png')
 
+            oplsda_mod.get_oplsda_scores().to_csv(path['Score_data'] + name + '_score_data.csv', index=False)
+            oplsda_mod.get_s_scores().to_csv(path['Loading_data'] + name + '_loading_data.csv', index=False)
+
             if len(feature_names) >= 100:
                 marker_load_size = 5
             else:
@@ -253,6 +259,7 @@ class lazy_opls_da:
                 oplsda_mod.permutation_test(n_permutations=self.n_permutation, n_jobs=self.n_jobs)
                 oplsda_mod.plot_hist().write_html(path['hist_plot'] + name + '_hist_plot.html')
                 oplsda_mod.plot_hist().write_image(path['hist_plot'] + name + '_hist_plot.png')
+                oplsda_mod.get_permutation_scores().to_csv(path['Permutation_scores'] + name + '_permutation_scores.csv', index=False)
             else:
                 pass
 
