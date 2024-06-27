@@ -259,7 +259,9 @@ class lazy_opls_da:
                 oplsda_mod.permutation_test(n_permutations=self.n_permutation, n_jobs=self.n_jobs)
                 oplsda_mod.plot_hist().write_html(path['hist_plot'] + name + '_hist_plot.html')
                 oplsda_mod.plot_hist().write_image(path['hist_plot'] + name + '_hist_plot.png')
-                oplsda_mod.get_permutation_scores().to_csv(path['Permutation_scores'] + name + '_permutation_scores.csv', index=False)
+                permutation_score_np = oplsda_mod.get_permutation_scores()
+                permutation_score_df = pd.DataFrame(permutation_score_np, columns=['Permutation_scores'])
+                permutation_score_df.to_csv(path['Permutation_scores'] + name + '_permutation_scores.csv', index=False)
             else:
                 pass
 
