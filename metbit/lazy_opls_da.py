@@ -74,7 +74,7 @@ class lazy_opls_da:
         self.linear_regression = linear_regression
         if linear_regression == True:
             self.FC_threshold = float(input('Enter the fold change threshold: '))
-            self.p_val_threshold = float(input('Enter the p-value threshold: '))
+            self.p_val_threshold = float(input('Enter the -log10 p-value threshold: '))
 
         """
         This function takes in a dataframe and a list of y values and returns the project_name model.
