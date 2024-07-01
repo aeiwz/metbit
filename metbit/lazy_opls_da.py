@@ -174,7 +174,7 @@ class lazy_opls_da:
 
 
 
-    def fit(self, marker_color: dict = None) -> None:
+    def fit(self, marker_color: dict = None, custom_color: list = None, custom_shape: list = None, symbol_dict: dict = None) -> None:
 
         from .metbit import opls_da
         from lingress import lin_regression
@@ -193,8 +193,29 @@ class lazy_opls_da:
         path = self.path
         scale = self.scale
 
-        marker_color = marker_color
+        if marker_color == None:
+            marker_color = {}
+            for i in data['Class'].unique():
+                marker_color[i] = '#' + ''.join([random.choice('0123456789ABCDEF') for j in range(6)])
+        else:
+            marker_color = marker_color
 
+        if custom_color == None:
+            data['color'] = data['Class']
+        else:
+            data['color'] = custom_color
+
+        if custom_shape == None:
+            data['shape'] = data['Class']
+        else:
+            data['shape'] = custom_shape
+
+        if symbol_dict == None:
+            symbol_dict = {}
+            for i in data['Class'].unique():
+                symbol_dict[i] = 'circle'
+        else:
+            symbol_dict = symbol_dict
 
         #Create object attribute
         lazy = lazypair(data, 'Class')
@@ -206,7 +227,7 @@ class lazy_opls_da:
             df = data_list[i]
             name = name_save[i]
 
-            X = df.drop('Class', axis=1)
+            X = df.drop(['Class', 'color', 'shape'], axis=1)
             y = df['Class']
             feature_names = X.columns
             # Check if feature names can be converted to float
@@ -223,12 +244,21 @@ class lazy_opls_da:
 
 
             if len(df) <= 100:
-                marker_pca_size = 35
+                marker_score_size = 35
             else:
-                marker_pca_size = 16
+                marker_score_size = 16
+            
             #Score plot
-            oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_pca_size).write_html(path['score_plot'] + name + '_score_plot.html')
-            oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_pca_size).write_image(path['score_plot'] + name + '_score_plot.png')
+            if custom_color != None and custom_shape != None:
+                oplsda_mod.plot_oplsda_scores(color_ = df['color'], symbol_=df['symbol'], color_dict=marker_color, symbol_dict=symbol_dict, marker_size=marker_score_size).write_html(path['score_plot'] + name + '_score_plot.html')
+
+                oplsda_mod.plot_oplsda_scores(color_ = df['color'], symbol_=df['symbol'], color_dict=marker_color, symbol_dict=symbol_dict, marker_size=marker_score_size).write_image(path['score_plot'] + name + '_score_plot.png')
+
+            else:
+                oplsda_mod.plot_oplsda_scores(marker_size=marker_score_size).write_html(path['score_plot'] + name + '_score_plot.html')
+                oplsda_mod.plot_oplsda_scores(marker_size=marker_score_size).write_image(path['score_plot'] + name + '_score_plot.png')
+
+            
 
             oplsda_mod.get_oplsda_scores().to_csv(path['Score_data'] + name + '_score_data.csv', index=False)
             oplsda_mod.get_s_scores().to_csv(path['Loading_data'] + name + '_loading_data.csv', index=False)
