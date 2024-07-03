@@ -210,7 +210,8 @@ class lazy_opls_da:
         if symbol_dict is None:
             symbol_dict = {}
             for i in data['Class'].unique():
-                symbol_dict[i] = 'circle'
+                #random symbol from plotly symbol
+                symbol_dict[i] = random.choice(plotly.colors.qualitative.Plotly)
         else:
             symbol_dict = symbol_dict
 

@@ -307,7 +307,20 @@ class opls_da:
         
         duration = T2 - T1
 
-        return print(f'OPLS-DA model is fitted in {duration} seconds')
+        summary_model = f'''
+        Comparison of {y.unique()[0]} and {y.unique()[1]}
+        Sample size: {X.shape[0]}
+        Number of features: {X.shape[1]}
+        Number of components: {n_components}
+        Method of scaling: {scale}
+        OPLS-DA model is fitted in {duration} seconds
+        R2Xcorr: {R2Xcorr}
+        R2y: {R2y}
+        Q2: {q2}
+        '''
+
+
+        return print(summary_model)
 
     def get_oplsda_scores(self):
             
