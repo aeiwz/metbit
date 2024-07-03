@@ -262,7 +262,7 @@ lazy_mod = lazy_opls_da(data=X, groups=y,working_dir=working_dir, auto_ncomp=Tru
             Kfold: 3
             Random state: 94
             Auto ncomp: True
-            Working directory: /path/to/working/directory/metbit tutorial
+            Working directory: /path/to/working/directory/2024-06-26 13:34:49_PulsePioneer
             Permutation: True
             VIP: True
             Linear regression: True
