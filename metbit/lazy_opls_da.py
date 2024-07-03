@@ -174,7 +174,7 @@ class lazy_opls_da:
 
 
 
-    def fit(self, marker_color: dict = None, custom_color: list = None, custom_shape: list = None, symbol_dict: dict = None) -> None:
+    def fit(self, marker_color: dict = None, custom_color: list = None, custom_shape: list = None, symbol_dict: dict = None, custom_legend_name = ['Group', 'Sub-group']) -> None:
 
         from .metbit import opls_da
         from lingress import lin_regression
@@ -259,11 +259,11 @@ class lazy_opls_da:
             
             #Score plot
             if custom_shape is not None:
-                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size).write_html(path['score_plot'] + name + '_score_plot.html')
-                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size).write_image(path['score_plot'] + name + '_score_plot.png')
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, legend_name=custom_legend_name).write_html(path['score_plot'] + name + '_score_plot.html')
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, legend_name=custom_legend_name).write_image(path['score_plot'] + name + '_score_plot.png')
             else:
-                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size).write_html(path['score_plot'] + name + '_score_plot.html')
-                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size).write_image(path['score_plot'] + name + '_score_plot.png')
+                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, legend_name=custom_legend_name).write_html(path['score_plot'] + name + '_score_plot.html')
+                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, legend_name=custom_legend_name).write_image(path['score_plot'] + name + '_score_plot.png')
 
 
             oplsda_mod.get_oplsda_scores().to_csv(path['Score_data'] + name + '_score_data.csv', index=False)
