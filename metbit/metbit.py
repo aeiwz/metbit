@@ -302,7 +302,7 @@ class opls_da:
         
         self.oplsda = oplsda
         self.cv_model = cv_model
-        
+
         T2 = time.time()
         
         duration = T2 - T1
@@ -508,15 +508,12 @@ class opls_da:
         s_df_scores_ = self.s_df_scores_
 
         
-
-        
-        
         # add scatter plot of VIP score
         import plotly.express as px
         vips = self.vips
 
         if vip_transform == True:
-            vips['VIP'] = vips['VIP'] * np.sign(np.ravel(s_df_scores_['correlation']))
+            vips['VIP'] = vips['VIP'] * np.sign(np.ravel(s_df_scores_['covariance']))
             vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}", 
                                 np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", 
                                 "Under cut off"))
