@@ -198,14 +198,14 @@ class lazy_opls_da:
             marker_color = marker_color
 
         if custom_color is None:
-            data['color'] = data['Class']
+            data['Group'] = data['Class']
         else:
-            data['color'] = custom_color
+            data['Group'] = custom_color
 
         if custom_shape is None:
-            data['shape'] = data['Class']
+            data['Sub-group'] = data['Class']
         else:
-            data['shape'] = custom_shape
+            data['Sub-group'] = custom_shape
 
         if symbol_dict is None:
             symbol_dict = {}
@@ -225,9 +225,9 @@ class lazy_opls_da:
             df = data_list[i]
             name = name_save[i]
 
-            X = df.copy()
-            X.drop(['Class', 'color', 'shape'], axis=1)
-            y = df['Class']
+            meta = df.loc[:, ['Class', 'Group', 'Sub-group']]
+            X = df.drop(['Class', 'Group', 'Sub-group'], axis=1)
+            y = meta['Class']
             feature_names = X.columns
             # Check if feature names can be converted to float
             try:
@@ -249,8 +249,8 @@ class lazy_opls_da:
             
             #Score plot
             if custom_shape is not None:
-                oplsda_mod.plot_oplsda_scores(color_=df['color'], color_dict=marker_color, symbol_=df['shape'], symbol_dict=symbol_dict, marker_size=marker_score_size).write_html(path['score_plot'] + name + '_score_plot.html')
-                oplsda_mod.plot_oplsda_scores(color_=df['color'], color_dict=marker_color, symbol_=df['shape'], symbol_dict=symbol_dict, marker_size=marker_score_size).write_image(path['score_plot'] + name + '_score_plot.png')
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size).write_html(path['score_plot'] + name + '_score_plot.html')
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size).write_image(path['score_plot'] + name + '_score_plot.png')
             else:
                 oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size).write_html(path['score_plot'] + name + '_score_plot.html')
                 oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size).write_image(path['score_plot'] + name + '_score_plot.png')
