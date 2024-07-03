@@ -190,24 +190,24 @@ class lazy_opls_da:
         path = self.path
         scale = self.scale
 
-        if marker_color == None:
+        if marker_color is None:
             marker_color = {}
             for i in data['Class'].unique():
                 marker_color[i] = plotly.colors.qualitative.Plotly[i]
         else:
             marker_color = marker_color
 
-        if custom_color == None:
+        if custom_color is None:
             data['color'] = data['Class']
         else:
             data['color'] = custom_color
 
-        if custom_shape == None:
+        if custom_shape is None:
             data['shape'] = data['Class']
         else:
             data['shape'] = custom_shape
 
-        if symbol_dict == None:
+        if symbol_dict is None:
             symbol_dict = {}
             for i in data['Class'].unique():
                 symbol_dict[i] = 'circle'
