@@ -192,6 +192,13 @@ class lazy_opls_da:
         path = self.path
         scale = self.scale
 
+        from plotly.validators.scatter.marker import SymbolValidator
+        raw_symbols = SymbolValidator().values
+        namestems = []
+        for i in range(0,len(raw_symbols),3):
+            name = raw_symbols[i+2]
+            namestems.append(name)
+
         if marker_color is None:
             marker_color = {}
             for i in data['Class'].unique():
@@ -213,7 +220,7 @@ class lazy_opls_da:
             symbol_dict = {}
             for i in data['Class'].unique():
                 #random symbol from plotly symbol
-                symbol_dict[i] = random.choice(plotly.graph_objects.scatter.marker.Symbol)
+                symbol_dict[i] = random.choice(namestems)
         else:
             symbol_dict = symbol_dict
 
