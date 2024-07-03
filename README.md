@@ -262,7 +262,7 @@ lazy_mod = lazy_opls_da(data=X, groups=y,working_dir=working_dir, auto_ncomp=Tru
             Kfold: 3
             Random state: 94
             Auto ncomp: True
-            Working directory: /Volumes/CAS9/Aeiwz/test flight/metbit tutorial
+            Working directory: /path/to/working/directory/metbit tutorial
             Permutation: True
             VIP: True
             Linear regression: True
