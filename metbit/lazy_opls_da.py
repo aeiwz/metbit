@@ -184,6 +184,8 @@ class lazy_opls_da:
         import pandas as pd
         import numpy as np
         import random
+        import plotly
+
      
         data = self.data
         n_components = self.n_components
@@ -211,7 +213,7 @@ class lazy_opls_da:
             symbol_dict = {}
             for i in data['Class'].unique():
                 #random symbol from plotly symbol
-                symbol_dict[i] = random.choice(plotly.colors.qualitative.Plotly)
+                symbol_dict[i] = random.choice(plotly.graph_objects.scatter.marker.Symbol)
         else:
             symbol_dict = symbol_dict
 
