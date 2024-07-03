@@ -225,7 +225,8 @@ class lazy_opls_da:
             df = data_list[i]
             name = name_save[i]
 
-            X = df.drop(['Class', 'color', 'shape'], axis=1)
+            X = df.copy()
+            X.drop(['Class', 'color', 'shape'], axis=1)
             y = df['Class']
             feature_names = X.columns
             # Check if feature names can be converted to float
