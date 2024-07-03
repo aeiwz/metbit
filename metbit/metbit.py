@@ -630,33 +630,34 @@ class opls_da:
         else:
             symbol_dict = None
 
-
-
         df_opls_scores = self.df_opls_scores
 
         if color_ is not None:
             df_opls_scores['Group'] = color_
-        else:
-            df_opls_scores['Group'] = self.y
+        
 
         if symbol_ is not None:
             df_opls_scores['symbol'] = symbol_
             
         df_opls_scores['Index'] = df_opls_scores.index
         
-        
+
         #If user not input color_dict then get unique of label and create color_dict
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_opls_scores['Group'].unique()))}
+            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_opls_scores['Group'].unique())}
             
 
-        #new color_dict to match with unique label
-        group_unique = df_opls_scores['Group'].unique()
-        #change key of color_dict to match with unique label
-        color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
-        
+        # Create a new color dictionary to match with unique labels
+        color_dict_2 = {}
+        for group in df_opls_scores['Group'].unique():
+            if group in color_dict:
+                color_dict_2[group] = color_dict[group]
+            else:
+                # Assign a default color if the label is not found in the original color_dict
+                color_dict_2[group] = px.colors.qualitative.Plotly[len(color_dict_2) % len(px.colors.qualitative.Plotly)]
+
 
         
         from .pca_ellipse import confidence_ellipse
