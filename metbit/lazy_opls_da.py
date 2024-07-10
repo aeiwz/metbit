@@ -15,7 +15,7 @@ class lazy_opls_da:
     from .utility import lazypair
     
 
-    def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, n_components: int = 2, scaling: str = 'pareto', 
+    def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_names: list = None, n_components: int = 2, scaling: str = 'pareto', 
                     estimator: str = 'opls', kfold: int = 3, random_state: int = 94, auto_ncomp: bool = True,  
                     permutation: bool = True, 
                     VIP: bool = True, 
@@ -49,6 +49,7 @@ class lazy_opls_da:
         self.groups = groups
         self.n_components = n_components
         self.working_dir = working_dir
+        self.feature_names = feature_names
 
         self.random_state = random_state        
         self.estimator = estimator
@@ -191,6 +192,7 @@ class lazy_opls_da:
         n_components = self.n_components
         path = self.path
         scale = self.scale
+        feature_names = self.feature_names
 
         from plotly.validators.scatter.marker import SymbolValidator
         raw_symbols = SymbolValidator().values
@@ -237,13 +239,15 @@ class lazy_opls_da:
 
             meta = df.loc[:, ['Class', 'Group', 'Sub-group']]
             X = df.drop(['Class', 'Group', 'Sub-group'], axis=1)
+            if feature_names is None:
+                try:
+                    feature_names = X.columns.astype(float).to_list()
+                except:
+                    feature_names = X.columns.to_list()
+            else: 
+                feature_names = feature_names
             y = meta['Class']
-            feature_names = X.columns
-            # Check if feature names can be converted to float
-            try:
-                feature_names = feature_names(float).tolist()
-            except:
-                feature_names = feature_names.tolist()
+
 
             #OPLS-DA
             oplsda_mod = opls_da(X=X, y=y, features_name = feature_names, n_components=n_components, scale=scale, 
