@@ -288,6 +288,7 @@ class opls_da:
         s_df_scores_ = pd.DataFrame({'correlation': cv_model.correlation,'covariance': cv_model.covariance}, index=features_name)
         df_opls_scores = pd.DataFrame({'t_scores': cv_model.scores, 't_ortho': cv_model.orthogonal_score, 't_pred': cv_model.predictive_score, 'Group': y})
 
+        
 
         R2Xcorr = cv_model.R2Xcorr
         R2y = cv_model.R2y
@@ -512,8 +513,11 @@ class opls_da:
         import plotly.express as px
         vips = self.vips
 
+        oplsda = self.oplsda
+        coef_ = oplsda.coef_
+
         if vip_transform == True:
-            vips['VIP'] = vips['VIP'] * np.sign(np.ravel(s_df_scores_['covariance']))
+            vips['VIP'] = vips['VIP'] * np.sign(np.ravel(coef_))
             vips['threshold'] = np.where(vips['VIP'] >= threshold, f"High in {self.y.unique()[1]}", 
                                 np.where(vips['VIP'] <= -threshold, f"High in {self.y.unique()[0]}", 
                                 "Under cut off"))
