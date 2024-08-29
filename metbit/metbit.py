@@ -18,7 +18,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.offline as pyo
-from .cross_validation import CrossValidation
+from cross_validation import CrossValidation
 #import plotting
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
@@ -26,7 +26,7 @@ from sklearn.metrics import mean_squared_error
 import warnings
 warnings.filterwarnings('ignore')
 
-from .scaler import Scaler
+from scaler import Scaler
 
 import os
 
@@ -54,7 +54,7 @@ class opls_da:
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
     import plotly.offline as pyo
-    from .cross_validation import CrossValidation
+    from cross_validation import CrossValidation
     #import plotting
     from sklearn.linear_model import LinearRegression
     from sklearn.metrics import mean_squared_error
@@ -674,7 +674,7 @@ class opls_da:
 
 
         
-        from .pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
         fig = px.scatter(df_opls_scores, x=x_, y=y_, symbol=symbol_,     
                         symbol_map=symbol_dict,
                         color='Group', 
@@ -1047,7 +1047,7 @@ class pca:
     import matplotlib.pyplot as plt
 
 
-    from .scaler import Scaler
+    from scaler import Scaler
 
     # Use to obtain same values as in the text
 
@@ -1058,7 +1058,7 @@ class pca:
 
     from sklearn import decomposition
     from sklearn.preprocessing import scale
-    from .pca_ellipse import confidence_ellipse
+    from pca_ellipse import confidence_ellipse
 
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
@@ -1146,7 +1146,7 @@ class pca:
         import matplotlib.pyplot as plt
 
 
-        from .scaler import Scaler
+        from scaler import Scaler
 
         # Use to obtain same values as in the text
 
@@ -1157,7 +1157,7 @@ class pca:
 
         from sklearn import decomposition
         from sklearn.preprocessing import scale
-        from .pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
 
         from sklearn.model_selection import train_test_split
         from sklearn.preprocessing import StandardScaler
@@ -1402,7 +1402,7 @@ class pca:
 
         '''
 
-        from .pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
 
         scale = self.scale
         df_scores_ = self.df_scores_
@@ -1639,7 +1639,7 @@ class pca:
         '''
 
 
-        from .pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
 
 
         #check time_order must be a dictionary

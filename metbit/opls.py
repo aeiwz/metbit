@@ -4,11 +4,11 @@ Orthogonal Projection on Latent Structure (O-PLS)
 import numpy as np
 from numpy import linalg as la
 from typing import Tuple, Any, Union
-from .base import nipals
+from base import nipals
 
 
 class OPLS:
-    from .base import nipals
+    from base import nipals
     import numpy as np
     from numpy import linalg as la
     from typing import Tuple, Any, Union

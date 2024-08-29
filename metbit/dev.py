@@ -18,7 +18,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import plotly.offline as pyo
-from .cross_validation import CrossValidation
+from cross_validation import CrossValidation
 #import plotting
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
@@ -54,7 +54,7 @@ class opls_da:
     import plotly.graph_objects as go
     from plotly.subplots import make_subplots
     import plotly.offline as pyo
-    from .cross_validation import CrossValidation
+    from cross_validation import CrossValidation
     #import plotting
     from sklearn.linear_model import LinearRegression
     from sklearn.metrics import mean_squared_error
@@ -450,7 +450,7 @@ class opls_da:
 
 
         
-        from .pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
         fig = px.scatter(df_opls_scores, x='t_scores', y='t_ortho', symbol=symbol, 
                     
                         symbol_map=symbol_dict,
@@ -747,7 +747,7 @@ class pca:
     import plotly.graph_objects as go
     from sklearn import decomposition
     from sklearn.preprocessing import scale
-    from .pca_ellipse import confidence_ellipse
+    from pca_ellipse import confidence_ellipse
     from sklearn.model_selection import train_test_split
     from sklearn.preprocessing import StandardScaler
     from sklearn.decomposition import PCA
@@ -834,7 +834,7 @@ class pca:
                         marker_size=35, marker_opacity=0.7,
                         text_ = None):
 
-        from .pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
 
         scale = self.scale
         df_scores_ = self.df_scores_
@@ -996,7 +996,7 @@ class pca:
                             marker_size=35, marker_opacity=0.7, ):
 
 
-        from .pca_ellipse import confidence_ellipse
+        from pca_ellipse import confidence_ellipse
 
 
         #check time_order must be a dictionary
