@@ -1,59 +1,71 @@
 
 class Normalization:
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    import numpy as np
+    """
+    A class for performing various normalization methods, including 
+    Probabilistic Quotient Normalization (PQN).
 
+    Methods:
+    --------
+    pqn_normalization(df):
+        Applies PQN normalization to the input dataframe.
+    """
 
     def __init__(self):
         pass
 
-    def pqn_normalization(df, plot=False):
+    @staticmethod
+    def pqn_normalization(df):
         """
-        Probabilistic Quotient Normalization (PQN) method
-        """
+        Perform Probabilistic Quotient Normalization (PQN) on a dataframe.
 
+        Parameters:
+        -----------
+        df : pandas.DataFrame or numpy.ndarray
+            The input data to normalize. Each column represents a feature.
+
+        Returns:
+        --------
+        df_norm : pandas.DataFrame
+            The PQN normalized dataframe.
+
+        Raises:
+        -------
+        TypeError: 
+            If input is not a pandas DataFrame or cannot be converted to one.
+        """
         import numpy as np
         import pandas as pd
-        #check data type of input data id dataframe or not
+
+        # Check if the input is a DataFrame, if not, attempt to convert it
         if not isinstance(df, pd.DataFrame):
-            df = pd.DataFrame(df)
+            try:
+                df = pd.DataFrame(df)
+            except Exception as e:
+                raise TypeError(f"Input data is not a valid DataFrame or cannot be converted: {e}")
 
         try:
-            nom_arr = df.values
+            # Get the numpy array and column names
+            X_ = df.values
             feature_ = df.columns
 
-            # Calculate the median of each row
-            median = np.median(nom_arr, axis=0, keepdims=True)
+            # Calculate the median across the rows (per column)
+            median_spectra = np.median(X_, axis=0, keepdims=True)
 
-            # Divide each row by its median
-            df_norm = nom_arr / median
-            df_norm = pd.DataFrame(df_norm, columns=feature_)
+            # Calculate the fold change matrix
+            foldChangeMatrix = X_ / median_spectra
 
-            if plot == True:
-                #histogram sub-plot of PQN normalized data with fold change of original data and PQN normalized data
-                #Calculate fold change of original data and PQN normalized data
-                fold_change = nom_arr / df_norm.values
-                
+            # Calculate the PQN normalization coefficients (median fold change per row)
+            pqn_coef = np.nanmedian(foldChangeMatrix, axis=1)
 
+            # Normalize the data by dividing each row by its PQN coefficient
+            # Reshape pqn_coef to a column vector (if needed) to match the shape of X_
+            norm_X = X_ / pqn_coef[:, np.newaxis]
 
-                fig, axs = plt.subplots(1, 2, figsize=(12, 4))
-                fig.suptitle('PQN Normalization')
-                axs[0].hist(df_norm.values.flatten(), bins=50)
-                axs[0].set_title('Histogram of PQN normalized data')
-                axs[0].set_xlabel('Intensity')
-                axs[0].set_ylabel('Frequency')
-                axs[1].hist(fold_change.flatten(), bins=50)
-                axs[1].set_title('Histogram of fold change data')
-                axs[1].set_xlabel('Intensity')
-                axs[1].set_ylabel('Frequency')
-                axs[1].set_xlim(0, 10)
-                axs[1].set_ylim(0, 20000)
-                plt.show()
+            # Convert the normalized data back to a DataFrame
+            df_norm = pd.DataFrame(norm_X, columns=feature_)
 
-
-        except:
-            print("Error: Please check your input data")
+        except Exception as e:
+            raise ValueError(f"An error occurred during normalization: {e}")
 
         return df_norm
     
