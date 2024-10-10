@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
 
-import pandas as pd
-import numpy as np
-
 
 class peak_chops:
+        
+    import pandas as pd
+    import numpy as np
+
 
     def __init__(self, data: pd.DataFrame, ppm: list = None) -> None:
 
@@ -29,6 +30,12 @@ class peak_chops:
 
         else:
             pass
+        
+        if ppm is not None:
+            if ppm is not pd.core.indexes.base.Index:
+                ppm = self.pd.core.indexes.base.Index(ppm)
+            else:
+                pass
 
         self.data = data
         self.ppm = ppm
@@ -40,6 +47,7 @@ class peak_chops:
         
         X = self.data
         ppm = self.ppm
+        
 
         X.columns = ppm
         
@@ -47,6 +55,6 @@ class peak_chops:
         second_index = ppm.get_loc(min(ppm, key=lambda x: abs(x - second_ppm))) + 1
         
         X.drop(columns=X.iloc[:, first_index:second_index].columns, inplace=True)
-        ppm = X.columns.astype(float)
+        ppm = X.columns.astype(float).to_list()
         
         return X, ppm
