@@ -213,8 +213,15 @@ class lazy_opls_da:
                 palette += getattr(plotly_colour.qualitative, name) # This is a list of colors
 
             marker_color = {}
-            for i in data['Class'].unique():
-                marker_color[i] = palette[i]
+            unique_groups = df['Group'].unique()
+
+            # Make sure the palette has enough colors for the unique groups
+            if len(unique_groups) > len(palette):
+                raise ValueError("The palette does not have enough colors for all unique groups")
+
+            # Map each unique group to a color
+            for group, color in zip(unique_groups, palette):
+                marker_color[group] = color
         else:
             marker_color = marker_color
 
