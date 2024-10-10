@@ -26,8 +26,8 @@ class peak_chops:
         else:
             pass
 
-        self.data
-        self.ppm
+        self.data = data
+        self.ppm = ppm
 
 
 
