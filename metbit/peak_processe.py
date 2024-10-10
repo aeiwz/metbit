@@ -23,7 +23,7 @@ class peak_chops:
             -------------------------------------------
             '''
             try:
-                ppm = data.columns.astype(float).to_list()
+                ppm = data.columns.astype(float)
             except:
                 raise print(text)
 
@@ -40,8 +40,6 @@ class peak_chops:
         
         X = self.data
         ppm = self.ppm 
-
-
         
         first_index = ppm.get_loc(min(ppm, key=lambda x: abs(x - first_ppm)))
         second_index = ppm.get_loc(min(ppm, key=lambda x: abs(x - second_ppm)))
