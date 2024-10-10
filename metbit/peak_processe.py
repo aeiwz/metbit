@@ -9,8 +9,12 @@ class peak_chops:
 
     def __init__(self, data: pd.DataFrame, ppm: list = None) -> None:
 
+        '''
+        data: NMR spectra data maybe contain ppm as columns
+        ppm: list of ppm (Can ignore this argument if columns of data is ppm)
+        '''
 
-        #if ppm is None check column of X is can convert to float?
+        #if ppm is None check column of X can convert to float?
         if ppm is None:
             text = f'''
             ------------------------------------------- \n
