@@ -7,16 +7,37 @@ import numpy as np
 
 class peak_chops:
 
-    def __init__(self, data: pd.DataFrame, first_region: float, second_region: float):
-        self.data = data
-        self.first_region = first_region
-        self.second_region = second_region
+    def __init__(self, data: pd.DataFrame, ppm: list = None) -> None:
 
-    def cut_peak(X: pd.DataFrame, first_ppm: float, second_ppm: float):
-    
-        import pandas as pd
+
+        #if ppm is None check column of X is can convert to float?
+        if ppm is None:
+            text = f'''
+            ------------------------------------------- \n
+            The columns of data can't convert to ppm \n
+            please assign ppm parameter as list of ppm \n
+            -------------------------------------------
+            '''
+            try:
+                ppm = data.columns.astype(float).to_list()
+            except:
+                raise print(text)
+
+        else:
+            pass
+
+        self.data
+        self.ppm
+
+
+
+
+    def cut_peak(self, first_ppm: float, second_ppm: float):
         
-        ppm = X.columns.astype(float)
+        X = self.data
+        ppm = self.ppm 
+
+
         
         first_index = ppm.get_loc(min(ppm, key=lambda x: abs(x - first_ppm)))
         second_index = ppm.get_loc(min(ppm, key=lambda x: abs(x - second_ppm)))
