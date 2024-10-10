@@ -202,9 +202,18 @@ class lazy_opls_da:
             namestems.append(name)
 
         if marker_color is None:
+
+            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
+                        'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
+                        'Vivid', 'Prism']
+
+            palette = []
+            for name in name_color_set:
+                palette += getattr(pc.qualitative, name) # This is a list of colors
+
             marker_color = {}
             for i in data['Class'].unique():
-                marker_color[i] = plotly.colors.qualitative.Plotly[i]
+                marker_color[i] = palette[i]
         else:
             marker_color = marker_color
 

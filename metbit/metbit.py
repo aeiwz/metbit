@@ -660,7 +660,17 @@ class opls_da:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {label: px.colors.qualitative.Plotly[i] for i, label in enumerate(df_opls_scores['Group'].unique())}
+            
+            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
+                        'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
+                        'Vivid', 'Prism']
+
+            palette = []
+            for name in name_color_set:
+                palette += getattr(pc.qualitative, name) # This is a list of colors
+
+
+            color_dict = {label: palette[i] for i, label in enumerate(df_opls_scores['Group'].unique())}
             
 
         # Create a new color dictionary to match with unique labels
@@ -670,7 +680,17 @@ class opls_da:
                 color_dict_2[group] = color_dict[group]
             else:
                 # Assign a default color if the label is not found in the original color_dict
-                color_dict_2[group] = px.colors.qualitative.Plotly[len(color_dict_2) % len(px.colors.qualitative.Plotly)]
+
+
+                name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 
+                                    'Set1', 'Pastel1', 'Dark2', 'Set2', 'Pastel2', 'Set3', 
+                                    'Antique', 'Safe', 'Bold', 'Pastel', 'Vivid', 'Prism']
+
+                palette = []
+                for name in name_color_set:
+                    palette += getattr(pc.qualitative, name) # This is a list of colors
+
+                color_dict_2[group] = palette[len(color_dict_2) % len(palette)]
 
 
         
@@ -1460,7 +1480,17 @@ class pca:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_['Group'].unique()))}
+
+
+            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
+                                'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
+                                'Vivid', 'Prism']
+
+            palette = []
+            for name in name_color_set:
+                palette += getattr(pc.qualitative, name) # This is a list of colors
+
+            color_dict = {i: palette[i] for i in range(len(df_scores_['Group'].unique()))}
             
 
         #new color_dict to match with unique label
@@ -1717,7 +1747,18 @@ class pca:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_point['Group'].unique()))}
+
+
+            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
+                                'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
+                                'Vivid', 'Prism']
+
+            palette = []
+            for name in name_color_set:
+                palette += getattr(pc.qualitative, name) # This is a list of colors
+
+
+            color_dict = {i: palette[i] for i in range(len(df_scores_point['Group'].unique()))}
             
 
         #new color_dict to match with unique label
@@ -1911,7 +1952,18 @@ class pca:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            color_dict = {i: px.colors.qualitative.Plotly[i] for i in range(len(df_scores_['Group'].unique()))}
+
+
+            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
+                                'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
+                                'Vivid', 'Prism']
+
+            palette = []
+            for name in name_color_set:
+                palette += getattr(pc.qualitative, name) # This is a list of colors
+
+
+            color_dict = {i: palette[i] for i in range(len(df_scores_['Group'].unique()))}
 
         #new color_dict to match with unique label
         group_unique = df_scores_['Group'].unique()
