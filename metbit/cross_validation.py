@@ -16,8 +16,8 @@ import numpy.linalg as la
 class CrossValidation:
 
 
-    from pls import PLS
-    from opls import OPLS
+    from .pls import PLS
+    from .opls import OPLS
     from pretreatment import Scaler
     import collections
     import typing
