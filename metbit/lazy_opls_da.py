@@ -203,6 +203,7 @@ class lazy_opls_da:
 
         if marker_color is None:
 
+            import plotly.colors as pc
             name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
                         'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
                         'Vivid', 'Prism']

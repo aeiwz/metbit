@@ -660,7 +660,7 @@ class opls_da:
         if color_dict is not None:
             color_dict = color_dict
         else:
-            
+            import plotly.colors as pc
             name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
                         'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
                         'Vivid', 'Prism']
@@ -681,7 +681,7 @@ class opls_da:
             else:
                 # Assign a default color if the label is not found in the original color_dict
 
-
+                import plotly.colors as pc
                 name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 
                                     'Set1', 'Pastel1', 'Dark2', 'Set2', 'Pastel2', 'Set3', 
                                     'Antique', 'Safe', 'Bold', 'Pastel', 'Vivid', 'Prism']
@@ -1480,7 +1480,8 @@ class pca:
         if color_dict is not None:
             color_dict = color_dict
         else:
-
+            
+            import plotly.colors as pc
 
             name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
                                 'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
@@ -1748,7 +1749,7 @@ class pca:
             color_dict = color_dict
         else:
 
-
+            import plotly.colors as pc
             name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
                                 'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
                                 'Vivid', 'Prism']
@@ -1953,7 +1954,7 @@ class pca:
             color_dict = color_dict
         else:
 
-
+            import plotly.colors as pc
             name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
                                 'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
                                 'Vivid', 'Prism']
