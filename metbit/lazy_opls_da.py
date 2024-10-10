@@ -203,14 +203,14 @@ class lazy_opls_da:
 
         if marker_color is None:
 
-            import plotly.colors as pc
+            import plotly.colors as plotly_colour
             name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
                         'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
                         'Vivid', 'Prism']
 
             palette = []
             for name in name_color_set:
-                palette += getattr(pc.qualitative, name) # This is a list of colors
+                palette += getattr(plotly_colour.qualitative, name) # This is a list of colors
 
             marker_color = {}
             for i in data['Class'].unique():
