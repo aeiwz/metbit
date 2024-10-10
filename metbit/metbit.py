@@ -1187,7 +1187,7 @@ class pca:
 
 
             
-        model_scaler = Scaler(scale_power=scale_power_)
+        model_scaler = Scaler(scaler=scale)
         model_scaler.fit(X)
         model_X = model_scaler.transform(X)
 
