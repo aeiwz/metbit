@@ -26,7 +26,7 @@ from sklearn.metrics import mean_squared_error
 import warnings
 warnings.filterwarnings('ignore')
 
-from .pretreatment import Scaler
+from .scaler import Scaler
 
 import os
 
@@ -253,20 +253,20 @@ class opls_da:
         auto_ncomp = self.auto_ncomp
         
         if scale == 'pareto':
-            scale_power = 0.5
+            Scale_power = 0.5
         elif scale == 'mean':
-            scale_power = 0
+            Scale_power = 0
         elif scale == 'uv':
-            scale_power = 1
+            Scale_power = 1
         elif scale == 'minmax':
-            scale_power = 0
+            Scale_power = 0
             
         self.scale = scale
             
             
         # Create a pipeline with data preprocessing and OPLS-DA model
         pipeline = Pipeline([
-                                ('scale', Scaler(scaler=scale)),
+                                ('scale', Scaler(scale_power=Scale_power)),
                                 ('oplsda', PLSRegression(n_components=n_components)),
                                 ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
                             ])
@@ -1047,7 +1047,7 @@ class pca:
     import matplotlib.pyplot as plt
 
 
-    from .pretreatment import Scaler
+    from .scaler import Scaler
 
     # Use to obtain same values as in the text
 
@@ -1146,7 +1146,7 @@ class pca:
         import matplotlib.pyplot as plt
 
 
-        from .pretreatment import Scaler
+        from .scaler import Scaler
 
         # Use to obtain same values as in the text
 
@@ -1187,7 +1187,7 @@ class pca:
 
 
             
-        model_scaler = Scaler(scaler=scale)
+        model_scaler = Scaler(scale_power=Scale_power)
         model_scaler.fit(X)
         model_X = model_scaler.transform(X)
 
