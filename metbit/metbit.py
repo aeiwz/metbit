@@ -1122,16 +1122,7 @@ class pca:
         self.scale = scale
         self.random_state = random_state
 
-        if scale == 'pareto':
-            scale_power_ = 0.5
-        elif scale == 'mean':
-            scale_power_ = 0
-        elif scale == 'uv':
-            scale_power_ = 1
-        elif scale == 'minmax':
-            scale_power_ = 0
 
-        self.scale_power_ = scale_power_
         self.test_size = test_size
 
 
@@ -1174,7 +1165,7 @@ class pca:
         random_state = self.random_state
         features_name = self.features_name
         Y = pd.Categorical(label).codes
-        scale_power_ = self.scale_power_ 
+    
         
         if isinstance(features_name, list):
             features_name = list(features_name)
@@ -1185,7 +1176,15 @@ class pca:
         if not isinstance(label, pd.Series):
             label = pd.Series(label)
 
-
+        if scale == 'pareto':
+            Scale_power = 0.5
+        elif scale == 'mean':
+            Scale_power = 0
+        elif scale == 'uv':
+            Scale_power = 1
+        elif scale == 'minmax':
+            Scale_power = 0
+            
             
         model_scaler = Scaler(scale_power=Scale_power)
         model_scaler.fit(X)
