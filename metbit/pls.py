@@ -6,7 +6,7 @@ class PLS:
     import numpy as np
     import numpy.linalg as la
 
-    from base import nipals
+    from .base import nipals
     """ Partial least squares. """
     def __init__(self):
         pass

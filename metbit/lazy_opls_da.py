@@ -9,10 +9,10 @@ class lazy_opls_da:
     import pandas as pd
     import numpy as np
     import random
-    from metbit import opls_da
+    from .metbit import opls_da
 
-    from utility import project_name_generator
-    from utility import lazypair
+    from .utility import project_name_generator
+    from .utility import lazypair
     
 
     def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_names: list = None, n_components: int = 2, scaling: str = 'pareto', 
@@ -26,10 +26,10 @@ class lazy_opls_da:
         import pandas as pd
         import numpy as np
         import random
-        from metbit import opls_da
+        from .metbit import opls_da
 
-        from utility import project_name_generator
-        from utility import lazypair
+        from .utility import project_name_generator
+        from .utility import lazypair
 
         """
         This function takes in a dataframe and a list of y values and returns the project_name model.
@@ -177,9 +177,9 @@ class lazy_opls_da:
 
     def fit(self, marker_color: dict = None, custom_color: list = None, custom_shape: list = None, symbol_dict: dict = None, custom_legend_name = ['Group', 'Sub-group'], individual_ellipse=False) -> None:
 
-        from metbit import opls_da
+        from .metbit import opls_da
         from lingress import lin_regression
-        from utility import lazypair
+        from .utility import lazypair
 
         from glob import glob
         import pandas as pd
