@@ -266,7 +266,7 @@ class opls_da:
             
         # Create a pipeline with data preprocessing and OPLS-DA model
         pipeline = Pipeline([
-                                ('scale', Scaler(scale_power=scale_power)),
+                                ('scale', Scaler(scaler=scale)),
                                 ('oplsda', PLSRegression(n_components=n_components)),
                                 ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
                             ])
