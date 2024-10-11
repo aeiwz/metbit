@@ -5,6 +5,8 @@ import numpy as np
 
 
 class Scaler:
+
+    import numpy as np
     """
     A scaler to scale data matrix
     """

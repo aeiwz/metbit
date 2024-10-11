@@ -1,5 +1,6 @@
 
-
+import numpy as np
+import numpy.linalg as la
 
 class PLS:
 
@@ -7,12 +8,15 @@ class PLS:
     import numpy.linalg as la
 
     from .base import nipals
+
     """ Partial least squares. """
     def __init__(self):
         pass
 
     def fit(self, x: np.ndarray, y: np.ndarray,
             n_comp: int = None, dot=np.dot) -> None:
+
+        
         """
         Fit PLS model
 
@@ -32,6 +36,8 @@ class PLS:
         PLS object
 
         """
+
+        import numpy as np
         n, r = x.shape
         # preallocation
         T = np.empty((n, n_comp))
