@@ -36,7 +36,7 @@ class PLS:
         PLS object
 
         """
-
+        from .base import nipals
         import numpy as np
         n, r = x.shape
         # preallocation
