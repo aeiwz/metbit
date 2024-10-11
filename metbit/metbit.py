@@ -268,18 +268,20 @@ class opls_da:
             self.s_df_scores_ = s_df_scores_
             self.df_opls_scores = df_opls_scores        
             self.oplsda = oplsda
+
+            R2Xcorr = cv_model.R2Xcorr
+            R2y = cv_model.R2y
+            q2 = cv_model.q2
+
+            self.R2Xcorr = R2Xcorr
+            self.R2y = R2y
+            self.q2 = q2
         else:
             pass
 
         
 
-        R2Xcorr = cv_model.R2Xcorr
-        R2y = cv_model.R2y
-        q2 = cv_model.q2
 
-        self.R2Xcorr = R2Xcorr
-        self.R2y = R2y
-        self.q2 = q2
 
 
 
@@ -289,18 +291,34 @@ class opls_da:
         
         duration = T2 - T1
 
-        summary_model = f'''
-        Comparison of {y.unique()[0]} and {y.unique()[1]} \n
-        Sample size: {pd.Series(y).value_counts()} \n
-        Number of features: {X.shape[1]} \n
-        Number of components: {n_components} \n
-        Method of scaling: {self.scaling_method} \n
-        OPLS-DA model is fitted in {duration} seconds \n
-        R2Xcorr: {R2Xcorr} \n
-        R2y: {R2y} \n
-        Q2: {q2} \n
+        summary_model_oplsda = f'''
+        Comparison of {y.unique()[0]} and {y.unique()[1]}
+        Sample size: \n {pd.Series(y).value_counts()} \n
+        Number of features: {X.shape[1]}
+        Number of components: {n_components}
+        Method of scaling: {self.scaling_method}
+        OPLS-DA model is fitted in {duration} seconds
+        R2Xcorr: {R2Xcorr}
+        R2y: {R2y}
+        Q2: {q2}
         '''
 
+        summary_model_plsda = f'''
+        Comparison of {y.unique()[0]} and {y.unique()[1]}
+        Sample size: \n {pd.Series(y).value_counts()} \n
+        Number of features: {X.shape[1]}
+        Number of components: {n_components}
+        Method of scaling: {self.scaling_method}
+        OPLS-DA model is fitted in {duration} seconds
+        R2Xcorr: -
+        R2y: - 
+        Q2: -
+        '''
+
+        if self.estimator == 'opls':
+            summary_model = summary_model_oplsda
+        else:
+            summary_model = summary_model_plsda
 
         return print(summary_model)
 
