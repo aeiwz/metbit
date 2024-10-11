@@ -290,7 +290,7 @@ class opls_da:
         Sample size: {X.shape[0]}
         Number of features: {X.shape[1]}
         Number of components: {n_components}
-        Method of scaling: {scaling_method}
+        Method of scaling: {self.scaling_method}
         OPLS-DA model is fitted in {duration} seconds
         R2Xcorr: {R2Xcorr}
         R2y: {R2y}
@@ -676,7 +676,7 @@ class opls_da:
                         symbol_map=symbol_dict,
                         color='Group', 
                         color_discrete_map=color_dict_2, 
-                        title=f'<b>OPLS-DA Scores Plot<b> ({scaling_method} scaling)', 
+                        title=f'<b>OPLS-DA Scores Plot<b> ({self.scaling_method} scaling)', 
                         height=fig_height, width=fig_width,
                         labels={
                             't_pred': 't<sub>predict</sub>',
@@ -1481,7 +1481,7 @@ class pca:
                         symbol=symbol_, 
                         color_discrete_map=color_dict_2, 
                         symbol_map=symbol_dict, 
-                        title=f'<b>PCA Scores Plot<b> {scaling_method} scaling', 
+                        title=f'<b>PCA Scores Plot<b> {self.scaling_method} scaling', 
                         height=fig_height, width=fig_width,
                         labels={'color': legend_name[0], 'symbol': legend_name[1],
                                 'Group': legend_name[0],
@@ -1951,7 +1951,7 @@ class pca:
 
         fig = px.scatter_3d(df_scores_, x=pc[0], y=pc[1], z=pc[2], color='Group', symbol=symbol_, 
                             color_discrete_map=color_dict_2, symbol_map=symbol_dict, 
-                            title=f'<b>PCA Scores Plot<b> {scaling_method} scaling', 
+                            title=f'<b>PCA Scores Plot<b> {self.scaling_method} scaling', 
                             height=fig_height, width=fig_width,
                             labels={'color': legend_name[0], 'symbol': legend_name[1],
                                     'Group': legend_name[0],
