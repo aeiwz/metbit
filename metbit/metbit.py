@@ -262,8 +262,14 @@ class opls_da:
 
         oplsda.fit(X, pd.Categorical(y).codes)
         
-        s_df_scores_ = pd.DataFrame({'correlation': cv_model.correlation,'covariance': cv_model.covariance}, index=features_name)
-        df_opls_scores = pd.DataFrame({'t_scores': cv_model.scores, 't_ortho': cv_model.orthogonal_score, 't_pred': cv_model.predictive_score, 'Group': y})
+        if self.estimator == 'opls':
+            s_df_scores_ = pd.DataFrame({'correlation': cv_model.correlation,'covariance': cv_model.covariance}, index=features_name)
+            df_opls_scores = pd.DataFrame({'t_scores': cv_model.scores, 't_ortho': cv_model.orthogonal_score, 't_pred': cv_model.predictive_score, 'Group': y})
+            self.s_df_scores_ = s_df_scores_
+            self.df_opls_scores = df_opls_scores        
+            self.oplsda = oplsda
+        else:
+            pass
 
         
 
@@ -275,10 +281,8 @@ class opls_da:
         self.R2y = R2y
         self.q2 = q2
 
-        self.s_df_scores_ = s_df_scores_
-        self.df_opls_scores = df_opls_scores
-        
-        self.oplsda = oplsda
+
+
         self.cv_model = cv_model
 
         T2 = time.time()
@@ -286,19 +290,20 @@ class opls_da:
         duration = T2 - T1
 
         summary_model = f'''
-        Comparison of {y.unique()[0]} and {y.unique()[1]}
-        Sample size: {X.shape[0]}
-        Number of features: {X.shape[1]}
-        Number of components: {n_components}
-        Method of scaling: {self.scaling_method}
-        OPLS-DA model is fitted in {duration} seconds
-        R2Xcorr: {R2Xcorr}
-        R2y: {R2y}
-        Q2: {q2}
+        Comparison of {y.unique()[0]} and {y.unique()[1]} \n
+        Sample size: {pd.Series(y).value_counts()} \n
+        Number of features: {X.shape[1]} \n
+        Number of components: {n_components} \n
+        Method of scaling: {self.scaling_method} \n
+        OPLS-DA model is fitted in {duration} seconds \n
+        R2Xcorr: {R2Xcorr} \n
+        R2y: {R2y} \n
+        Q2: {q2} \n
         '''
 
 
         return print(summary_model)
+
 
     def get_oplsda_scores(self):
             
