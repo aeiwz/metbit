@@ -68,13 +68,13 @@ class CrossValidation:
             self.estimator = OPLS()
         self.estimator_id = estimator
         # scaler
-        if scaling_method == 'pareto':
+        if scaler == 'pareto':
             Scale_power = 0.5
-        elif scaling_method == 'mean':
+        elif scaler == 'mean':
             Scale_power = 0
-        elif scaling_method == 'uv':
+        elif scaler == 'uv':
             Scale_power = 1
-        elif scaling_method == 'minmax':
+        elif scaler == 'minmax':
             Scale_power = 0
 
         self.scaler = Scaler(scale_power=Scale_power)
