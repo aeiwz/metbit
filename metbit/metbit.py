@@ -121,7 +121,7 @@ class opls_da:
         ## Perform OPLS-DA model
 
 
-        opls_da_mod = opls_da(X=X, y=y,features_name=features_name, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42):
+        opls_da_mod = opls_da(X=X, y=y,features_name=features_name, n_components=2, scaling_method='pareto', kfold=3, estimator='opls', random_state=42):
                 
         opls_da.fit()
 
@@ -152,21 +152,21 @@ class opls_da:
 
         
     
-    def __init__(self, X, y, features_name=None, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42, auto_ncomp=True):
+    def __init__(self, X, y, features_name=None, n_components=2, scaling_method='pareto', kfold=3, estimator='opls', random_state=42, auto_ncomp=True):
         
 
         self.auto_ncomp = auto_ncomp
         #check X and y must be dataframe or array
         if not isinstance(X, (pd.DataFrame, np.ndarray)):
             raise ValueError('X must be a dataframe or array')
-        if not isinstance(y, (pd.Series, np.ndarray)):
-            raise ValueError('y must be a series or array')
+        if not isinstance(y, (pd.Series, np.ndarray, list)):
+            raise ValueError('y must be a series or array or list')
         if X.shape[0] != y.shape[0]:
             raise ValueError('X and y must have the same number of samples')
         if not isinstance(n_components, int):
             raise ValueError('n_components must be an integer')
-        if not isinstance(scale, str):
-            raise ValueError('scale must be a string')
+        if not isinstance(scaling_method, str):
+            raise ValueError('scaling method must be a string')
         if not isinstance(kfold, int):
             raise ValueError('kfold must be an integer')
         if not isinstance(estimator, str):
@@ -179,29 +179,6 @@ class opls_da:
             if len(features_name) != X.shape[1]:
                 raise ValueError('features_name must have the same number of features as X')
             
-            
-            
-        #check unique values in y
-        if isinstance(y, pd.Series):
-            if len(y.unique()) < 2:
-                raise ValueError('OPLS-DA requires at least 2 group comparisons')
-        if isinstance(y, np.ndarray):
-            if len(np.unique(y)) < 2:
-                raise ValueError('OPLS-DA requires at least 2 group comparisons')
-        if isinstance(y, list):
-            if len(np.unique(y)) < 2:
-                raise ValueError('OPLS-DA requires at least 2 group comparisons')        
-            
-        #check unique values in y
-        if isinstance(y, pd.Series):
-            if len(y.unique()) > 2:
-                raise ValueError('OPLS-DA requires only 2 group comparisons')
-        if isinstance(y, np.ndarray):
-            if len(np.unique(y)) < 2:
-                raise ValueError('OPLS-DA requires only 2 group comparisons')
-        if isinstance(y, list):
-            if len(np.unique(y)) < 2:
-                raise ValueError('OPLS-DA requires only 2 group comparisons')
 
 
 
@@ -226,7 +203,7 @@ class opls_da:
         self.y = y
         self.features_name = features_name
         self.n_components = n_components
-        self.scale = scale
+        self.scaling_method = scaling_method
         self.kfold = kfold
         self.estimator = estimator
         self.random_state = random_state
@@ -245,30 +222,30 @@ class opls_da:
         y = self.y
         features_name = self.features_name
         n_components = self.n_components
-        scale = self.scale
+        scaling_method = self.scaling_method
 
         random_state = self.random_state
         kfold = self.kfold
         estimator = self.estimator
         auto_ncomp = self.auto_ncomp
         
-        if scale == 'pareto':
+        if scaling_method == 'pareto':
             Scale_power = 0.5
-        elif scale == 'mean':
+        elif scaling_method == 'mean':
             Scale_power = 0
-        elif scale == 'uv':
+        elif scaling_method == 'uv':
             Scale_power = 1
-        elif scale == 'minmax':
+        elif scaling_method == 'minmax':
             Scale_power = 0
             
-        self.scale = scale
+        self.scaling_method = scaling_method
             
             
         # Create a pipeline with data preprocessing and OPLS-DA model
         pipeline = Pipeline([
                                 ('scale', Scaler(scale_power=Scale_power)),
                                 ('oplsda', PLSRegression(n_components=n_components)),
-                                ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scale))
+                                ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scaling_method))
                             ])
 
         self.pipeline = pipeline
@@ -313,7 +290,7 @@ class opls_da:
         Sample size: {X.shape[0]}
         Number of features: {X.shape[1]}
         Number of components: {n_components}
-        Method of scaling: {scale}
+        Method of scaling: {scaling_method}
         OPLS-DA model is fitted in {duration} seconds
         R2Xcorr: {R2Xcorr}
         R2y: {R2y}
@@ -699,7 +676,7 @@ class opls_da:
                         symbol_map=symbol_dict,
                         color='Group', 
                         color_discrete_map=color_dict_2, 
-                        title='<b>OPLS-DA Scores Plot<b>', 
+                        title=f'<b>OPLS-DA Scores Plot<b> ({scaling_method} scaling)', 
                         height=fig_height, width=fig_width,
                         labels={
                             't_pred': 't<sub>predict</sub>',
@@ -1041,7 +1018,7 @@ class pca:
     ## Perform PCA model
 
 
-    pca_mod = pca(X = X, label = y, features_name=features_name, n_components=2, scale='pareto', random_state=42, test_size=0.3)
+    pca_mod = pca(X = X, label = y, features_name=features_name, n_components=2, scaling_method='pareto', random_state=42, test_size=0.3)
     pca_mod.fit()
 
 
@@ -1087,7 +1064,7 @@ class pca:
     from lingress import unipair
 
 
-    def __init__(self, X: pd.DataFrame, label: list = None, features_name: list = None, n_components=2, scale='pareto', random_state=42, test_size=0.3):
+    def __init__(self, X: pd.DataFrame, label: list = None, features_name: list = None, n_components=2, scaling_method='pareto', random_state=42, test_size=0.3):
 
 
 
@@ -1107,8 +1084,8 @@ class pca:
         if not isinstance(n_components, int):
             raise ValueError('n_components must be an integer')
 
-        if not isinstance(scale, str):
-            raise ValueError('scale must be a string')
+        if not isinstance(scaling_method, str):
+            raise ValueError('scaling method must be a string')
 
         if not isinstance(random_state, int):
             raise ValueError('random_state must be an integer')
@@ -1139,7 +1116,7 @@ class pca:
         self.X = X
         self.label = label
         self.n_components = n_components
-        self.scale = scale
+        self.scaling_method = scaling_method
         self.random_state = random_state
 
 
@@ -1181,7 +1158,7 @@ class pca:
         X = self.X
         label = self.label
         n_components = self.n_components
-        scale = self.scale
+        scaling_method = self.scaling_method
         random_state = self.random_state
         features_name = self.features_name
         Y = pd.Categorical(label).codes
@@ -1196,13 +1173,13 @@ class pca:
         if not isinstance(label, pd.Series):
             label = pd.Series(label)
 
-        if scale == 'pareto':
+        if scaling_method == 'pareto':
             Scale_power = 0.5
-        elif scale == 'mean':
+        elif scaling_method == 'mean':
             Scale_power = 0
-        elif scale == 'uv':
+        elif scaling_method == 'uv':
             Scale_power = 1
-        elif scale == 'minmax':
+        elif scaling_method == 'minmax':
             Scale_power = 0
             
             
@@ -1312,7 +1289,7 @@ class pca:
 
         '''
 
-        scale = self.scale
+        scaling_method = self.scaling_method
         
         df_explained_variance_ = self.df_explained_variance_
         
@@ -1320,7 +1297,7 @@ class pca:
                 x='PC', y=df_explained_variance_['Explained variance'],
                 text=np.round(df_explained_variance_['Explained variance'], decimals=3),
                 width=fig_width, height=fig_height,
-                title='Explained Variance ({} scaling)'.format(scale))
+                title='Explained Variance ({} scaling)'.format(scaling_method))
         fig.update_layout(
             title={
                 'y':0.95,
@@ -1423,7 +1400,7 @@ class pca:
 
         from .pca_ellipse import confidence_ellipse
 
-        scale = self.scale
+        scaling_method = self.scaling_method
         df_scores_ = self.df_scores_
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
@@ -1772,7 +1749,7 @@ class pca:
                         error_x=err_df[pc[0]], error_y=err_df[pc[1]],
                         color='Group', color_discrete_map=color_dict_2,
                         symbol='Time point', symbol_map=symbol_dict,
-                        title='<b>Principle component analysis ({})<b>'.format(self.scale), 
+                        title='<b>Principle component analysis ({})<b>'.format(self.scaling_method), 
                         height=fig_height, width=fig_width,
                         labels={
                             pc[0]: "{} R<sup>2</sup>X: {} %".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
@@ -1897,7 +1874,7 @@ class pca:
 
 
 
-        scale = self.scale
+        scaling_method = self.scaling_method
         df_scores_ = self.df_scores_
         r2 = self.df_explained_variance_
         q2_test = self.q2_test
@@ -1974,7 +1951,7 @@ class pca:
 
         fig = px.scatter_3d(df_scores_, x=pc[0], y=pc[1], z=pc[2], color='Group', symbol=symbol_, 
                             color_discrete_map=color_dict_2, symbol_map=symbol_dict, 
-                            title=f'<b>PCA Scores Plot<b> {scale} scaling', 
+                            title=f'<b>PCA Scores Plot<b> {scaling_method} scaling', 
                             height=fig_height, width=fig_width,
                             labels={'color': legend_name[0], 'symbol': legend_name[1],
                                     'Group': legend_name[0],
