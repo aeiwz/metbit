@@ -291,33 +291,32 @@ class opls_da:
         
         duration = T2 - T1
 
-        summary_model_oplsda = f'''
-        Comparison of {y.unique()[0]} and {y.unique()[1]}
-        Sample size: \n {pd.Series(y).value_counts()} \n
-        Number of features: {X.shape[1]}
-        Number of components: {n_components}
-        Method of scaling: {self.scaling_method}
-        OPLS-DA model is fitted in {duration} seconds
-        R2Xcorr: {R2Xcorr}
-        R2y: {R2y}
-        Q2: {q2}
-        '''
-
-        summary_model_plsda = f'''
-        Comparison of {y.unique()[0]} and {y.unique()[1]}
-        Sample size: \n {pd.Series(y).value_counts()} \n
-        Number of features: {X.shape[1]}
-        Number of components: {n_components}
-        Method of scaling: {self.scaling_method}
-        OPLS-DA model is fitted in {duration} seconds
-        R2Xcorr: -
-        R2y: - 
-        Q2: -
-        '''
-
         if self.estimator == 'opls':
+    
+            summary_model_oplsda = f'''
+            Comparison of {y.unique()[0]} and {y.unique()[1]}
+            Sample size: \n {pd.Series(y).value_counts()} \n
+            Number of features: {X.shape[1]}
+            Number of components: {n_components}
+            Method of scaling: {self.scaling_method}
+            OPLS-DA model is fitted in {duration} seconds
+            R2Xcorr: {R2Xcorr}
+            R2y: {R2y}
+            Q2: {q2}        
+            '''
             summary_model = summary_model_oplsda
         else:
+            summary_model_plsda = f'''
+            Comparison of {y.unique()[0]} and {y.unique()[1]}
+            Sample size: \n {pd.Series(y).value_counts()} \n
+            Number of features: {X.shape[1]}
+            Number of components: {n_components}
+            Method of scaling: {self.scaling_method}
+            OPLS-DA model is fitted in {duration} seconds
+            R2Xcorr: -
+            R2y: - 
+            Q2: -
+            '''
             summary_model = summary_model_plsda
 
         return print(summary_model)
