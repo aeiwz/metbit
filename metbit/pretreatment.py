@@ -62,7 +62,7 @@ class Scaler:
         normalizer = np.sqrt(x.std(axis=0))
         return center, normalizer, (x - center) / normalizer
 
-    def _meancentering(x: np.ndarray) -> tuple:
+    def _meancentering(self, x: np.ndarray) -> tuple:
         """
         Mean center
         :param x: variable matrix with size n samples and p variables
@@ -71,7 +71,7 @@ class Scaler:
         center = x.mean(axis=0)
         return center, None, x - center
 
-    def _minmaxscaling(x: np.ndarray) -> tuple:
+    def _minmaxscaling(self, x: np.ndarray) -> tuple:
         """
         Min-max scaling to scale each variable into range 0 and 1
         :param x: variable matrix with size n samples and p variables
