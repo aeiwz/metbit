@@ -1481,7 +1481,7 @@ class pca:
                         symbol=symbol_, 
                         color_discrete_map=color_dict_2, 
                         symbol_map=symbol_dict, 
-                        title=f'<b>PCA Scores Plot<b> {scale} scaling', 
+                        title=f'<b>PCA Scores Plot<b> {scaling_method} scaling', 
                         height=fig_height, width=fig_width,
                         labels={'color': legend_name[0], 'symbol': legend_name[1],
                                 'Group': legend_name[0],

@@ -18,7 +18,7 @@ class CrossValidation:
 
     from .pls import PLS
     from .opls import OPLS
-    from .pretreatment import Scaler
+    from .scaler import Scaler
     import collections
     import typing
     import numpy as np
@@ -53,7 +53,7 @@ class CrossValidation:
         
         from .pls import PLS
         from .opls import OPLS
-        from .pretreatment import Scaler
+        from .scaler import Scaler
         import collections
         import typing
         import numpy as np
@@ -68,7 +68,16 @@ class CrossValidation:
             self.estimator = OPLS()
         self.estimator_id = estimator
         # scaler
-        self.scaler = Scaler(scaler=scaler)
+        if scaling_method == 'pareto':
+            Scale_power = 0.5
+        elif scaling_method == 'mean':
+            Scale_power = 0
+        elif scaling_method == 'uv':
+            Scale_power = 1
+        elif scaling_method == 'minmax':
+            Scale_power = 0
+
+        self.scaler = Scaler(scale_power=Scale_power)
 
         # initialize other attributes, but should be HIDDEN
         self._ypred: np.ndarray = None
