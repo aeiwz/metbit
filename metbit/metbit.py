@@ -279,11 +279,6 @@ class opls_da:
         else:
             pass
 
-        
-
-
-
-
 
         self.cv_model = cv_model
 
