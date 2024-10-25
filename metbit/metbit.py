@@ -290,8 +290,8 @@ class opls_da:
     
             summary_model_oplsda = f'''
             Comparison of {y.unique()[0]} and {y.unique()[1]}
-            Sample size: {y.unique()[0]}: {y.value_counts()[0]}
-                         {y.unique()[1]}: {y.value_counts()[1]}
+            Sample size: {y.unique()[0]}: {y.value_counts().get(unique_values[0], 0)}
+                         {y.unique()[1]}: {y.value_counts().get(unique_values[1], 0)}
             Number of features: {X.shape[1]}
             Number of components: {n_components}
             Method of scaling: {self.scaling_method}
@@ -304,8 +304,8 @@ class opls_da:
         else:
             summary_model_plsda = f'''
             Comparison of {y.unique()[0]} and {y.unique()[1]}
-            Sample size: {y.unique()[0]}: {y.value_counts()[0]}
-                         {y.unique()[1]}: {y.value_counts()[1]}
+            Sample size: {y.unique()[0]}: {y.value_counts().get(unique_values[0], 0)}
+                         {y.unique()[1]}: {y.value_counts().get(unique_values[1], 0)}
             Number of features: {X.shape[1]}
             Number of components: {n_components}
             Method of scaling: {self.scaling_method}
