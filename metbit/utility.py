@@ -630,37 +630,40 @@ def project_name_generator():
     # Get local time
     current_time = time.localtime()
     # Set format for time
-    time_format = time.strftime('%Y-%m-%d %H:%M:%S', current_time)
+    time_format = time.strftime('%Y-%m-%d_%H-%M-%S', current_time)
     project_names = [
-                    "QuantumQuest",
-                    "NebulaNet",
-                    "StellarSync",
-                    "AeroPulse",
-                    "CyberCircuit",
-                    "TerraTrack",
-                    "HoloHive",
-                    "PyroPixel",
-                    "LunarLoom",
-                    "ZenithZero",
-                    "BlazeBeacon",
-                    "AquaArise",
-                    "EchoEclipse",
-                    "FusionForge",
-                    "OrbitOpus",
-                    "PrismPortal",
-                    "NimbusNexus",
-                    "AstroArc",
-                    "VoltVoyage",
-                    "OmniOrbit",
-                    "PulsePioneer",
-                    "VortexVoyage",
-                    "GalacticGrid",
-                    "SolarSpectrum",
-                    "Satternlite",
-                    "StarSpectrum",
-                    "SpaceSpectrum",
-                    "GalacticSpectrum"
-                    ]
+    "ApolloPulse", "OrbitOmni", "NebulaNexus", "StarStream", "CometCore",
+    "AstralAxis", "CelestialSync", "MeteorMerge", "GalaxusGate", "StellarScope",
+    "NovaNest", "SpectraSphere", "IonIgnite", "QuasarQuest", "CosmosCircuit",
+    "OrbitOxide", "CelestialCircuit", "GalaxyGrid", "ApolloAlign", "StellarSignal",
+    "HyperHalo", "LunarLattice", "StarForge", "NebulaNode", "AstrumAxis",
+    "OrbitOps", "GalacticGate", "MeteorMap", "CosmicCore", "SolsticeSync",
+    "EclipseEcho", "CelestiaConnect", "ZenithZone", "VoidVector", "AstroAlign",
+    "PlasmaPath", "OrbitOscillator", "CometCatalyst", "AetherArc", "VoidVelocity",
+    "PulsarPulse", "StellarSail", "AstralAnchor", "PhotonPath", "VortexVector",
+    "OrbitOptic", "NovaNetwork", "StarSphere", "EchoEnergy", "ChronoCelestial",
+    "QuantumVoyage", "NebulaNexus", "StellarSync", "AstroArray", "GalacticGlow",
+    "PhotonPulse", "QuantumQuasar", "CelestialCircuit", "NovaNucleus", "CosmicCascade",
+    "StellarSpire", "AstroArc", "NebulaNode", "QuasarQuest", "PlasmaPioneer",
+    "InfinityIon", "OrbitOracle", "CelestialClimb", "QuantumQuest", "StarlightSync",
+    "GalaxiaGlimmer", "PulsarPath", "CosmosCircuit", "QuantumSphere", "AstroAxis",
+    "HyperHelix", "StellarScope", "CelestiaChrono", "EclipseEngine", "QuantaCove",
+    "OrbitOrigin", "MeteorMind", "PhotonPath", "StarSystem", "ChronoCelestial",
+    "VoidVector", "GalaxyGate", "CosmicCircuit", "AetherArc", "LunarLoom",
+    "QuantaCluster", "NovaNest", "SpectraSphere", "NebulaNavigator", "PulsarPeak",
+    "OrbitOdyssey", "CosmicConduit", "TerraTrajectory", "StellarStrata", "VoidVoyager",
+    "EclipseEcho", "ZenithZone", "CelestialConnect", "AstroAlign", "IonIgnite",
+    "AetherAtlas", "GalaxusGrid", "QuantaQuay", "HorizonHalo", "AstralApex",
+    "ZenithZephyr", "GalacticGlide", "CelestialSync", "PlasmaPulse", "QuantumPulse",
+    "NebulaNebula", "AstroAlign", "CometClimb", "GalacticGaze", "LunarLink",
+    "StellarSplice", "EclipseEngine", "NovaNode", "PulsarPilot", "PhotonPortal",
+    "QuantaQuest", "CelestialClimb", "GalacticGlider", "AstralAnchor", "ZenithZero",
+    "VortexVector", "PulsarPathfinder", "IonInfinity", "ChronoCircuit", "QuantumQuay",
+    "NebulaNucleus", "StarSphere", "GalacticGate", "InfinityIris", "HorizonHub",
+    "StellarSignal", "NovaNexus", "CosmosCore", "GalaxiaGrid", "CelestialCompass",
+    "PulsarPioneer", "AstralAether", "PlasmaPeak", "OrbitOpus", "AetherArcadia",
+    "CelestialCircuitry", "PhotonPeak", "ZenithZone", "VoidVoyager", "QuasarCove"
+    ]
 
     project_name = time_format + '_' + random.choice(project_names)
     return project_name
