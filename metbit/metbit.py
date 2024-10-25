@@ -286,6 +286,8 @@ class opls_da:
         
         duration = T2 - T1
 
+        unique_values = y.unique()
+
         if self.estimator == 'opls':
     
             summary_model_oplsda = f'''
