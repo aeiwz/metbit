@@ -267,7 +267,7 @@ class lazy_opls_da:
 
 
             #OPLS-DA
-            oplsda_mod = opls_da(X=X, y=y, features_name = feature_names, n_components=n_components, scale=scale, 
+            oplsda_mod = opls_da(X=X, y=y, features_name = feature_names, n_components=n_components, scaling_method=scale, 
                                     estimator=self.estimator, kfold=self.kfold, random_state=self.random_state, 
                                     auto_ncomp = self.auto_ncomp)
             oplsda_mod.fit()
