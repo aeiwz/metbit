@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 # Importing the custom STOCSY function
-from STOCSY import STOCSY  # Adjust as necessary based on your file
+from .STOCSY import STOCSY  # Adjust as necessary based on your file
 
 class STOCSY_app:
 
@@ -235,7 +235,7 @@ class STOCSY_app:
                 Updated STOCSY plot or no update if conditions are not met.
             """
 
-            
+
             if not stored_peaks or n_clicks is None:
                 return dash.no_update
             
