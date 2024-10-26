@@ -10,13 +10,13 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 # Importing the custom STOCSY function
-from .STOCSY import STOCSY  # Adjust as necessary based on your file
+from STOCSY import STOCSY  # Adjust as necessary based on your file
 
 class STOCSY_app:
 
     """
     A Dash application for visualizing NMR spectra and performing STOCSY analysis.
-
+    
     Parameters:
     -----------
     spectra : pd.DataFrame
@@ -27,7 +27,16 @@ class STOCSY_app:
     Methods:
     --------
     run_ui() -> dash.Dash:
-        Sets up the Dash UI layout and initializes the application callbacks.
+        Sets up the Dash UI layout, initializes the application callbacks, and returns the app instance.
+
+    Example:
+    --------
+        df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
+        spectra = df.iloc[:,1:]
+        ppm = spectra.columns.astype(float).to_list()
+        stocsy_app = STOCSY_app(spectra, ppm)
+        app = stocsy_app.run_ui()
+        app.run_server(debug=True, port=8051)
     """
 
     def __init__(self, spectra: pd.DataFrame, ppm: list):
@@ -46,21 +55,24 @@ class STOCSY_app:
         self.ppm = ppm
 
     def run_ui(self):
-
+        
+        
         """
-        Sets up the Dash application layout and callbacks.
-
+        Sets up the Dash application layout, callbacks, and configuration.
+        
         Returns:
         --------
         app : dash.Dash
             The initialized Dash application instance.
         """
 
+
         class plot_NMR_spec:
 
-            """
-            A class to handle the plotting of NMR spectra.
 
+            """
+            A helper class to handle the plotting of NMR spectra.
+            
             Parameters:
             -----------
             spectra : pd.DataFrame
@@ -68,6 +80,8 @@ class STOCSY_app:
             ppm : list
                 List of PPM values corresponding to the spectra.
             """
+
+
             def __init__(self, spectra, ppm):
 
                 """
@@ -80,12 +94,15 @@ class STOCSY_app:
                 ppm : list
                     List of PPM values corresponding to the spectra.
                 """
+
+
                 self.spectra = spectra
                 self.ppm = ppm
 
             def single_spectra(self, color_map=None, title='<b>Spectra of <sup>1</sup>H NMR data</b>',
                                 title_font_size=28, legend_name='<b>Sample</b>', legend_font_size=16,
                                 axis_font_size=20, line_width=1.5):
+
 
                 """
                 Generates a plot of the NMR spectra.
@@ -112,6 +129,8 @@ class STOCSY_app:
                 fig : go.Figure
                     A Plotly figure object containing the plotted NMR spectra.
                 """
+
+
                 from plotly import express as px
 
                 df_spectra = pd.DataFrame(self.spectra)
@@ -120,7 +139,7 @@ class STOCSY_app:
                 fig = go.Figure()
                 for i in df_spectra.index:
                     fig.add_trace(go.Scatter(x=self.ppm, y=df_spectra.loc[i, :], mode='lines', name=i,
-                                            line=dict(width=line_width)))
+                                             line=dict(width=line_width)))
                 fig.update_layout(
                     title={'text': title, 'xanchor': 'center', 'yanchor': 'top'}, title_x=0.5,
                     xaxis_title="<b>δ<sup>1</sup>H</b>", yaxis_title="<b>Intensity</b>",
@@ -143,10 +162,9 @@ class STOCSY_app:
                     html.Div(id='peak-data', children='Click on the plot to select peaks.'),
                     dcc.Store(id='stored-peaks', data=[]),
                     html.Label("P-value Threshold:", className="mr-2"),
-                    dbc.Input(id='pvalue-threshold', type='number', value=0.001, step=0.000000000000000000000000000000000000000000001, placeholder="P-value threshold"),
-                    # Add more configuration options here if necessary
+                    dbc.Input(id='pvalue-threshold', type='number', value=0.001, placeholder="P-value threshold"),
+                    dbc.Button("Run STOCSY", id="run-stocsy-button", color="primary", className="mt-2"),
                     dbc.Button("Clear Data", id="clear-button", color="danger", className="mt-2 ml-2"),
-                    dbc.Button("Run STOCSY", id="submit-button", color="primary", className="mt-2 ml-2")
                 ], width=12)
             ]),
             dbc.Row([
@@ -160,6 +178,25 @@ class STOCSY_app:
             [State('stored-peaks', 'data')]
         )
         def update_peaks(clickData, clear_clicks, stored_peaks):
+            """
+            Updates the selected peaks based on user interactions with the plot.
+
+            Parameters:
+            -----------
+            clickData : dict
+                Data about where the user clicked on the NMR plot.
+            clear_clicks : int
+                Number of times the 'Clear Data' button has been clicked.
+            stored_peaks : list
+                Previously selected peaks.
+
+            Returns:
+            --------
+            stored_peaks : list
+                Updated list of selected peaks.
+            peak_text : str
+                Text to display information about the selected peaks.
+            """
             ctx = dash.callback_context
             if not ctx.triggered:
                 return stored_peaks, 'Click on the plot to select peaks.'
@@ -175,28 +212,41 @@ class STOCSY_app:
 
         @app.callback(
             Output("stocsy-plot", "figure"),
-            [Input("stored-peaks", "data"), Input("pvalue-threshold", "value"), Input("submit-button", "n_clicks")]
+            [Input("run-stocsy-button", "n_clicks")],
+            [State("stored-peaks", "data"), State("pvalue-threshold", "value")]
         )
-        def update_stocsy_plot(stored_peaks, pvalue_threshold, submit_clicks):
-            # Check if the submit button was clicked
-            if not submit_clicks:
-                return dash.no_update  # Do nothing if the button hasn't been clicked
+        def update_stocsy_plot(n_clicks, stored_peaks, pvalue_threshold):
 
-            # If no peak is selected, do not update
-            if not stored_peaks:
-                print("No peak selected.")
+            """
+            Runs the STOCSY analysis and updates the STOCSY plot when the 'Run STOCSY' button is clicked.
+
+            Parameters:
+            -----------
+            n_clicks : int
+                The number of times the 'Run STOCSY' button has been clicked.
+            stored_peaks : list
+                Selected peaks from the NMR plot.
+            pvalue_threshold : float
+                P-value threshold for STOCSY analysis.
+
+            Returns:
+            --------
+            fig : go.Figure or dash.no_update
+                Updated STOCSY plot or no update if conditions are not met.
+            """
+
+            
+            if not stored_peaks or n_clicks is None:
                 return dash.no_update
-
-            # Extract the x position of the selected peak
+            
             try:
                 x_peak = float(stored_peaks[0]['x'])
             except (KeyError, TypeError, ValueError) as e:
                 print("Error extracting peak value:", e)
                 return dash.no_update
-
-            # Ensure p-value threshold is not None
+            
             if pvalue_threshold is None:
-                pvalue_threshold = 0.05  # Default p-value if user input is cleared
+                pvalue_threshold = 0.05
                 print("p-value threshold was None, setting to default:", pvalue_threshold)
             else:
                 try:
@@ -205,14 +255,11 @@ class STOCSY_app:
                     print("Error converting p-value threshold to float:", e)
                     return dash.no_update
 
-            # Print the values for debugging
             print(f"Running STOCSY with x_peak={x_peak}, p-value threshold={pvalue_threshold}")
 
-            # Run the STOCSY function and catch any issues
             try:
                 spectra_for_stocsy = self.spectra
                 ppm = self.ppm
-
                 spectra_for_stocsy.columns = list(ppm)
                 fig = STOCSY(spectra=spectra_for_stocsy, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
                 if not isinstance(fig, go.Figure):
@@ -223,39 +270,13 @@ class STOCSY_app:
 
             return fig
 
-        '''
-        @app.callback(
-            Output("download-dataframe-csv", "data"),
-            [Input("export-button", "n_clicks")],
-            [State("stored-peaks", "data")],
-            prevent_initial_call=True
-        )
-        '''
-        def export_x_positions(n_clicks, stored_peaks):
-            if not stored_peaks:
-                return dash.no_update
-            x_positions = [p['x'] for p in stored_peaks]
-            df = pd.DataFrame(x_positions, columns=["X Positions"])
-            csv_string = df.to_csv(index=False)
-            return dict(content=csv_string, filename="x_positions.csv")
-
         return app
 
 
 if __name__ == '__main__':
-
-    # Step 1: Load your NMR spectra data
     df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
-    spectra = df.iloc[:,1:]  # Assuming first column is metadata and not part of the spectra
-    ppm = spectra.columns.astype(float).to_list()  # Convert column names to floats (ppm values)
-    # Outside the class, in the main block
-    # Create instance of the class with spectra and ppm data
-
-
+    spectra = df.iloc[:,1:]
+    ppm = spectra.columns.astype(float).to_list()
     stocsy_app = STOCSY_app(spectra, ppm)
-    
-    # Get the app instance
     app = stocsy_app.run_ui()
-    
-    # Run the app
     app.run_server(debug=True, port=8051)
