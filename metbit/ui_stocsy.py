@@ -13,7 +13,6 @@ from dash import dcc, html
 from .STOCSY import STOCSY  # Adjust as necessary based on your file
 
 class STOCSY_app:
-
     """
     A Dash application for visualizing NMR spectra and performing STOCSY analysis.
     
@@ -31,13 +30,21 @@ class STOCSY_app:
 
     Example:
     --------
-        df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
-        spectra = df.iloc[:,1:]
-        ppm = spectra.columns.astype(float).to_list()
-        stocsy_app = STOCSY_app(spectra, ppm)
-        app = stocsy_app.run_ui()
-        app.run_server(debug=True, port=8051)
+    # Load your NMR spectra data
+    df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
+    spectra = df.iloc[:,1:]
+    ppm = spectra.columns.astype(float).to_list()
+    
+    # Create instance of the class with spectra and ppm data
+    stocsy_app = STOCSY_app(spectra, ppm)
+    
+    # Get the app instance
+    app = stocsy_app.run_ui()
+    
+    # Run the app
+    app.run_server(debug=True, port=8051)
     """
+
 
     def __init__(self, spectra: pd.DataFrame, ppm: list):
 
@@ -55,8 +62,6 @@ class STOCSY_app:
         self.ppm = ppm
 
     def run_ui(self):
-        
-        
         """
         Sets up the Dash application layout, callbacks, and configuration.
         
@@ -65,11 +70,7 @@ class STOCSY_app:
         app : dash.Dash
             The initialized Dash application instance.
         """
-
-
         class plot_NMR_spec:
-
-
             """
             A helper class to handle the plotting of NMR spectra.
             
@@ -80,10 +81,7 @@ class STOCSY_app:
             ppm : list
                 List of PPM values corresponding to the spectra.
             """
-
-
             def __init__(self, spectra, ppm):
-
                 """
                 Initializes the plot_NMR_spec with the spectra and PPM values.
 
@@ -94,15 +92,12 @@ class STOCSY_app:
                 ppm : list
                     List of PPM values corresponding to the spectra.
                 """
-
-
                 self.spectra = spectra
                 self.ppm = ppm
 
             def single_spectra(self, color_map=None, title='<b>Spectra of <sup>1</sup>H NMR data</b>',
                                 title_font_size=28, legend_name='<b>Sample</b>', legend_font_size=16,
                                 axis_font_size=20, line_width=1.5):
-
 
                 """
                 Generates a plot of the NMR spectra.
@@ -130,16 +125,13 @@ class STOCSY_app:
                     A Plotly figure object containing the plotted NMR spectra.
                 """
 
-
-                from plotly import express as px
-
                 df_spectra = pd.DataFrame(self.spectra)
                 df_spectra.columns = self.ppm
 
                 fig = go.Figure()
                 for i in df_spectra.index:
                     fig.add_trace(go.Scatter(x=self.ppm, y=df_spectra.loc[i, :], mode='lines', name=i,
-                                             line=dict(width=line_width)))
+                                            line=dict(width=line_width)))
                 fig.update_layout(
                     title={'text': title, 'xanchor': 'center', 'yanchor': 'top'}, title_x=0.5,
                     xaxis_title="<b>δ<sup>1</sup>H</b>", yaxis_title="<b>Intensity</b>",
@@ -153,6 +145,7 @@ class STOCSY_app:
         plotter = plot_NMR_spec(self.spectra, self.ppm)
         app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+        # Define the layout for the Dash app
         app.layout = dbc.Container([
             dbc.Row([
                 dbc.Col([dcc.Graph(id='nmr-plot', figure=plotter.single_spectra())], width=12)
@@ -167,8 +160,15 @@ class STOCSY_app:
                     dbc.Button("Clear Data", id="clear-button", color="danger", className="mt-2 ml-2"),
                 ], width=12)
             ]),
+            # Add loading spinner for STOCSY plot
             dbc.Row([
-                dbc.Col([dcc.Graph(id='stocsy-plot')], width=12)
+                dbc.Col([
+                    dcc.Loading(
+                        id="loading-stocsy",
+                        type="circle",  # Type of spinner: 'default', 'circle', or 'dot'
+                        children=[dcc.Graph(id='stocsy-plot')]
+                    )
+                ], width=12)
             ]),
         ], fluid=True)
 
@@ -216,7 +216,6 @@ class STOCSY_app:
             [State("stored-peaks", "data"), State("pvalue-threshold", "value")]
         )
         def update_stocsy_plot(n_clicks, stored_peaks, pvalue_threshold):
-
             """
             Runs the STOCSY analysis and updates the STOCSY plot when the 'Run STOCSY' button is clicked.
 
@@ -234,8 +233,6 @@ class STOCSY_app:
             fig : go.Figure or dash.no_update
                 Updated STOCSY plot or no update if conditions are not met.
             """
-
-
             if not stored_peaks or n_clicks is None:
                 return dash.no_update
             
@@ -264,19 +261,27 @@ class STOCSY_app:
                 fig = STOCSY(spectra=spectra_for_stocsy, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
                 if not isinstance(fig, go.Figure):
                     raise ValueError("STOCSY did not return a Plotly figure.")
+                print('Done')
             except Exception as e:
                 print("Error in STOCSY:", e)
                 return dash.no_update
-
+            
             return fig
 
         return app
 
 
 if __name__ == '__main__':
+    # Load your NMR spectra data
     df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
     spectra = df.iloc[:,1:]
     ppm = spectra.columns.astype(float).to_list()
+    
+    # Create instance of the class with spectra and ppm data
     stocsy_app = STOCSY_app(spectra, ppm)
+    
+    # Get the app instance
     app = stocsy_app.run_ui()
+    
+    # Run the app
     app.run_server(debug=True, port=8051)
