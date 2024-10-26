@@ -2,15 +2,33 @@
 class Normalization:
     """
     A class for performing various normalization methods, including 
-    Probabilistic Quotient Normalization (PQN).
+    Probabilistic Quotient Normalization (PQN), Standard Normal Variate 
+    (SNV), Multiplicative Scatter Correction (MSC), and their combinations.
 
     Methods:
     --------
     pqn_normalization(df):
-        Applies PQN normalization to the input dataframe.
+        Applies Probabilistic Quotient Normalization (PQN) to the input dataframe.
+    
+    snv_normalization(df):
+        Applies Standard Normal Variate (SNV) normalization to the input dataframe.
+
+    msc_normalization(df):
+        Applies Multiplicative Scatter Correction (MSC) normalization to the input dataframe.
+
+    snv_msc_normalization(df):
+        Applies SNV followed by MSC normalization to the input dataframe.
+
+    snv_pqn_normalization(df):
+        Applies SNV followed by PQN normalization to the input dataframe.
+
+    snv_msc_pqn_normalization(df):
+        Applies SNV followed by MSC and then PQN normalization to the input dataframe.
     """
 
+
     def __init__(self):
+        """Initializes the Normalization class."""
         pass
 
     @staticmethod
@@ -71,7 +89,22 @@ class Normalization:
     
     def snv_normalization(df):
         """
-        Standard Normal Variate (SNV) method
+        Apply Standard Normal Variate (SNV) normalization to a dataframe.
+
+        Parameters:
+        -----------
+        df : pandas.DataFrame or numpy.ndarray
+            The input data to normalize. Each column represents a feature.
+
+        Returns:
+        --------
+        df_norm : pandas.DataFrame
+            The SNV normalized dataframe.
+
+        Raises:
+        -------
+        TypeError:
+            If input is not a pandas DataFrame or cannot be converted to one.
         """
         import numpy as np
         import pandas as pd
@@ -103,7 +136,22 @@ class Normalization:
 
     def msc_normalization(df):
         """
-        Multiplicative Scatter Correction (MSC) method
+        Apply Multiplicative Scatter Correction (MSC) normalization to a dataframe.
+
+        Parameters:
+        -----------
+        df : pandas.DataFrame or numpy.ndarray
+            The input data to normalize. Each column represents a feature.
+
+        Returns:
+        --------
+        df_norm : pandas.DataFrame
+            The MSC normalized dataframe.
+
+        Raises:
+        -------
+        TypeError:
+            If input is not a pandas DataFrame or cannot be converted to one.
         """
         import numpy as np
         import pandas as pd
@@ -140,7 +188,22 @@ class Normalization:
 
     def snv_msc_normalization(df):
         """
-        SNV-MSC method
+        Apply SNV followed by MSC normalization to a dataframe.
+
+        Parameters:
+        -----------
+        df : pandas.DataFrame or numpy.ndarray
+            The input data to normalize. Each column represents a feature.
+
+        Returns:
+        --------
+        df_norm : pandas.DataFrame
+            The SNV-MSC normalized dataframe.
+
+        Raises:
+        -------
+        TypeError:
+            If input is not a pandas DataFrame or cannot be converted to one.
         """
         import numpy as np
         import pandas as pd
@@ -177,7 +240,22 @@ class Normalization:
 
     def snv_pqn_normalization(df):
         """
-        SNV-PQN method
+        Apply SNV followed by PQN normalization to a dataframe.
+
+        Parameters:
+        -----------
+        df : pandas.DataFrame or numpy.ndarray
+            The input data to normalize. Each column represents a feature.
+
+        Returns:
+        --------
+        df_norm : pandas.DataFrame
+            The SNV-PQN normalized dataframe.
+
+        Raises:
+        -------
+        TypeError:
+            If input is not a pandas DataFrame or cannot be converted to one.
         """
         import numpy as np
         import pandas as pd
@@ -208,7 +286,24 @@ class Normalization:
 
     def snv_msc_pqn_normalization(df):
         """
-        SNV-MSC-PQN method
+        Apply SNV followed by MSC and then PQN normalization to a dataframe.
+
+        Parameters:
+        -----------
+        df : pandas.DataFrame or numpy.ndarray
+            The input data to normalize. Each column represents a feature.
+
+        Returns:
+        --------
+        df_norm : pandas.DataFrame
+            The SNV-MSC-PQN normalized dataframe.
+
+        Raises:
+        -------
+        TypeError:
+            If input is not a pandas DataFrame or cannot be converted to one.
+        ValueError:
+            If an error occurs during the normalization process.
         """
         import numpy as np
         import pandas as pd

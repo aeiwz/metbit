@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -5,7 +7,39 @@ from scipy.stats import pearsonr
 
 
 
-def plot_nmr_correlation(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
+def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
+
+    """
+    Performs a STOCSY (Soft Toward Correlation Spectroscopy) analysis on NMR spectra data.
+
+    This function calculates the Pearson correlation between a specified anchor signal 
+    (identified by its PPM value) and all other signals in the NMR spectra. It identifies 
+    significant correlations based on the specified p-value threshold and visualizes 
+    the results in a scatter plot.
+
+    Parameters:
+    -----------
+    spectra : pd.DataFrame
+        A DataFrame containing the NMR spectra data, where each column represents a 
+        chemical shift in ppm and each row represents a sample.
+
+    anchor_ppm_value : float
+        The PPM value of the anchor signal used for correlation analysis.
+
+    p_value_threshold : float, optional
+        The threshold for determining significance. Correlations with a p-value less than 
+        this threshold will be marked as significant. Default is 0.0001.
+
+    Returns:
+    --------
+    fig : go.Figure
+        A Plotly figure object containing the scatter plot of the correlation results.
+
+    Example:
+    ---------
+    >>> fig = STOCSY(spectra=spectra, anchor_ppm_value=1.29275, p_value_threshold=0.0000001)
+    >>> fig.show()
+    """
     # Step 1: Load NMR spectra data
 
     ppm = spectra.columns.astype(float).to_list()  # Convert column names to floats (ppm values)
@@ -58,19 +92,25 @@ def plot_nmr_correlation(spectra: pd.DataFrame, anchor_ppm_value, p_value_thresh
             size=3,
             color='red',  # Red color for significant points
         ),
-        name=f'Significant (p < {p_value_threshold})'
+        name=f'Significant (<i>p</i> < {p_value_threshold})'
     ))
 
     # Add labels and title
     fig.update_layout(
-        title=f'STOCSY: Correlation Profile with Anchor ppm {anchor_ppm_value}',
+        title={'text':f'<b>STOCSY: δ {anchor_ppm_value}</b>',
+                'y':0.9,
+                'x':0.5,
+                'xanchor':'center',
+                'yanchor':'top'},
         xaxis_title='Chemical Shift (ppm)',
-        yaxis_title=r'Correlation (r^2)',
+        yaxis_title=f'Correlation (r<sup>2</sup>) δ = {anchor_ppm_value}',
         showlegend=True
     )
 
+    #invert x-axis
+    fig.update_xaxes(autorange="reversed")
     # Display the interactive plot
-    fig.show()
+    return fig
 
 # Example usage
 #plot_nmr_correlation(spectra=spectra, anchor_ppm_value=1.29275, p_value_threshold=0.0000001)
