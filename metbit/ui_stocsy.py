@@ -10,7 +10,7 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 # Importing the custom STOCSY function
-from STOCSY import STOCSY  # Adjust as necessary based on your file
+from .STOCSY import STOCSY  # Adjust as necessary based on your file
 
 class STOCSY_app:
 
