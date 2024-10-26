@@ -97,13 +97,13 @@ def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
 
     # Add labels and title
     fig.update_layout(
-        title={'text':f'<b>STOCSY: δ {anchor_ppm_value}</b>',
+        title={'text':f'<b>STOCSY: δ {np.round(anchor_ppm_value, decimals=4)}</b>',
                 'y':0.9,
                 'x':0.5,
                 'xanchor':'center',
                 'yanchor':'top'},
-        xaxis_title='Chemical Shift (ppm)',
-        yaxis_title=f'Correlation (r<sup>2</sup>) δ = {anchor_ppm_value}',
+        xaxis_title='<b>δ<sup>1</sup>H</b>',
+        yaxis_title=f'Correlation (r<sup>2</sup>) δ = {np.round(anchor_ppm_value, decimals=4)}',
         showlegend=True
     )
 
