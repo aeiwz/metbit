@@ -1,0 +1,26 @@
+Metadata-Version: 2.1
+Name: metbit
+Version: 6.0.2
+Summary: Metabolomics data analysis and visualization tools.
+Home-page: https://github.com/aeiwz/metbit.git
+Download-URL: https://github.com/aeiwz/metbit/archive/refs/tags/V6.0.2.tar.gz
+Author: aeiwz
+Author-email: theerayut_aeiw_123@hotmail.com
+License: MIT
+Keywords: Omics,Multivariate analysis,Visualization,Data Analysis,Metabolomics,Chemometrics
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Education
+Classifier: Topic :: Software Development :: Build Tools
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3.12
+License-File: LICENSE
+Requires-Dist: scikit-learn
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: matplotlib
+Requires-Dist: seaborn
+Requires-Dist: scipy
+Requires-Dist: statsmodels
+Requires-Dist: plotly
+Requires-Dist: pyChemometrics
+Requires-Dist: lingress

@@ -128,6 +128,7 @@ class STOCSY_app:
                     xaxis_autorange="reversed", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
                     yaxis=dict(tickformat=".2e")
                 )
+
                 return fig
 
         plotter = plot_NMR_spec(self.spectra, self.ppm)
@@ -203,7 +204,11 @@ class STOCSY_app:
 
             # Run the STOCSY function and catch any issues
             try:
-                fig = STOCSY(spectra=spectra, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
+                spectra_for_stocsy = self.spectra
+                ppm = self.ppm
+
+                spectra_for_stocsy.columns=list(ppm)
+                fig = STOCSY(spectra=spectra_for_stocsy, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
                 if not isinstance(fig, go.Figure):
                     raise ValueError("STOCSY did not return a Plotly figure.")
             except Exception as e:
