@@ -252,7 +252,7 @@ class STOCSY_app:
                     print("Error converting p-value threshold to float:", e)
                     return dash.no_update
 
-            print(f"Running STOCSY with x_peak={x_peak}, p-value threshold={pvalue_threshold}")
+            print(f"Running STOCSY with δ={x_peak}, p-value threshold={pvalue_threshold}")
 
             try:
                 spectra_for_stocsy = self.spectra
@@ -261,7 +261,7 @@ class STOCSY_app:
                 fig = STOCSY(spectra=spectra_for_stocsy, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
                 if not isinstance(fig, go.Figure):
                     raise ValueError("STOCSY did not return a Plotly figure.")
-                print('Done')
+                print(f'STOCSY: x_peak={x_peak}, p-value threshold={pvalue_threshold} Done')
             except Exception as e:
                 print("Error in STOCSY:", e)
                 return dash.no_update
