@@ -142,9 +142,11 @@ class STOCSY_app:
                 dbc.Col([
                     html.Div(id='peak-data', children='Click on the plot to select peaks.'),
                     dcc.Store(id='stored-peaks', data=[]),
-                    html.Label("P-value Threshold:", className="mr-2"),  # Add this line for the label
-                    dbc.Input(id='pvalue-threshold', type='number', value=0.001, step=0.000000000000000000000000000000000000000000000001, placeholder="P-value threshold"),
+                    html.Label("P-value Threshold:", className="mr-2"),
+                    dbc.Input(id='pvalue-threshold', type='number', value=0.001, step=0.000000000000000000000000000000000000000000001, placeholder="P-value threshold"),
+                    # Add more configuration options here if necessary
                     dbc.Button("Clear Data", id="clear-button", color="danger", className="mt-2 ml-2"),
+                    dbc.Button("Run STOCSY", id="submit-button", color="primary", className="mt-2 ml-2")
                 ], width=12)
             ]),
             dbc.Row([
@@ -173,22 +175,26 @@ class STOCSY_app:
 
         @app.callback(
             Output("stocsy-plot", "figure"),
-            [Input("stored-peaks", "data"), Input("pvalue-threshold", "value")]
+            [Input("stored-peaks", "data"), Input("pvalue-threshold", "value"), Input("submit-button", "n_clicks")]
         )
-        def update_stocsy_plot(stored_peaks, pvalue_threshold):
+        def update_stocsy_plot(stored_peaks, pvalue_threshold, submit_clicks):
+            # Check if the submit button was clicked
+            if not submit_clicks:
+                return dash.no_update  # Do nothing if the button hasn't been clicked
+
             # If no peak is selected, do not update
             if not stored_peaks:
                 print("No peak selected.")
                 return dash.no_update
-            
+
             # Extract the x position of the selected peak
             try:
                 x_peak = float(stored_peaks[0]['x'])
             except (KeyError, TypeError, ValueError) as e:
                 print("Error extracting peak value:", e)
                 return dash.no_update
-            
-            # Ensure p-value threshold is not None; if None, use a default value (e.g., 0.05)
+
+            # Ensure p-value threshold is not None
             if pvalue_threshold is None:
                 pvalue_threshold = 0.05  # Default p-value if user input is cleared
                 print("p-value threshold was None, setting to default:", pvalue_threshold)
@@ -207,15 +213,16 @@ class STOCSY_app:
                 spectra_for_stocsy = self.spectra
                 ppm = self.ppm
 
-                spectra_for_stocsy.columns=list(ppm)
+                spectra_for_stocsy.columns = list(ppm)
                 fig = STOCSY(spectra=spectra_for_stocsy, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
                 if not isinstance(fig, go.Figure):
                     raise ValueError("STOCSY did not return a Plotly figure.")
             except Exception as e:
                 print("Error in STOCSY:", e)
                 return dash.no_update
-            
+
             return fig
+
         '''
         @app.callback(
             Output("download-dataframe-csv", "data"),
