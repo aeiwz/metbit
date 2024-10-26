@@ -227,8 +227,7 @@ class STOCSY_app:
             csv_string = df.to_csv(index=False)
             return dict(content=csv_string, filename="x_positions.csv")
 
-        # Inside STOCSY_app class, replace `app.run_server(debug=True)` with:
-        return app  # At the end of the `run_ui` method
+        app.run_server(debug=True)
 
 
 
