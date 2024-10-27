@@ -49,7 +49,7 @@ Example Usage
 
 To use the STOCSY Dash app with your own data, ensure your .csv file has the same format as shown above. Update the data loading section in app.py if needed.
 
-’’’python
+```python
 import pandas as pd
 from metbit import STOCSY_app
 
@@ -60,4 +60,4 @@ ppm = spectra.columns.astype(float).to_list()
 stocsy_app = STOCSY_app(spectra, ppm)
 app = stocsy_app.run_ui()
 app.run_server(debug=True, port=8051)
-’’’
+```
