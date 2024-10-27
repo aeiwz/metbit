@@ -2,7 +2,7 @@
 
 This is a Dash-based web application for visualizing NMR spectra and performing STOCSY (**S**tatistical **TO**tal **C**orrelation **S**pectroscop**Y**) analysis. The application allows users to select peaks from NMR spectra, set a *p-value* threshold, and perform STOCSY analysis, with caching for improved performance.
 
-Features
+**Features:**
 
 •	Interactive NMR Plotting: Visualize and explore NMR spectra by clicking on peaks to select them.
 
@@ -10,7 +10,7 @@ Features
 
 •	Caching: Uses caching to avoid redundant **STOCSY** computations for repeated requests with the same peak and p-value threshold.
 
-Requirements
+**Requirements:**
 
 The application requires the following libraries:
 
@@ -18,12 +18,12 @@ The application requires the following libraries:
 	•	Plotly
 	•	Pandas
 
-Install the necessary libraries using:
+**Install the necessary libraries using:**
 
 ```bash
 pip install dash dash-bootstrap-components plotly pandas
 ```
-Example Usage
+**Example Usage:**
 
 To use the **STOCSY Dash app** with your own data, ensure your .csv file has the same format as shown above. Update the data loading section in app.py if needed.
 
@@ -40,7 +40,7 @@ app = stocsy_app.run_ui()
 app.run_server(debug=True, port=8051)
 ```
 
-Run the Application:
+**Run the Application:**
 
 ```bash
 python app.py
@@ -57,7 +57,7 @@ The STOCSY_app class initializes the NMR data, sets up the Dash layout, and mana
 	3.	STOCSY Analysis with Caching:
 	•	The update_stocsy_plot method performs STOCSY analysis using cached results for previously computed peaks and thresholds.
 
-Application Callbacks
+## **Application Callbacks**
 
 	•	update_peaks: Updates peak selection based on user clicks on the NMR plot.
 	•	update_stocsy_plot: Runs STOCSY analysis and updates the STOCSY plot. Cached results are used if available.
