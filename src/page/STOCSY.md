@@ -50,11 +50,16 @@ The application will run locally on http://localhost:8051. Open this URL in your
 
 The STOCSY_app class initializes the NMR data, sets up the Dash layout, and manages callbacks for the application. Key functionalities include:
 
-	1.	Data Initialization:
+1.	Data Initialization:
+
 	•	Loads NMR spectra data (spectra) and corresponding PPM values (ppm).
-	2.	Interactive Plotting:
+
+2.	Interactive Plotting:
+
 	•	The plot_NMR_spec inner class generates interactive plots of the NMR spectra.
-	3.	STOCSY Analysis with Caching:
+
+3.	STOCSY Analysis with Caching:
+
 	•	The update_stocsy_plot method performs STOCSY analysis using cached results for previously computed peaks and thresholds.
 
 ## **Application Callbacks**
