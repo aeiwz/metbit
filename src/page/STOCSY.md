@@ -1,5 +1,5 @@
 # **STOCSY Dash Application**
-<code style="red : red">text</code>
+$${\color{red}Red}$$
 This is a Dash-based web application for visualizing NMR spectra and performing <mark>**STOCSY**</mark> (**S**tatistical **TO**tal **C**orrelation **S**pectroscop**Y**) analysis. The application allows users to select peaks from NMR spectra, set a *p-value* threshold, and perform STOCSY analysis, with caching for improved performance.
 
 **Features:**
