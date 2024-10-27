@@ -52,7 +52,7 @@ The STOCSY_app class initializes the NMR data, sets up the Dash layout, and mana
 
 1.	Data Initialization:
 
-	•	Loads NMR spectra data (spectra) and corresponding PPM values (ppm).
+	•	Loads NMR spectra data (spectra) and corresponding ppm values.
 
 2.	Interactive Plotting:
 
