@@ -32,7 +32,7 @@ import pandas as pd
 from metbit import STOCSY_app
 
 df = pd.read_csv("path_to_your_file.csv")
-spectra = df.iloc[:,1:]
+spectra = df.iloc[:,1:] # depend on number of meta data and spectra data
 ppm = spectra.columns.astype(float).to_list()
 
 stocsy_app = STOCSY_app(spectra, ppm)
