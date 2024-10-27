@@ -4,9 +4,9 @@ This is a Dash-based web application for visualizing NMR spectra and performing 
 
 Features
 
-	•	Interactive NMR Plotting: Visualize and explore NMR spectra by clicking on peaks to select them.
-	•	STOCSY Analysis: Perform **STOCSY** analysis on selected peaks with adjustable *p-value* threshold.
-	•	Caching: Uses caching to avoid redundant **STOCSY** computations for repeated requests with the same peak and p-value threshold.
+•	Interactive NMR Plotting: Visualize and explore NMR spectra by clicking on peaks to select them.
+•	STOCSY Analysis: Perform **STOCSY** analysis on selected peaks with adjustable *p-value* threshold.
+•	Caching: Uses caching to avoid redundant **STOCSY** computations for repeated requests with the same peak and p-value threshold.
 
 Requirements
 
