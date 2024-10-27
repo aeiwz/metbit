@@ -8,7 +8,10 @@ Metbit is a Python package designed for the analysis of metabolomics data. It pr
 ```bash
 pip install metbit
 ```
-
+# Features: 
+![1. PCA model and visualisation](#principal-component-analysis)
+![2. OPLS-DA model and visualisation](#orthogonal-partial-least-squares-discriminant-analysis-(opls-da))
+![3. STOCSY and STOCSY app](src/page/STOCSY.md)
 # Example:
 
 # **Principal component analysis**
