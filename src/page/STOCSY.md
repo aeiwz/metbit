@@ -2,7 +2,7 @@
 
 This is a Dash-based web application for visualizing NMR spectra and performing **STOCSY** (**S**tatistical **TO**tal **C**orrelation **S**pectroscop**Y**) analysis. The application allows users to select peaks from NMR spectra, set a *p-value* threshold, and perform STOCSY analysis, with caching for improved performance.
 
-**Features:**
+**Features:** This is <span style="color:blue">blue text</span> in Markdown.
 
 •	Interactive NMR Plotting: Visualize and explore NMR spectra by clicking on peaks to select them.
 
