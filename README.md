@@ -19,7 +19,7 @@ pip install metbit
 
 [5. Lazy OPLS-DA](#lazy-opls-da)
 
-[4. Peak chop]()
+[6. Peak chop]()
 
 
 # Example:
