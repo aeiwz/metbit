@@ -64,6 +64,7 @@ The STOCSY_app class initializes the NMR data, sets up the Dash layout, and mana
 
 ## **Application Callbacks**
 
-	•	update_peaks: Updates peak selection based on user clicks on the NMR plot.
-	•	update_stocsy_plot: Runs STOCSY analysis and updates the STOCSY plot. Cached results are used if available.
+ •	update_peaks: Updates peak selection based on user clicks on the NMR plot.
+
+ •	update_stocsy_plot: Runs STOCSY analysis and updates the STOCSY plot. Cached results are used if available.
 
