@@ -1,6 +1,6 @@
 # **STOCSY Dash Application**
 
-This is a Dash-based web application for visualizing NMR spectra and performing **STOCSY** (**S**tatistical **TO**tal **C**orrelation **S**pectroscop**Y**) analysis. The application allows users to select peaks from NMR spectra, set a *p-value* threshold, and perform STOCSY analysis, with caching for improved performance.
+This is a Dash-based web application for visualizing NMR spectra and performing **STOCSY** (**S**tatistical **TO**tal **C**orrelation **S**pectroscop**Y**) analysis. The application allows users to select peaks from NMR spectra, set a *p-value* threshold, and perform **STOCSY** analysis, with caching for improved performance.
 
 **Features:**
 
@@ -60,11 +60,11 @@ The STOCSY_app class initializes the NMR data, sets up the Dash layout, and mana
 
 3.	STOCSY Analysis with Caching:
 
-	•	The update_stocsy_plot method performs STOCSY analysis using cached results for previously computed peaks and thresholds.
+	•	The update_stocsy_plot method performs **STOCSY** analysis using cached results for previously computed peaks and thresholds.
 
 ## **Application Callbacks**
 
  •	update_peaks: Updates peak selection based on user clicks on the NMR plot.
 
- •	update_stocsy_plot: Runs STOCSY analysis and updates the STOCSY plot. Cached results are used if available.
+ •	update_stocsy_plot: Runs **STOCSY** analysis and updates the **STOCSY** plot. Cached results are used if available.
 
