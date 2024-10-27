@@ -1,11 +1,11 @@
 # **STOCSY Dash Application**
 
-This is a Dash-based web application for visualizing NMR spectra and performing STOCSY (Statistical TOtal Correlation SpectroscopY) analysis. The application allows users to select peaks from NMR spectra, set a p-value threshold, and perform STOCSY analysis, with caching for improved performance.
+This is a Dash-based web application for visualizing NMR spectra and performing STOCSY (**S**tatistical **TO**tal **C**orrelation **S**pectroscop**Y**) analysis. The application allows users to select peaks from NMR spectra, set a p-value threshold, and perform STOCSY analysis, with caching for improved performance.
 
 Features
 
 	•	Interactive NMR Plotting: Visualize and explore NMR spectra by clicking on peaks to select them.
-	•	STOCSY Analysis: Perform STOCSY analysis on selected peaks with adjustable p-value threshold.
+	•	STOCSY Analysis: Perform **STOCSY** analysis on selected peaks with adjustable p-value threshold.
 	•	Caching: Uses caching to avoid redundant STOCSY computations for repeated requests with the same peak and p-value threshold.
 
 Requirements
