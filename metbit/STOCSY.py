@@ -5,6 +5,9 @@ import pandas as pd
 import plotly.graph_objects as go
 from scipy.stats import pearsonr
 
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
+
 
 
 def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
