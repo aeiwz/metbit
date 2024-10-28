@@ -10,7 +10,7 @@ from scipy.stats import pearsonr
 def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
 
     """
-    Performs a STOCSY (Soft Toward Correlation Spectroscopy) analysis on NMR spectra data.
+    Performs a STOCSY (Statistic Total Correlation Spectroscopy) analysis on NMR spectra data.
 
     This function calculates the Pearson correlation between a specified anchor signal 
     (identified by its PPM value) and all other signals in the NMR spectra. It identifies 
