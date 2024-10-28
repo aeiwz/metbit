@@ -1,5 +1,8 @@
-# _*_ coding: utf-8 _*_
+# -*- coding: utf-8 -*-
 
+
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
 
 import sys
 import os

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
 # Import necessary libraries
 import numpy as np
 import pandas as pd
@@ -30,7 +32,7 @@ from .scaler import Scaler
 
 import os
 
-__auther__ = "aeiwz"
+
 
 
 class opls_da:

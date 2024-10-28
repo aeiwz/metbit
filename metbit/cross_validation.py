@@ -1,6 +1,10 @@
-"""
-Perform cross validation.
-"""
+# -*- coding: utf-8 -*-
+
+
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
+
+
 import collections
 import typing
 import numpy as np

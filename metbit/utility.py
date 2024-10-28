@@ -3,7 +3,8 @@
 import numpy as np
 import pandas as pd
 
-__author__ = "aeiwz"
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
 
 class lazypair:
 

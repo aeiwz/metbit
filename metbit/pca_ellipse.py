@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
+
 import numpy as np 
 
 def confidence_ellipse(x, y, n_std=1.96, size=100): # 95% confidence interval (1.96) 

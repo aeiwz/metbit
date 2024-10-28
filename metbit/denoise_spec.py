@@ -1,5 +1,10 @@
+# -*- coding: utf-8 -*-
 
-#Preprocessing data set to decrease noise
+
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
+
+
 class Denoise:
     def decrease_noise(spectra, window_length=11, polyorder=2):
         import pandas as pd

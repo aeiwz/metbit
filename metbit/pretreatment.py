@@ -1,6 +1,8 @@
-"""
-Preprocess data matrix.
-"""
+# -*- coding: utf-8 -*-
+
+
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
 import numpy as np
 
 

@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
+
 import numpy as np
 import numpy.linalg as la
 import typing

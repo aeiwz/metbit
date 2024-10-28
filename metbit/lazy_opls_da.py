@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
 class lazy_opls_da:
 
     

@@ -1,6 +1,10 @@
-"""
-Orthogonal Projection on Latent Structure (O-PLS)
-"""
+# -*- coding: utf-8 -*-
+
+
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
+
+
 import numpy as np
 from numpy import linalg as la
 from typing import Tuple, Any, Union
