@@ -64,6 +64,6 @@ class peak_chops:
         second_index = ppm.get_loc(min(ppm, key=lambda x: abs(x - second_ppm))) + 1
         
         X.drop(columns=X.iloc[:, first_index:second_index].columns, inplace=True)
-        ppm = X.columns.astype(float).to_list()
+        ppm = X.columns.astype(float)
         
         return X, ppm
