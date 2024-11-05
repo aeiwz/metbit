@@ -15,7 +15,7 @@ def calculate_correlation(anchor_data, target_data):
     return pearsonr(anchor_data, target_data)
 
 
-def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
+def dynamic_STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
     """
     Performs a STOCSY (Statistic Total Correlation Spectroscopy) analysis on NMR spectra data.
 
