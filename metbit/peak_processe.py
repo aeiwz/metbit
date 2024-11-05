@@ -4,6 +4,9 @@
 __auther__ ='aeiwz'
 author_email='theerayut_aeiw_123@hotmail.com'
 
+import pandas as pd
+import numpy as np
+
 class peak_chops:
         
     import pandas as pd
@@ -11,6 +14,10 @@ class peak_chops:
 
 
     def __init__(self, data: pd.DataFrame, ppm: list = None) -> None:
+
+        import pandas as pd
+
+
 
         '''
         data: NMR spectra data maybe contain ppm as columns
