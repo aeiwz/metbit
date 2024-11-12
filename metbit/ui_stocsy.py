@@ -93,7 +93,7 @@ class STOCSY_app:
                 elif df_spectra.shape[0] <= 100:
                     index_x = random.sample(df_spectra.index.to_list(), int(0.2 * n_sample))
                 else:
-                    index_x = random.sample(df_spectra.index.to_list(), int(0.1 * n_sample))
+                    index_x = random.sample(df_spectra.index.to_list(), 30)
 
 
                 for i in index_x:
