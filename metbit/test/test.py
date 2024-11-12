@@ -13,7 +13,7 @@ from dash import dcc, html
 from functools import lru_cache
 
 # Importing the custom STOCSY function
-from .STOCSY import STOCSY  # Adjust as necessary based on your file
+from STOCSY import STOCSY  # Adjust as necessary based on your file
 
 class STOCSY_app:
     """
@@ -197,17 +197,17 @@ class STOCSY_app:
         return app
 
 
-if __name__ == '__main__':
-    # Load your NMR spectra data
-    df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
-    spectra = df.iloc[:,1:]
-    ppm = spectra.columns.astype(float).to_list()
 
-    # Create instance of the class with spectra and ppm data
-    stocsy_app = STOCSY_app(spectra, ppm)
+# Load your NMR spectra data
+df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
+spectra = df.iloc[:,1:]
+ppm = spectra.columns.astype(float).to_list()
 
-    # Get the app instance
-    app = stocsy_app.run_ui()
+# Create instance of the class with spectra and ppm data
+stocsy_app = STOCSY_app(spectra, ppm)
 
-    # Run the app
-    app.run_server(debug=True, port=8051)
+# Get the app instance
+app = stocsy_app.run_ui()
+
+# Run the app
+app.run_server(debug=True, port=8051)
