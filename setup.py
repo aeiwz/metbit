@@ -32,8 +32,7 @@ setup(
           'pyChemometrics',
           'lingress',
           'tqdm',
-          'dash'
-          'dash_bootstrap_components'],
+          'dash'],
   classifiers=[
     'Development Status :: 3 - Alpha',     
     'Intended Audience :: Education',     
