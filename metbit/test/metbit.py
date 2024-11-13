@@ -678,7 +678,6 @@ class opls_da:
             color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
         
 
-
         
         from pca_ellipse import confidence_ellipse
         fig = px.scatter(df_opls_scores, x=x_, y=y_, symbol=symbol_,     
@@ -701,6 +700,11 @@ class opls_da:
         fig.update_traces(marker=dict(size=marker_size, 
                             opacity=marker_opacity, 
                             line=dict(width=2, color='DarkSlateGrey')))
+        
+        fig.update_traces(textposition='middle center',
+                            textfont_size=marker_size-(0.4*marker_size))
+
+
 
 
         fig.add_annotation(dict(font=dict(color="black",size=font_size),
@@ -1978,6 +1982,8 @@ class pca:
         fig.add_annotation(dict(font=dict(color="black",size=font_size), x=1.0, y=0.01, showarrow=False, 
                                 text=f"<b>Q<sup>2</sup>X (Cum): {np.round(q2_test*100, decimals=2)}%<b>",
                                 textangle=0, xref="paper", yref="paper"), align="left")
+
+        
 
         fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
 

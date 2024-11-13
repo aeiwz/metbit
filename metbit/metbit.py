@@ -701,7 +701,10 @@ class opls_da:
                             opacity=marker_opacity, 
                             line=dict(width=2, color='DarkSlateGrey')))
 
+        fig.update_traces(textposition='middle center',
+                            textfont_size=marker_size-(0.4*marker_size))
 
+                            
         fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
@@ -1502,6 +1505,9 @@ class pca:
                             opacity=marker_opacity, 
                             line=dict(width=2, color='DarkSlateGrey')))
 
+        fig.update_traces(textposition='middle center',
+                            textfont_size=marker_size-(0.4*marker_size))                            
+
 
         fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
@@ -1968,6 +1974,9 @@ class pca:
         fig.update_traces(marker=dict(size=marker_size,
                             opacity=marker_opacity,
                             line=dict(width=2, color='DarkSlateGrey')))
+
+        fig.update_traces(textposition='middle center',
+                    textfont_size=marker_size-(0.4*marker_size))
 
         fig.add_annotation(dict(font=dict(color="black",size=font_size), x=1.0, y=0.05, showarrow=False,
                                 text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2.loc[r2['PC']==pc[2]].index, 'Cumulative variance'].values[0]*100, decimals=2)}%<b>",
