@@ -5,7 +5,66 @@ __auther__ ='aeiwz'
 author_email='theerayut_aeiw_123@hotmail.com'
 class lazy_opls_da:
 
-    
+    '''
+    Parameters:
+    -----------
+        •	data (pd.DataFrame): DataFrame containing the dataset.
+        •	groups (list): List of class labels for each data sample.
+        •	working_dir (str): Directory path for storing output files.
+        •	feature_names (list, optional): Names of features, defaults to None.
+        •	n_components (int, optional): Number of components for OPLS-DA, defaults to 2.
+        •	scaling (str, optional): Scaling method ('pareto'), defaults to 'pareto'.
+        •	estimator (str, optional): Model estimator, defaults to 'opls'.
+        •	kfold (int, optional): Number of folds in cross-validation, defaults to 3.
+        •	random_state (int, optional): Random seed, defaults to 94.
+        •	auto_ncomp (bool, optional): Automatically choose the optimal number of components, defaults to True.
+        •	permutation (bool, optional): Conduct permutation tests, defaults to True.
+        •	VIP (bool, optional): Calculate VIP scores, defaults to True.
+        •	linear_regression (bool, optional): Conduct linear regression analysis, defaults to True.
+
+    Returns:
+    --------
+        •	A printout of the model summary, including the project name, dataset information, configuration, and directory paths.
+
+    fit Method
+
+    Fits the OPLS-DA model to the dataset, generates plots, and saves them to the output directory.
+
+    Parameters:
+    -----------
+        •	marker_color (dict, optional): Dictionary mapping groups to colors.
+        •	custom_color (list, optional): Custom color grouping.
+        •	custom_shape (list, optional): Custom shape grouping.
+        •	symbol_dict (dict, optional): Dictionary mapping groups to marker symbols.
+        •	custom_legend_name (list, optional): Custom names for the legend, defaults to ['Group', 'Sub-group'].
+        •	marker_label (str or None, optional): Specifies marker labels ('class', 'group', or 'sub-group').
+        •	marker_size (int or None, optional): Size of markers in plots.
+        •	marker_opacity (float or None, optional): Opacity level of markers in plots.
+        •	individual_ellipse (bool, optional): Option to display individual ellipses for each group.
+
+    Returns:
+    --------
+        •	A message indicating the model fitting was successful.
+
+    Directory and Project Setup
+    ===========================
+    Creates necessary folders in the working directory based on project needs (e.g., for VIP score plots, permutation scores, etc.). Paths are stored in a dictionary (self.path).
+
+    Directories Created:
+    --------------------
+        •	working_dir/project_name/element/plots/... for different plots.
+        •	working_dir/project_name/element/data/... for data outputs.
+
+    Plotting and Saving Data
+    ------------------------
+        1.	Score Plot: Generates OPLS-DA score plots for each group.
+        2.	Loading Plot: Generates and saves loading plots.
+        3.	S Plot: Generates and saves S-score plots.
+        4.	VIP Score Plot: Generates VIP score plots and saves VIP scores as CSV if VIP=True.
+        5.	Permutation Test Plot: Conducts permutation tests and saves permutation scores as CSV if permutation=True.
+        6.	Volcano Plot (Linear Regression): Generates volcano plot and saves data if linear_regression=True.
+    '''
+
     import os
     from glob import glob
     import pandas as pd
@@ -181,44 +240,6 @@ class lazy_opls_da:
 
     def fit(self, marker_color: dict = None, custom_color: list = None, custom_shape: list = None, symbol_dict: dict = None, custom_legend_name = ['Group', 'Sub-group'], marker_label=None, marker_size=None, marker_opacity=None, individual_ellipse=False) -> None:
 
-
-        """
-        Fit the OPLS-DA model with custom visualization settings and generate various plots and data exports.
-
-        Parameters:
-        - marker_color (dict): A dictionary mapping unique group labels to colors for plotting. Defaults to a palette if not provided.
-        - custom_color (list): List to override group labels for color categorization in the data.
-        - custom_shape (list): List to override subgroup labels for shape categorization in the data.
-        - symbol_dict (dict): Dictionary mapping unique group labels to specific symbols for plotting. A random symbol is assigned if None.
-        - custom_legend_name (list): List of names for legend categories. Default is ['Group', 'Sub-group'].
-        - marker_label: Label to apply to markers in the plots (index, group, sub-group, class).
-        - marker_size: Size of markers in plots. If None, defaults are set based on data size.
-        - marker_opacity: Opacity of markers in plots. Default is 0.7 if None.
-        - individual_ellipse (bool): If True, individual ellipses are plotted per group in the score plot.
-
-        Workflow:
-        1. **Initialize Parameters**: Set color and shape settings based on provided parameters or default values.
-        2. **Assign Symbols**: Assign symbols to unique groups if not specified.
-        3. **Data Preparation**: Split data by 'Class' and initialize metadata for each subset.
-        4. **OPLS-DA Model Fitting**:
-        - Fit the OPLS-DA model for each data subset with specified components, scaling, and other model parameters.
-        - Save score plots (HTML and PNG), scores data (CSV), loading plots, and S-plots.
-        5. **Optional VIP Scores**: Calculate and save VIP scores and plots if enabled.
-        6. **Permutation Test**: Perform permutation tests if enabled and save histograms and scores.
-        7. **Linear Regression**: Fit a linear regression model if enabled and generate volcano plots and reports.
-
-        Outputs:
-        - Various plot files (.html, .png) saved in designated paths within `path` dictionary attribute.
-        - Data exports (.csv) for scores, loading plots, VIP scores, permutation test results, and regression data.
-
-        Returns:
-        - A success message confirming the model fitting completion.
-
-        Example:
-        ```python
-        model.fit(marker_color={'Group1': 'blue', 'Group2': 'green'}, custom_shape=['circle', 'square'])
-        ```
-        """
 
         from .metbit import opls_da
         from lingress import lin_regression

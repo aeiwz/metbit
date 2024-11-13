@@ -11,11 +11,51 @@ import dash_bootstrap_components as dbc
 from dash import dcc, html
 
 class pickie_peak:
+
+    """
+    A class to display and interact with NMR spectral data, enabling users to pick peaks from an interactive plot.
+
+    Parameters:
+    - spectra (pd.DataFrame): A DataFrame containing NMR spectral data with rows representing different spectra and columns representing intensity values at each chemical shift (ppm).
+    - ppm (list): A list of ppm values corresponding to the columns in the `spectra` DataFrame.
+
+    Methods:
+    - run_ui: Launches a Dash web application with a user interface to visualize NMR spectra, select peaks interactively, and export peak positions.
+
+    Example:
+    ```python
+    import pandas as pd
+    spectra = pd.DataFrame(...)  # Load or generate spectral data
+    ppm = [...]  # Define corresponding ppm values
+    picker = pickie_peak(spectra, ppm)
+    picker.run_ui()
+    ```
+
+    Usage:
+    1. **Plot Visualization**: Displays the spectra using an interactive Plotly graph.
+    2. **Peak Selection**: Allows users to click on the plot to select peaks, storing their positions.
+    3. **Export Functionality**: Offers options to export selected peak positions as a CSV file.
+    """
+
     def __init__(self, spectra: pd.DataFrame, ppm: list):
         self.spectra = spectra
         self.ppm = ppm
 
     def run_ui(self):
+
+
+        """
+        Launches the Dash application for visualizing and selecting NMR spectral peaks.
+
+        Components:
+        - Interactive Plot: Displays NMR spectra with options to click on peaks.
+        - Peak Selection: Allows users to store selected peak positions.
+        - Export Data: Provides an option to download selected peak positions as a CSV file.
+
+        Returns:
+        - Dash app: An interactive web application with plot, data selection, and export features.
+        """
+
 
         import dash
         from dash.dependencies import Input, Output, State
@@ -25,6 +65,9 @@ class pickie_peak:
         from dash import dcc, html
         
         class plot_NMR_spec:
+            """
+            A nested class for handling the plotting of NMR spectral data.
+            """
             def __init__(self, spectra, ppm):
                 self.spectra = spectra
                 self.ppm = ppm
@@ -34,6 +77,25 @@ class pickie_peak:
                                 legend_name='<b>Group</b>', legend_font_size=20, 
                                 axis_font_size=20, 
                                 line_width=1.5, legend_order=None):
+                """
+                Creates a single spectra plot.
+
+                Parameters:
+                - color_map (dict): Custom colors for each group.
+                - title (str): Title of the plot.
+                - title_font_size (int): Font size for the title.
+                - legend_name (str): Name of the legend.
+                - legend_font_size (int): Font size for the legend.
+                - axis_font_size (int): Font size for axes.
+                - line_width (float): Width of the plot lines.
+                - legend_order: Custom order for legend items.
+
+                Returns:
+                - fig (go.Figure): A Plotly figure object.
+                """
+
+
+
                 from plotly import express as px
 
                 spectra = self.spectra
@@ -109,6 +171,14 @@ class pickie_peak:
             [State('stored-peaks', 'data')]
         )
         def update_peaks(clickData, clear_clicks, stored_peaks):
+
+            """
+            Callback to update stored peaks upon user click or clear action.
+
+            Returns:
+            - Updated peaks data and display text with selected peak positions.
+            """
+            
             ctx = dash.callback_context
 
             if not ctx.triggered:

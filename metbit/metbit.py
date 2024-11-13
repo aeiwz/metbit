@@ -155,10 +155,47 @@ class opls_da:
         
     
     def __init__(self, X, y, features_name=None, n_components=2, scaling_method='pareto', kfold=3, estimator='opls', random_state=42, auto_ncomp=True):
-        
 
+        '''
+        Purpose:
+        Initializes the model, validates the inputs, and preprocesses the data for further analysis.
+
+        Parameters:
+
+            •	X: array-like (Data matrix)
+        The input features for the model (must be a 2D array-like structure, such as pandas.DataFrame or numpy.ndarray).
+            •	y: array-like (Target vector)
+        The target variable or class labels associated with the rows of X (can be a pandas.Series, numpy.ndarray, or list).
+            •	features_name: array-like, optional (default=None)
+        List of feature names corresponding to the columns of X. If not provided, column names will be generated or inferred.
+            •	n_components: int, optional (default=2)
+        The number of components to use for OPLS-DA analysis. Must be a positive integer.
+            •	scaling_method: str, optional (default=‘pareto’)
+        The method used for scaling the data. Options include:
+            •	'pareto': Pareto scaling (power 0.5)
+            •	'mean': Mean-centered data
+            •	'uv': Unit variance scaling (standardization)
+            •	'minmax': Min-max scaling
+            •	kfold: int, optional (default=3)
+        The number of folds for cross-validation.
+            •	estimator: str, optional (default=‘opls’)
+        The estimator method used for modeling. Default is 'opls' (Orthogonal Projections to Latent Structures).
+            •	random_state: int, optional (default=42)
+        The random seed used for reproducibility.
+            •	auto_ncomp: bool, optional (default=True)
+        If True, automatically selects the optimal number of components for the model. If False, the number of components is set manually.
+
+        Raises:
+
+	        •	ValueError: If any input is invalid, such as mismatched dimensions or incorrect data types.
+
+        '''
         self.auto_ncomp = auto_ncomp
         #check X and y must be dataframe or array
+        if X is None or y is None:
+            raise ValueError("Input data X and target y must be provided.")
+        if n_components < 1:
+            raise ValueError("Number of components must be a positive integer.")
         if not isinstance(X, (pd.DataFrame, np.ndarray)):
             raise ValueError('X must be a dataframe or array')
         if not isinstance(y, (pd.Series, np.ndarray, list)):
@@ -216,6 +253,22 @@ class opls_da:
         
     def fit(self):
         
+        '''        
+        Purpose:
+        Fits the OPLS-DA model to the data and computes model performance metrics.
+
+        Parameters:
+        None
+
+        Returns:
+
+            •	Prints a summary of the model fit, including:
+            •	Sample size and class distributions
+            •	Number of features and components
+            •	Scaling method used
+            •	R² and Q² metrics
+
+        '''
         import time
         
         T1 = time.time()
@@ -487,22 +540,36 @@ class opls_da:
                  xaxis_direction = 'reversed'):
 
         '''
-        Plot VIP score
+        Purpose:
+        Plots the VIP scores for the features, allowing for customization and thresholding.
 
-        Parameters
-        ----------
-        x_range : int, default=9
-            Range of x-axis.
-        threshold : int, default=2
-            Threshold of VIP score.
-        size : int, default=12
-            Size of the marker.
-        width : int, default=1000
-            Width of the figure.
-        height : int, default=500
-            Height of the figure.
-        filter_ : bool, default=False
-            If True, filter VIP score based on threshold.
+        Parameters:
+
+            •	x_range: int, optional (default=9)
+        The range of the x-axis in the plot.
+            •	threshold: int, optional (default=2)
+        The threshold used to categorize VIP scores into “High” or “Low” importance.
+            •	marker_size: int, optional (default=12)
+        The size of the markers in the scatter plot.
+            •	fig_width: int, optional (default=1000)
+        The width of the plot.
+            •	fig_height: int, optional (default=500)
+        The height of the plot.
+            •	filter_: bool, optional (default=False)
+        If True, only features with VIP scores above the threshold are plotted.
+            •	vip_transform: bool, optional (default=True)
+        If True, the VIP scores are transformed to reflect their contribution to the model.
+            •	font_size: int, optional (default=20)
+        The font size for labels.
+            •	title_font_size: int, optional (default=20)
+        The font size for the plot title.
+            •	xaxis_direction: str, optional (default=‘reversed’)
+        The direction of the x-axis (‘reversed’ or ‘normal’).
+
+        Returns:
+
+            •	fig: Plotly figure
+        A Plotly scatter plot visualizing the VIP scores for the features.
 
         '''
 
@@ -623,6 +690,22 @@ class opls_da:
         marker_opacity : float, default=0.7
             Opacity of the marker.
 
+        •	Purpose: This function generates an OPLS-DA (Orthogonal Partial Least Squares Discriminant Analysis) scores plot, showing how samples are positioned based on their scores in two principal components (t_scores and t_ortho).
+        •	Parameters:
+            •	x_, y_: The names of the columns in the DataFrame (df_opls_scores) that contain the scores for the x and y axes (default to 't_scores' and 't_ortho').
+            •	color_: An array that assigns a color to each sample (optional).
+            •	color_dict: A dictionary of color mappings for the groups (optional).
+            •	symbol_: An array of symbols for the samples (optional).
+            •	fig_height, fig_width: Dimensions for the plot.
+            •	marker_size, marker_opacity: Control the appearance of the markers.
+            •	legend_name: Custom labels for the legend.
+            •	individual_ellipse: Whether to add ellipses to individual groups (default True).
+        •	Plot Details:
+            •	Uses Plotly (px.scatter) to create an interactive scatter plot.
+            •	Can display confidence ellipses around each group.
+            •	Adds annotations for R²X, R²Y, and Q² statistics.
+            •	The plot is highly customizable (marker size, opacity, labels, colors, etc.).            
+
         '''
         if color_ is not None:
             if len(color_) != len(self.y):
@@ -704,7 +787,7 @@ class opls_da:
         fig.update_traces(textposition='middle center',
                             textfont_size=marker_size-(0.4*marker_size))
 
-                            
+
         fig.add_annotation(dict(font=dict(color="black",size=font_size),
                                 #x=x_loc,
                                 x=0,
@@ -790,6 +873,16 @@ class opls_da:
         fig_width : int, default=1000
             Width of the figure.
 
+
+	    •	Purpose: This function creates a histogram of permutation scores from a permutation test, commonly used to evaluate model stability and significance.
+	    •	Parameters:
+            •	nbins_: Number of bins in the histogram.
+            •	fig_height, fig_width: Dimensions of the plot.
+            •	font_size, title_font_size: Font size for labels and title.
+            •	Plot Details:
+            •	Plots the permutation scores as a histogram with Plotly.
+            •	Marks the actual model accuracy score with a red dashed line.
+            •	Adds additional annotations for the number of permutations, the accuracy score, and the p-value.
         '''
 
 
@@ -878,6 +971,17 @@ class opls_da:
         color_continuous_scale_ : str, default='jet'
             color_ scale for the plot.
 
+        •	Purpose: This function generates a scatter plot (S-plot), which visualizes the covariance and correlation between the scores of the model.
+	    •	Parameters:
+            •	fig_height, fig_width: Dimensions of the plot.
+            •	range_color_: Range of colors to display.
+            •	color_continuous_scale_: Color scale for the plot.
+            •	marker_size, font_size, title_font_size: Customize marker size and font sizes.
+	    •	Plot Details:
+            •	The plot visualizes the relationship between covariance and correlation for features.
+            •	Uses Plotly’s scatter plot to create an interactive S-plot.
+            •	The axes are customizable, and the plot is set to be visually clean (e.g., axes lines and tick marks).
+
         '''
 
 
@@ -940,6 +1044,21 @@ class opls_da:
             Range of color_ for the plot.
         color_continuous_scale_ : str, default='jet'
             color_ scale for the plot.
+
+
+	    •	Purpose: This function generates a loading plot, typically used in multivariate analysis to visualize the relationship between features and the scores.
+	    •	Parameters:
+            •	fig_height, fig_width: Dimensions of the plot.
+            •	range_color_: Color range to represent the covariance values.
+            •	color_continuous_scale_: Color scale used for continuous color mapping.
+            •	marker_size, font_size, title_font_size: Customize the appearance of the markers and fonts.
+            •	xaxis_direction: Set the direction for the x-axis (e.g., reversed or not).
+            •	xaxis_title: Title for the x-axis.
+	    •	Plot Details:
+            •	The loading plot shows the relationship between features (usually a set of variables or compounds) and the model scores.
+            •	The correlation for each feature is displayed alongside its covariance, with colors representing the covariance values.
+            •	The plot is interactive and customizable (e.g., marker size, color scale, axis settings).
+
 
         '''
 
