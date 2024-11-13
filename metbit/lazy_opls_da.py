@@ -330,18 +330,20 @@ class lazy_opls_da:
             y = meta['Class']
 
 
-            if marker_label is not None:
-                marker_label = marker_label
+            if marker_label is None:
+                marker_label_2 = marker_label
             
             else:
                 if marker_label == 'class':
-                    marker_label = meta['class']
+                    marker_label_2 = meta['class']
                 elif marker_label == 'group':
-                    marker_label = meta['Group']
+                    marker_label_2 = meta['Group']
                 elif marker_label == 'sub-group':
-                    marker_label = meta['Sub-group']
+                    marker_label_2 = meta['Sub-group']
+                elif marker_label == 'index':
+                    marker_label_2 = meta.index
                 else:
-                    marker_label = meta.index
+                    marker_label_2 = meta.index
 
 
             #OPLS-DA
@@ -365,14 +367,14 @@ class lazy_opls_da:
                 
             #Score plot
             if custom_shape is not None:
-                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label, 
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_html(path['score_plot'] + name + '_score_plot.html')
-                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label, 
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_image(path['score_plot'] + name + '_score_plot.png')
             else:
-                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label, 
+                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_html(path['score_plot'] + name + '_score_plot.html')
-                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label, 
+                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_image(path['score_plot'] + name + '_score_plot.png')
 
 
