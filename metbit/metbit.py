@@ -671,9 +671,9 @@ class opls_da:
             for name in name_color_set:
                 palette += getattr(plotly_colour.qualitative, name) # This is a list of colors
 
-            color_dict = {i: palette[i] for i in range(len(df_scores_['Group'].unique()))}
+            color_dict = {i: palette[i] for i in range(len(df_opls_scores['Group'].unique()))}
 
-            group_unique = df_scores_['Group'].unique()
+            group_unique = df_opls_scores['Group'].unique()
             color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
         
 

@@ -599,7 +599,8 @@ class opls_da:
                            marker_size = 35, marker_opacity = 0.7, 
                            font_size = 20, title_font_size = 21,
                            legend_name = ['Group', 'Time point'],
-                           individual_ellipse = True):
+                           individual_ellipse = True,
+                           marker_label = None):
 
         '''
         Plot OPLS-DA scores plot
@@ -671,9 +672,9 @@ class opls_da:
             for name in name_color_set:
                 palette += getattr(plotly_colour.qualitative, name) # This is a list of colors
 
-            color_dict = {i: palette[i] for i in range(len(df_scores_['Group'].unique()))}
+            color_dict = {i: palette[i] for i in range(len(df_opls_scores['Group'].unique()))}
 
-            group_unique = df_scores_['Group'].unique()
+            group_unique = df_opls_scores['Group'].unique()
             color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
         
 
@@ -683,7 +684,8 @@ class opls_da:
         fig = px.scatter(df_opls_scores, x=x_, y=y_, symbol=symbol_,     
                         symbol_map=symbol_dict,
                         color='Group', 
-                        color_discrete_map=color_dict_2, 
+                        color_discrete_map=color_dict_2,
+                        text=marker_label, 
                         title=f'<b>OPLS-DA Scores Plot<b> ({self.scaling_method} scaling)', 
                         height=fig_height, width=fig_width,
                         labels={
@@ -1365,7 +1367,8 @@ class pca:
 
     def plot_pca_scores(self, pc=['PC1', 'PC2'], 
                         color_=None, color_dict=None, 
-                        symbol_=None, symbol_dict=None, 
+                        symbol_=None, symbol_dict=None,
+                        marker_label=None, 
                         fig_height=900, fig_width=1300,
                         marker_size=35, marker_opacity=0.7,
                         font_size=20, title_font_size=21,
@@ -1485,7 +1488,8 @@ class pca:
         fig = px.scatter(df_scores_, x=pc[0], y=pc[1], color='Group',
                         symbol=symbol_, 
                         color_discrete_map=color_dict_2, 
-                        symbol_map=symbol_dict, 
+                        symbol_map=symbol_dict,
+                        text=marker_label,
                         title=f'<b>PCA Scores Plot<b> {self.scaling_method} scaling', 
                         height=fig_height, width=fig_width,
                         labels={'color': legend_name[0], 'symbol': legend_name[1],
@@ -1837,6 +1841,7 @@ class pca:
 
     def plot_3d_pca(self, pc=['PC1', 'PC2', 'PC3'], color_=None, color_dict=None, 
                     symbol_=None, symbol_dict=None, fig_height=900, fig_width=1300,
+                    marker_label=None,
                     marker_size=35, marker_opacity=0.7, font_size=20, title_font_size=20,
                     legend_name=['Group', 'Time point']):
         import plotly.express as px
@@ -1951,7 +1956,8 @@ class pca:
 
 
         fig = px.scatter_3d(df_scores_, x=pc[0], y=pc[1], z=pc[2], color='Group', symbol=symbol_, 
-                            color_discrete_map=color_dict_2, symbol_map=symbol_dict, 
+                            color_discrete_map=color_dict_2, symbol_map=symbol_dict,
+                            text=marker_label, 
                             title=f'<b>PCA Scores Plot<b> {self.scaling_method} scaling', 
                             height=fig_height, width=fig_width,
                             labels={'color': legend_name[0], 'symbol': legend_name[1],
