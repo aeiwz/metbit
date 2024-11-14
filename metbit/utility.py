@@ -29,7 +29,11 @@ class lazypair:
         import pandas as pd
         import numpy as np
         
-
+        #check unique values in the column
+        if meta[column_name].nunique() < 2:
+            raise ValueError("Group should contain at least 2 groups")
+        else:
+            pass
         #check meta is a dataframe
         if not isinstance(meta, pd.DataFrame):
             raise ValueError("meta should be a pandas dataframe")
