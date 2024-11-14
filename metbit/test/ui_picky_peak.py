@@ -24,60 +24,9 @@ class pickie_peak:
         import dash_bootstrap_components as dbc
         from dash import dcc, html
         
-        class plot_NMR_spec:
-            def __init__(self, spectra, ppm):
-                self.spectra = spectra
-                self.ppm = ppm
-
-            def single_spectra(self, color_map=None, 
-                                title='<b>Spectra of <sup>1</sup>H NMR data</b>', title_font_size=28, 
-                                legend_name='<b>Group</b>', legend_font_size=20, 
-                                axis_font_size=20, 
-                                line_width=1.5, legend_order=None):
-                from plotly import express as px
-
-                spectra = self.spectra
-                ppm = self.ppm
-
-                df_spectra = pd.DataFrame(spectra)
-                df_spectra.columns = ppm
-
-                if color_map is None:
-                    color_map = dict(zip(df_spectra.index, px.colors.qualitative.Plotly))
-                else:
-                    if len(color_map) != len(df_spectra.index):
-                        raise ValueError('Color map must have the same length as group labels')
-
-                fig = go.Figure()
-                for i in df_spectra.index:
-                    fig.add_trace(go.Scatter(x=ppm, y=df_spectra.loc[i, :], mode='lines', name=i, line=dict(width=line_width)))
-
-                fig.update_layout(
-                    autosize=True,
-                    margin=dict(l=50, r=50, b=100, t=100, pad=4)
-                )
-
-                fig.update_xaxes(showline=True, showgrid=False, linewidth=1, linecolor='rgb(82, 82, 82)', mirror=True)
-                fig.update_yaxes(showline=True, showgrid=False, linewidth=1, linecolor='rgb(82, 82, 82)', mirror=True)
-
-                fig.update_layout(
-                    font=go.layout.Font(size=axis_font_size),
-                    title={'text': title, 'xanchor': 'center', 'yanchor': 'top'},
-                    title_x=0.5,
-                    xaxis_title="<b>δ<sup>1</sup>H</b>", yaxis_title="<b>Intensity</b>",
-                    title_font_size=title_font_size,
-                    title_yanchor="top",
-                    title_xanchor="center",
-                    legend=dict(title=legend_name, font=dict(size=legend_font_size)),
-                    xaxis_autorange="reversed",
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    yaxis=dict(tickformat=".2e")
-                )
-
-                return fig
-
-        # Instantiate the class
-        plotter = plot_NMR_spec(self.spectra, self.ppm)
+        
+        from lingress import plot_NMR_spec
+        plotter = plot_NMR_spec(self.spectra, self.ppm, self.label).median_spectra_group()
 
         # Create the Dash app with Bootstrap stylesheet
         app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])

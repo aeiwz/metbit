@@ -37,9 +37,10 @@ class pickie_peak:
     3. **Export Functionality**: Offers options to export selected peak positions as a CSV file.
     """
 
-    def __init__(self, spectra: pd.DataFrame, ppm: list):
+    def __init__(self, spectra: pd.DataFrame, ppm: list, label: list):
         self.spectra = spectra
         self.ppm = ppm
+        self.label = label
 
     def run_ui(self):
 
@@ -65,81 +66,108 @@ class pickie_peak:
         from dash import dcc, html
         
         class plot_NMR_spec:
-            """
-            A nested class for handling the plotting of NMR spectral data.
-            """
-            def __init__(self, spectra, ppm):
+            def __init__(self, spectra, ppm, label):
+                
                 self.spectra = spectra
                 self.ppm = ppm
+                self.label = label
 
-            def single_spectra(self, color_map=None, 
-                                title='<b>Spectra of <sup>1</sup>H NMR data</b>', title_font_size=28, 
-                                legend_name='<b>Group</b>', legend_font_size=20, 
-                                axis_font_size=20, 
-                                line_width=1.5, legend_order=None):
-                """
-                Creates a single spectra plot.
 
+            def median_spectra_group(self, color_map=None, 
+                            title='<b>Median Spectra of <sup>1</sup>H NMR data</b>', title_font_size=28, 
+                            legend_name='<b>Group</b>', legend_font_size=20, 
+                            axis_font_size=20, 
+                            fig_height = 800, fig_width = 2000,
+                            line_width = 1.5, legend_order=None
+                            ):
+
+                '''
+                Plot median spectra of NMR data
                 Parameters:
-                - color_map (dict): Custom colors for each group.
-                - title (str): Title of the plot.
-                - title_font_size (int): Font size for the title.
-                - legend_name (str): Name of the legend.
-                - legend_font_size (int): Font size for the legend.
-                - axis_font_size (int): Font size for axes.
-                - line_width (float): Width of the plot lines.
-                - legend_order: Custom order for legend items.
+                - spectra: NMR data in pandas DataFrame format with group labels as index and chemical shift values as columns 
+                - ppm: chemical shift values
+                - label: group labels
+                - color_map: color map for each group
+                - title: title of the plot
+                - title_font_size: font size of the title
+                - legend_name: name of the legend
+                - legend_font_size: font size of the legend
 
                 Returns:
-                - fig (go.Figure): A Plotly figure object.
-                """
+                - fig: plotly figure object
+                '''
 
-
-
+                from plotly import graph_objs as go
                 from plotly import express as px
 
-                spectra = self.spectra
+                spectra = pd.DataFrame(self.spectra)
+                spectra.columns = self.ppm
                 ppm = self.ppm
+                label = self.label
 
-                df_spectra = pd.DataFrame(spectra)
-                df_spectra.columns = ppm
+                
 
+                df_mean = spectra.groupby(label).median()
+
+                #check if color_map is provided
                 if color_map is None:
-                    color_map = dict(zip(df_spectra.index, px.colors.qualitative.Plotly))
+                    color_map = dict(zip(df_mean.index, px.colors.qualitative.Plotly))
                 else:
-                    if len(color_map) != len(df_spectra.index):
+                    if len(color_map) != len(df_mean.index):
                         raise ValueError('Color map must have the same length as group labels')
+                    else:
+                        color_map = color_map
 
+                
+
+                #plot spectra
                 fig = go.Figure()
-                for i in df_spectra.index:
-                    fig.add_trace(go.Scatter(x=ppm, y=df_spectra.loc[i, :], mode='lines', name=i, line=dict(width=line_width)))
+                for i in df_mean.index:
+                    fig.add_trace(go.Scatter(x=ppm, y=df_mean.loc[i,:], mode='lines', name=i, line=dict(color=color_map[i], width=line_width)))
 
                 fig.update_layout(
-                    autosize=True,
-                    margin=dict(l=50, r=50, b=100, t=100, pad=4)
+                    autosize=False,
+                    width=fig_width,
+                    height=fig_height,
+                    margin=dict(
+                        l=50,
+                        r=50,
+                        b=100,
+                        t=100,
+                        pad=4
+                    )
                 )
 
                 fig.update_xaxes(showline=True, showgrid=False, linewidth=1, linecolor='rgb(82, 82, 82)', mirror=True)
                 fig.update_yaxes(showline=True, showgrid=False, linewidth=1, linecolor='rgb(82, 82, 82)', mirror=True)
 
-                fig.update_layout(
-                    font=go.layout.Font(size=axis_font_size),
-                    title={'text': title, 'xanchor': 'center', 'yanchor': 'top'},
-                    title_x=0.5,
-                    xaxis_title="<b>δ<sup>1</sup>H</b>", yaxis_title="<b>Intensity</b>",
-                    title_font_size=title_font_size,
-                    title_yanchor="top",
-                    title_xanchor="center",
-                    legend=dict(title=legend_name, font=dict(size=legend_font_size)),
-                    xaxis_autorange="reversed",
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    yaxis=dict(tickformat=".2e")
-                )
+                #Set font size of label
+                fig.update_layout(font=go.layout.Font(size=axis_font_size))
+                #Add title
+                fig.update_layout(title={'text': title, 'xanchor': 'center', 'yanchor': 'top'}, 
+                                title_x=0.5, 
+                                xaxis_title="<b>δ<sup>1</sup>H</b>", yaxis_title="<b>Intensity</b>",
+                                title_font_size=title_font_size,
+                                title_yanchor="top",
+                                title_xanchor="center")
+
+                #Add legend
+
+                fig.update_layout(legend=dict( title=legend_name, font=dict(size=legend_font_size)))
+                #Invert x-axis
+                fig.update_xaxes(autorange="reversed")
+                #Alpha background
+                fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
+                #fig.update_layout(title='Median Spectra', xaxis_title='δ <sup>1</sup>H', yaxis_title='Intensity')
+
+                #set y-axis tick format to scientific notation with 4 decimal places
+                fig.update_layout(yaxis=dict(tickformat=".2e"))
 
                 return fig
 
-        # Instantiate the class
-        plotter = plot_NMR_spec(self.spectra, self.ppm)
+
+        #from lingress import plot_NMR_spec
+        plotter = plot_NMR_spec(self.spectra, self.ppm, self.label).median_spectra_group()
 
         # Create the Dash app with Bootstrap stylesheet
         app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
@@ -150,7 +178,7 @@ class pickie_peak:
                 dbc.Col([
                     dcc.Graph(
                         id='nmr-plot',
-                        figure=plotter.single_spectra()
+                        figure=plotter
                     ),
                 ], width=12)
             ]),
@@ -178,7 +206,7 @@ class pickie_peak:
             Returns:
             - Updated peaks data and display text with selected peak positions.
             """
-            
+
             ctx = dash.callback_context
 
             if not ctx.triggered:
@@ -219,5 +247,18 @@ class pickie_peak:
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    # Load your NMR spectra data
+    df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
+    spectra = df.iloc[:,1:]
+    ppm = spectra.columns.astype(float).to_list()
+    label = df['Group']
 
+    # Create instance of the class with spectra and ppm data
+    picker_ui = pickie_peak(spectra, ppm, label)
+
+
+    # Get the app instance
+    app = picker_ui.run_ui()
+
+    # Run the app
+    app.run_server(debug=True, port=8051)
