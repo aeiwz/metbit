@@ -14,6 +14,12 @@ def create_boxplot_with_pvalues(
     annotate_style="value", 
     figure_size=(800, 600),
     y_offset=5,
+    show_non_significant=True,
+    title_=None,
+    y_label=None,
+    x_label=None,
+    fig_height=800,
+    fig_width=600
 ):
     """
     Creates a box plot with tiered p-value annotations.
@@ -32,6 +38,21 @@ def create_boxplot_with_pvalues(
     Returns:
     - fig (Figure): The Plotly figure object.
     """
+    if title_ is None:
+        title_ = y_col
+    else:
+        title_ = title_
+
+    if y_label is None:
+        y_label = y_col
+    else: 
+        y_label = y_label
+
+    if x_label is None:
+        x_label = x_col
+    else:
+        x_label = x_label
+
     # Group data and calculate p-values
     grouped = df.groupby(x_col)[y_col]
     if group_order is None:
@@ -68,7 +89,10 @@ def create_boxplot_with_pvalues(
                 p_text += "*" if p_val < 0.01 else ""
                 p_text += "*" if p_val < 0.001 else ""
             else:
-                continue  # Skip insignificant comparisons
+                if show_non_significant is not True:
+                    continue  # Skip insignificant comparisons
+                else:
+                    p_text = "ns"
         else:
             raise ValueError("Invalid annotate_style. Use 'value' or 'symbol'.")
 
@@ -82,7 +106,7 @@ def create_boxplot_with_pvalues(
                 hoverinfo="none",
             )
         )
-
+        
         # Add text annotation for the p-value
         annotations.append(
             dict(
@@ -96,6 +120,9 @@ def create_boxplot_with_pvalues(
             )
         )
 
+    
+
+
     # Add lines to the figure
     for line in lines:
         fig.add_trace(line)
@@ -103,34 +130,51 @@ def create_boxplot_with_pvalues(
     # Update layout with annotations and figure size
     fig.update_layout(
         annotations=annotations,
-        title="Box Plot with Tiered P-Value Annotations",
-        yaxis_title=y_col,
-        xaxis_title=x_col,
+        title=f'<b>{title_}</b>',
+        yaxis_title=y_label,
+        xaxis_title=x_label,
         legend_title=x_col,
-        width=figure_size[0],
-        height=figure_size[1],
+        width=fig_width,
+        height=fig_height,
+        showlegend=False
     )
+    fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
+
+    #update title position to center
+    fig.update_layout(
+            title={
+                'y':0.95,
+                'x':0.5,
+                'xanchor': 'center',
+                'yanchor': 'top'})
+
+    
 
     return fig
 
-# Example usage
-data = {
-    "treatment": ["A"] * 10 + ["B"] * 10 + ["C"] * 10 + ["D"] * 10,
-    "score": [5, 7, 6, 5, 6, 8, 5, 6, 7, 8, 15, 16, 14, 15, 16, 14, 13, 15, 15, 14,
-              40, 45, 50, 48, 41, 42, 47, 44, 45, 43, 5, 6, 5, 4, 5, 6, 4, 5, 6, 4],
-}
 
-df = pd.DataFrame(data)
-custom_colors = {"A": "red", "B": "blue", "C": "green", "D": "purple"}
-fig = create_boxplot_with_pvalues(
-    df, 
-    x_col="treatment", 
-    y_col="score", 
-    group_order=["A", "B", "C", "D"], 
-    custom_colors=custom_colors, 
-    p_value_threshold=0.05, 
-    annotate_style="symbol", 
-    figure_size=(1000, 800),
-    y_offset=7,
-)
-fig.show()
+
+if __name__ == '__main__':
+    # Example usage
+    data = {
+        "treatment": ["A"] * 10 + ["B"] * 10 + ["C"] * 10 + ["D"] * 10,
+        "score": [5, 7, 6, 5, 6, 8, 5, 6, 7, 8, 5, 7, 6, 5, 6, 8, 5, 6, 7, 8,
+                40, 45, 50, 48, 41, 42, 47, 44, 45, 43, 5, 6, 5, 4, 5, 6, 4, 5, 6, 4],
+    }
+
+    df = pd.DataFrame(data)
+    custom_colors = {"A": "red", "B": "blue", "C": "green", "D": "purple"}
+    fig = create_boxplot_with_pvalues(
+        df, 
+        x_col="treatment", 
+        y_col="score", 
+        group_order=["A", "B", "C", "D"], 
+        custom_colors=custom_colors, 
+        p_value_threshold=0.05, 
+        annotate_style="symbol", 
+        fig_height=800,
+        fig_width=600,
+        y_offset=7,
+        show_non_significant=True
+    )
+    fig.show()
