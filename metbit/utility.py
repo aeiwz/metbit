@@ -708,6 +708,31 @@ def boxplot_stats(
     - figure_size (tuple, optional): Width and height of the figure.
     - y_offset_factor (float, optional): Scaling factor for vertical spacing based on y-axis range.
 
+
+
+    # Example usage
+    data = {
+        "treatment": ["A"] * 10 + ["B"] * 10 + ["C"] * 10 + ["D"] * 10,
+        "score": [0.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.6, 0.7, 0.8, 0.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.6, 0.7, 0.8,
+                0.40, 0.45, 0.50, 0.48, 0.41, 0.42, 0.47, 0.44, 0.45, 0.43, 0.5, 0.6, 0.5, 0.4, 0.5, 0.6, 0.4, 0.5, 0.6, 0.4],
+    }
+
+    df = pd.DataFrame(data)
+    custom_colors = {"A": "red", "B": "blue", "C": "green", "D": "purple"}
+    fig = boxplot_stats(
+        df, 
+        x_col="treatment", 
+        y_col="score", 
+        group_order=["A", "B", "C", "D"], 
+        custom_colors=custom_colors, 
+        p_value_threshold=0.05, 
+        annotate_style="symbol", 
+        fig_height=800,
+        fig_width=600,
+        show_non_significant=True
+    )
+    fig.show()
+
     Returns:
     - fig (Figure): The Plotly figure object.
     """
