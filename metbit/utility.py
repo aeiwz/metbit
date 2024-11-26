@@ -677,7 +677,7 @@ import pandas as pd
 from scipy.stats import ttest_ind
 from itertools import combinations
 
-def create_boxplot_with_pvalues(
+def boxplot_stats(
     df, 
     x_col, 
     y_col, 
