@@ -79,6 +79,6 @@ fig.show()
 Output
 
 Figure:
-([src/img/Boxplot example.png](https://github.com/aeiwz/metbit/blob/49a6ec28a5383340a1c5d2b291c06080c43b86a3/src/img/Boxplot%20example.png))
+![image](https://github.com/aeiwz/metbit/blob/49a6ec28a5383340a1c5d2b291c06080c43b86a3/src/img/Boxplot%20example.png)
 
 The function produces an interactive Plotly box plot with statistical annotations.
