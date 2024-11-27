@@ -51,7 +51,7 @@ Usage
 | fig_width |	Width of the figure in pixels. |	600 |
 
 Example
-
+```python
 import pandas as pd
 
 # Sample data
@@ -75,7 +75,7 @@ fig = boxplot_stats(
 )
 
 fig.show()
-
+```
 Output
 
 The function produces an interactive Plotly box plot with statistical annotations.
