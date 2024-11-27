@@ -17,11 +17,6 @@ pip install metbit
 
 [4. STOCSY and STOCSY app](src/page/STOCSY.md)
 
-[5. Lazy OPLS-DA](#lazy-opls-da)
-
-[6. Peak chop]()
-
-
 # Example:
 
 # **Principal component analysis**
