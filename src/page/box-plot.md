@@ -78,13 +78,7 @@ fig.show()
 ```
 Output
 
+Figure:
+[figure](src/img/Boxplot example.png)
+
 The function produces an interactive Plotly box plot with statistical annotations.
-
-Contributing
-
-Contributions, bug fixes, and feature requests are welcome. Please fork the repository and submit a pull request.
-
-License
-
-This project is licensed under the MIT License.
-
