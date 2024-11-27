@@ -695,8 +695,7 @@ def boxplot_stats(
     custom_colors=None, 
     stats_options=None,  # User-selectable statistical methods
     p_value_threshold=0.05, 
-    annotate_style="value", 
-    figure_size=(800, 600),
+    annotate_style="value",
     y_offset_factor=0.05,  
     show_non_significant=True,
     correct_p="bonferroni",  # Option for multiple testing correction
