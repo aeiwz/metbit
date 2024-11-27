@@ -1,8 +1,4 @@
-import plotly.express as px
-import plotly.graph_objects as go
-import pandas as pd
-from scipy.stats import ttest_ind
-from itertools import combinations
+
 
 '''def create_boxplot_with_pvalues(
     df, 
@@ -297,7 +293,11 @@ def boxplot_stats(
 
     return fig'''
 
-
+import plotly.express as px
+import plotly.graph_objects as go
+import pandas as pd
+from scipy.stats import ttest_ind
+from itertools import combinations
 from statsmodels.stats.multitest import multipletests
 from statsmodels.stats.anova import AnovaRM
 from pingouin import compute_effsize
