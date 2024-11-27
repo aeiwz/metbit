@@ -26,48 +26,29 @@ Install them using pip if necessary:
 
 ```bash
 pip install pandas numpy scipy plotly pingouin statsmodels
-
+```
 Usage
 
-Function Parameters
+**Function Parameters**
 
-def boxplot_stats(
-    df, 
-    x_col, 
-    y_col, 
-    group_order=None, 
-    custom_colors=None, 
-    stats_options=None, 
-    p_value_threshold=0.05, 
-    annotate_style="value",
-    y_offset_factor=0.05,  
-    show_non_significant=True,
-    correct_p="bonferroni", 
-    title_=None,
-    y_label=None,
-    x_label=None,
-    fig_height=800,
-    fig_width=600
-):
-
-Parameter	Description	Default Value
-df	Input DataFrame containing the data.	-
-x_col	Column name for the categorical variable.	-
-y_col	Column name for the numerical variable.	-
-group_order	Custom order of groups for the x-axis.	None
-custom_colors	Dictionary mapping group names to colors.	None
-stats_options	Statistical methods: ["t-test"], ["nonparametric"], ["anova"], or a combination.	["t-test"]
-p_value_threshold	Threshold for statistical significance.	0.05
-annotate_style	Style for annotations: "value" (exact p-values) or "symbol" (e.g., ***, **, *, ns).	"value"
-figure_size	Tuple specifying plot width and height in pixels.	(800, 600)
-y_offset_factor	Proportion of y-axis range for annotation spacing.	0.05
-show_non_significant	Display annotations for non-significant results.	True
-correct_p	Method for correcting p-values: "bonferroni", "holm", "fdr_bh", or None.	"bonferroni"
-title_	Title of the plot.	None
-y_label	Label for the y-axis.	None
-x_label	Label for the x-axis.	None
-fig_height	Height of the figure in pixels.	800
-fig_width	Width of the figure in pixels.	600
+| Parameter | Description |	Default Value |
+|-----------|-------------|---------------|
+| df |	Input DataFrame containing the data. |	- | 
+| x_col	| Column name for the categorical variable. |	- |
+| y_col	| Column name for the numerical variable. |	- |
+| group_order |	Custom order of groups for the x-axis. |	None |
+| custom_colors |	Dictionary mapping group names to colors. |	None |
+| stats_options	| Statistical methods: ["t-test"], ["nonparametric"], ["anova"], or a combination. |	["t-test"] |
+| p_value_threshold	| Threshold for statistical significance. |	default = 0.05 |
+| annotate_style |	Style for annotations: "value" (exact p-values) or "symbol" (e.g., ***, **, *, ns). |	"value" |
+| y_offset_factor |	Proportion of y-axis range for annotation spacing. |	0.05 |
+| show_non_significant |	Display annotations for non-significant results. |	True |
+| correct_p |	Method for correcting p-values: "bonferroni", "holm", "fdr_bh", or None. |	"bonferroni" |
+| title_ |	Title of the plot. |	None |
+| y_label |	Label for the y-axis. |	None |
+| x_label |	Label for the x-axis. |	None |
+| fig_height |	Height of the figure in pixels. |	800 |
+| fig_width |	Width of the figure in pixels. |	600 |
 
 Example
 
