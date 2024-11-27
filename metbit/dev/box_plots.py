@@ -317,6 +317,7 @@ if __name__ == '__main__':
         annotate_style="symbol", 
         fig_height=800,
         fig_width=600,
-        show_non_significant=True
+        show_non_significant=True,
+        y_label="test"
     )
     fig.show()
