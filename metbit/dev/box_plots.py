@@ -567,6 +567,7 @@ def boxplot_stats(
         height=fig_height,
         showlegend=False,
     )
+    fig.update_layout(yaxis=dict(tickformat=".2e"))
     fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)')
     fig.update_layout(
         title={
