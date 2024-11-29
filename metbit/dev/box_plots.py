@@ -589,6 +589,26 @@ if __name__ == '__main__':
                   0.40, 0.45, 0.50, 0.48, 0.41, 0.42, 0.47, 0.44, 0.45, 0.43, 0.5, 0.6, 0.5, 0.4, 0.5, 0.6, 0.4, 0.5, 0.6, 0.4],
     }
 
+    '''    import pandas as pd
+    import numpy as np
+
+    # Define parameters
+    n_samples_per_group = 100
+    n_groups = 10
+    total_samples = n_samples_per_group * n_groups
+
+    # Generate random data
+    treatments = [f"Group_{i+1}" for i in range(n_groups)]
+    treatment_column = np.repeat(treatments, n_samples_per_group)
+    score_column = np.random.normal(loc=50, scale=10, size=total_samples)  # Random scores with mean=50, std=10
+
+    # Create DataFrame
+    df = pd.DataFrame({
+        'treatment': treatment_column,
+        'score': score_column
+    })
+    '''
+
     df = pd.DataFrame(data)
     custom_colors = {"A": "red", "B": "blue", "C": "green", "D": "purple"}
 
@@ -596,13 +616,13 @@ if __name__ == '__main__':
         df, 
         x_col="treatment", 
         y_col="score", 
-        group_order=["A", "B", "C", "D"], 
-        custom_colors=custom_colors, 
         stats_options=["t-test"], 
         correct_p="bonferroni", 
         p_value_threshold=0.05, 
         annotate_style="symbol", 
         show_non_significant=True,
-        y_label="Score"
+        y_label="Score",
+        fig_height=1000,
+        fig_width=800
     )
     fig.show()
