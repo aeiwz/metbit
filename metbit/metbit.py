@@ -1085,7 +1085,7 @@ class opls_da:
 
         fig.update_traces(marker=dict(size=marker_size))
         fig.update_xaxes(autorange=xaxis_direction)
-        fig.update_layout(title='<b>Loading spectra</b>', xaxis_title=xaxis_title, yaxis_title='Correlation')
+        fig.update_layout(title='<b>Loading spectra</b>', xaxis_title=xaxis_title, yaxis_title='Correlation coefficient')
         fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
         fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
 
