@@ -27,7 +27,7 @@ class get_intensity:
     import pandas as pd
     spectra = pd.DataFrame(...)  # Load or generate spectral data
     ppm = [...]  # Define corresponding ppm values
-    picker = pickie_peak(spectra, ppm)
+    picker = get_intensity(spectra, ppm)
     picker.run_ui()
     ```
 
@@ -252,7 +252,7 @@ class get_intensity:
 if __name__ == '__main__':
     # Load your NMR spectra data
     df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
-    spectra = df.iloc[:,1:]
+    spectra = df.iloc[[1],1:]
     ppm = spectra.columns.astype(float).to_list()
     label = df['Group']
 
