@@ -24,11 +24,21 @@ class pickie_peak:
 
     Example:
     ```python
-    import pandas as pd
-    spectra = pd.DataFrame(...)  # Load or generate spectral data
-    ppm = [...]  # Define corresponding ppm values
-    picker = pickie_peak(spectra, ppm)
-    picker.run_ui()
+        # Load your NMR spectra data
+        df = pd.read_csv("https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv")
+        spectra = df.iloc[:,1:]
+        ppm = spectra.columns.astype(float).to_list()
+        label = df['Group']
+
+        # Create instance of the class with spectra and ppm data
+        picker_ui = pickie_peak(spectra, ppm, label)
+
+
+        # Get the app instance
+        app = picker_ui.run_ui()
+
+        # Run the app
+        app.run_server(debug=True, port=8051)
     ```
 
     Usage:
