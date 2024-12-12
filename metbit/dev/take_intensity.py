@@ -239,8 +239,9 @@ class get_intensity:
 
             x_positions = [p['x'] for p in stored_peaks]
             df = pd.DataFrame(x_positions, columns=["X Positions"])
-            peak_list = df['X Positions'].to_list()
-            export_intensity = spectra.iloc[:, peak_list]
+            #convert str list
+            x_positions = [str(i) for i in x_positions]
+            export_intensity = spectra.loc[:, x_positions]
             csv_string = export_intensity.to_csv(index=False)
 
 
