@@ -236,6 +236,5 @@ Output:
 
 
 ---
-Publication:
-
+**Publication:**
 Karunasumetta C, Tourthong W, Mala R, Chatgasem C, Bubpamala T, Punchai S, Sawanyawisuth K. Comparative Analysis of Metabolomic Responses in On-Pump and Off-Pump Coronary Artery Bypass Grafting. Ann Thorac Cardiovasc Surg. 2024;30(1):24-00126. doi: 10.5761/atcs.oa.24-00126. PMID: 39631940; PMCID: PMC11634389.
