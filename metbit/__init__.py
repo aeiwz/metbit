@@ -11,9 +11,18 @@ from .ui_picky_peak import pickie_peak
 from .take_intensity import *
 
 
+# -*- coding: utf-8 -*-
 
-__author__ = 'aeiwz'
-__email__ = 'theerayut_aeiw_123@hotmail.com'
+__auther__ ='aeiwz'
+author_email='theerayut_aeiw_123@hotmail.com'
+__copyright__="Copyright 2024, Theerayut"
+
+__license__ = "MIT"
+__version__ = "7.0.0"
+__maintainer__ = "aeiwz"
+__email__ = "theerayut_aeiw_123@hotmail.com"
+__status__ = "Develop"
+
 
 
 

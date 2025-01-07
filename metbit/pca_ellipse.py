@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 
-
 __auther__ ='aeiwz'
 author_email='theerayut_aeiw_123@hotmail.com'
+__copyright__="Copyright 2024, Theerayut"
+
+__license__ = "MIT"
+__maintainer__ = "aeiwz"
+__email__ = "theerayut_aeiw_123@hotmail.com"
+__status__ = "Develop"
 
 import numpy as np 
 
