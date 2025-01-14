@@ -1793,9 +1793,6 @@ class pca:
         if not isinstance(time_order, dict):
             raise ValueError("time_order must be a dictionary \n Example: time_order = {'Day 1': 0, 'Day 2': 1, 'Day 3': 2}")
 
-
-
-
         #check time are not missing
         if time_ is None:
             raise ValueError('time_ must be provided fot time trajectory analysis')
