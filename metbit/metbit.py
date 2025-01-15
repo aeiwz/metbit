@@ -1003,7 +1003,7 @@ class opls_da:
                          height=fig_height, width=fig_width,
                          hover_data={'covariance':True, 'correlation':True, 'Features':True})
         
-        fig.update_layout(title='<b>S-plot</b>', xaxis_title='Covariance', yaxis_title='Correlation')
+        fig.update_layout(title='<b>S-plot</b>', xaxis_title='Covariance', yaxis_title='Correlation coefficient')
 
         
         #add line of axis and set color_ to black and line width to 2 pixel
