@@ -171,12 +171,52 @@ def calibrate(X, ppm, calib_type='tsp', custom_range=None):
     return calibrated_X_df
 
 class nmr_preprocessing:
+
+    '''
+    nmr_preprocessing is a class for processing NMR data.
+
+    Parameters:
+        data_path (str): Path to the directory containing the Bruker formatted data.
+        bin_size (float): Bin size for the PPM scale.
+        auto_phasing (bool): Perform automatic phase correction.
+        phase_fn (str): Phase correction function ("acme", "peak_minima").
+        baseline_correction (bool): Perform baseline correction ('linear', 'constant', 'median', 'solvent filter').
+        calib_type (str): Calibration type ('tsp', 'glucose', 'alanine').
+        
+    Returns:
+        nmr_preprocessing: An instance of the nmr_preprocessing class.
+
+    Example:
+        # Create an instance of the nmr_preprocessing class
+        nmr_data = nmr_preprocessing(data_path='path/to/data', bin_size=0.0003, auto_phasing=True, phase_fn='peak_minima', baseline_correction=True, calibration=True, calib_type='tsp')
+
+        # Get the processed NMR data
+        nmr_data.get_data()
+
+        # Get the PPM scale
+        nmr_data.get_ppm()
+
+        # Get the metadata
+        nmr_data.get_metadata()
+
+        # Get the phase correction
+        nmr_data.get_phase()
+    
+    '''
     
     def __init__(self, data_path: str, bin_size: float = 0.0003, 
-    auto_phasing: bool = True, baseline_correction: bool = True):
+                auto_phasing: bool = True, phase_fn: str = 'peak_minima', 
+                baseline_correction: bool = True, baseline_typr: str = 'linear', 
+                calibration: bool = True, calib_type: str = 'tsp'):
+
         self.data_path = data_path
         self.bin_size = bin_size
         self.auto_phasing = auto_phasing
+        self.phase_fn = phase_fn
+        self.baseline_correction = baseline_correction
+        self.calibration = calibration
+        self.calib_type = calib_type
+
         
         import os
         from glob import glob
@@ -214,6 +254,8 @@ class nmr_preprocessing:
         dir_['dir'].replace('fid', '', regex=True, inplace=True)
         
         nmr_data = pd.DataFrame()
+        phase_data = pd.DataFrame(columns=['p0', 'p1'])
+        dic_list = {}
         
         for i in tqdm.tqdm(dir_.index):
             
@@ -244,9 +286,20 @@ class nmr_preprocessing:
             zf_size = int(sweep_width / bin_size)
             data = ng.proc_base.zf_size(data, zf_size)       # Zero fill
             data = ng.proc_base.fft(data)                    # Fourier transform
-            data = ng.process.proc_autophase.autops(data, fn='peak_minima', p0=0.0, p1=0.0, return_phases=False)  # Phase correction
-            #data = ng.process.proc_autophase.autops(data, fn='peak_minima')  # Phase correction
 
+            # Perform automatic phase correction
+            if auto_phasing:
+                auto_phase = ng.process.proc_autophase.autops(data, fn=phase_fn, p0=0.0, p1=0.0, return_phases=True) # Phase correction
+            else:
+                pass
+
+            
+            data = auto_phase[0]
+            phase = auto_phase[1]
+
+            # Perform baseline correction
+            if baseline_correction:
+                data = ng.proc_base.bcorr(data)       # Baseline correction
 
             # Discard the imaginaries and reverse data if needed
             data = ng.proc_base.di(data)
@@ -263,8 +316,11 @@ class nmr_preprocessing:
             print(f"Offset: {offset} ppm")
             print(f"Data size: {data.size} data points")
             
-            nmr_data = pd.concat([nmr_data, pd.DataFrame(data).T], axis=0)
-            dic_array = np.array(list(dic.items()))
+            nmr_data = pd.concat([nmr_data, pd.DataFrame(spectra).T], axis=0)
+            dic_list.update({dir_['folder name'][i]: dic})
+            phase_data = pd.concat([phase_data, pd.DataFrame(phase).T], axis=0)
+
+
         
         try:
             nmr_data.index = dir_['folder name'].astype(int).to_list()
@@ -272,8 +328,9 @@ class nmr_preprocessing:
             nmr_data.index = dir_['folder name'].to_list()
 
         nmr_data.columns = ppm
-        
         nmr_data.sort_index(inplace=True)
+
+        phase_data.index = nmr_data.index
 
 
         text_completed = '''\n
@@ -288,7 +345,8 @@ class nmr_preprocessing:
         
         self.nmr_data = nmr_data
         self.ppm = ppm
-        self.dic_array = dic_array
+        self.dic_array = dic_list
+        self.phase_data = phase_data
         
         
         
@@ -305,5 +363,8 @@ class nmr_preprocessing:
 
     def get_metadata(self):
         return self.dic_array
+
+    def get_phase(self):
+        return self.phase_data
 
 

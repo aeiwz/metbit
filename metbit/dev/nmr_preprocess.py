@@ -273,8 +273,9 @@ class nmr_preprocessing:
             nmr_data.index = dir_['folder name'].to_list()
 
         nmr_data.columns = ppm
-        
         nmr_data.sort_index(inplace=True)
+
+        
 
 
         text_completed = '''\n

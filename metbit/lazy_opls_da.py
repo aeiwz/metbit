@@ -206,6 +206,7 @@ class lazy_opls_da:
 
         #Create dictionary to store the path
         dir = glob(working_dir + '/' + project_name + '/element/*/*/')
+        dir = [path_.replace('\\', '/') for path_ in dir]
 
         #Create dictionary to store the path
         path = {}
