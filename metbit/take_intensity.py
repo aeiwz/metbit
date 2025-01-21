@@ -172,7 +172,6 @@ class get_intensity:
             export_intensity = self.spectra.loc[:, x_positions]
             csv_string = export_intensity.to_csv(index=False)
 
-
             return dict(content=csv_string, filename="intensitys.csv")
 
         return app
