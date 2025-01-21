@@ -18,6 +18,7 @@ from dash import dcc, html
 from functools import lru_cache
 
 # Importing the custom STOCSY function
+
 from .STOCSY import STOCSY  # Adjust as necessary based on your file
 
 class STOCSY_app:
@@ -77,43 +78,17 @@ class STOCSY_app:
         return STOCSY(spectra=self.spectra, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
 
     def run_ui(self):
-        class plot_NMR_spec:
-            def __init__(self, spectra, ppm):
-                self.spectra = spectra
-                self.ppm = ppm
+       
+        from lingress import plot_NMR_spec
+        
 
-            def single_spectra(self, color_map=None, title='<b>Spectra of <sup>1</sup>H NMR data</b>',
-                               title_font_size=28, legend_name='<b>Sample</b>', legend_font_size=16,
-                               axis_font_size=20, line_width=1.5):
-                df_spectra = pd.DataFrame(self.spectra)
-                df_spectra.columns = self.ppm
-                fig = go.Figure()
-                import random
-                
-                n_sample = df_spectra.shape[0]
+        if self.spectra.shape[0] >= 20:
+            spectra_plot = self.spectra.sample(20)
+            plotter = plot_NMR_spec(spectra_plot, self.ppm, label=None)
+        else:
+            plotter = plot_NMR_spec(self.spectra, self.ppm, label=None)
 
 
-                if df_spectra.shape[0] <= 5:
-                    index_x = df_spectra.index.to_list()
-                elif df_spectra.shape[0] <= 100:
-                    index_x = random.sample(df_spectra.index.to_list(), int(0.2 * n_sample))
-                else:
-                    index_x = random.sample(df_spectra.index.to_list(), 30)
-
-
-                for i in index_x:
-                    fig.add_trace(go.Scatter(x=self.ppm, y=df_spectra.loc[i, :], mode='lines', name=i,
-                                             line=dict(width=line_width)))
-                fig.update_layout(
-                    title={'text': title, 'xanchor': 'center', 'yanchor': 'top'}, title_x=0.5,
-                    xaxis_title="<b>δ<sup>1</sup>H</b>", yaxis_title="<b>Intensity</b>",
-                    title_font_size=title_font_size, legend=dict(title=legend_name, font=dict(size=legend_font_size)),
-                    xaxis_autorange="reversed", paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    yaxis=dict(tickformat=".2e")
-                )
-                return fig
-
-        plotter = plot_NMR_spec(self.spectra, self.ppm)
         app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
         # Define the layout for the Dash app
