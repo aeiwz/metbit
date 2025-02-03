@@ -9,3 +9,4 @@ metbit/__pycache__/pls.cpython-311.pyc
 metbit/__pycache__/pretreatment.cpython-311.pyc
 
 .codegpt
+.DS_Store
