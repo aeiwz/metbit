@@ -301,13 +301,13 @@ class nmr_preprocessing:
             # Perform baseline correction
             if baseline_correction:
                 if baseline_type == 'linear':
-                    data = ng.proc_bl.base(data)
+                    data = ng.process.pipe_proc.base(dic, data)
                 elif baseline_type == 'constant':
-                    data = ng.proc_bl.cbf(data)
+                    data = ng.process.pipe_proc.cbf(data)
                 elif baseline_type == 'median':
-                    data = ng.proc_bl.med(data)
+                    data = ng.process.pipe_proc.med(data)
                 elif baseline_type == 'solvent filter':
-                    data = ng.proc_bl.sol(data)
+                    data = ng.process.pipe_proc.sol(data)
                 else:
                     continue
             else:
