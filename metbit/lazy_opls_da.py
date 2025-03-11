@@ -75,10 +75,15 @@ class lazy_opls_da:
     import pandas as pd
     import numpy as np
     import random
-    from .metbit import opls_da
 
-    from .utility import project_name_generator
-    from .utility import lazypair
+    if __name__ == '__main__':
+        from metbit import opls_da
+        from metbit.utility import project_name_generator
+        from metbit.utility import lazypair
+    else:
+        from .metbit import opls_da
+        from .utility import project_name_generator
+        from .utility import lazypair
     
 
     def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_names: list = None, n_components: int = 2, scaling: str = 'pareto', 
@@ -244,7 +249,11 @@ class lazy_opls_da:
 
 
 
-    def fit(self, marker_color: dict = None, custom_color: list = None, custom_shape: list = None, symbol_dict: dict = None, custom_legend_name = ['Group', 'Sub-group'], marker_label=None, marker_size=None, marker_opacity=None, individual_ellipse=False) -> None:
+    def fit(self, marker_color: dict = None, custom_color: list = None, 
+            custom_shape: list = None, symbol_dict: dict = None, 
+            custom_legend_name = ['Group', 'Sub-group'], 
+            marker_label=None, marker_size=None, marker_opacity=None, 
+            individual_ellipse=False) -> None:
 
 
         from .metbit import opls_da
