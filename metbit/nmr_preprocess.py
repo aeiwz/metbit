@@ -206,7 +206,7 @@ class nmr_preprocessing:
     
     def __init__(self, data_path: str, bin_size: float = 0.0003, 
                 auto_phasing: bool = True, phase_fn: str = 'peak_minima', 
-                baseline_correction: bool = True, baseline_typr: str = 'linear', 
+                baseline_correction: bool = True, baseline_type: str = 'linear', 
                 calibration: bool = True, calib_type: str = 'tsp'):
 
         self.data_path = data_path
@@ -216,6 +216,7 @@ class nmr_preprocessing:
         self.baseline_correction = baseline_correction
         self.calibration = calibration
         self.calib_type = calib_type
+        self.baseline_type = baseline_type
 
         
         import os
