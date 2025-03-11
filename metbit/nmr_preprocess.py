@@ -299,7 +299,18 @@ class nmr_preprocessing:
 
             # Perform baseline correction
             if baseline_correction:
-                data = ng.proc_base.bcorr(data)       # Baseline correction
+                if baseline_type == 'linear':
+                    data = ng.proc_bl.base(data)
+                elif baseline_type == 'constant':
+                    data = ng.proc_bl.cbf(data)
+                elif baseline_type == 'median':
+                    data = ng.proc_bl.med(data)
+                elif baseline_type == 'solvent filter':
+                    data = ng.proc_bl.sol(data)
+                else:
+                    continue
+            else:
+                continue
 
             # Discard the imaginaries and reverse data if needed
             data = ng.proc_base.di(data)
