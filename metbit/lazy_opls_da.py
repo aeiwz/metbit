@@ -135,7 +135,7 @@ class lazy_opls_da:
 
         self.permutation = permutation
         if permutation == True:
-            self.n_permutation = n_components
+            self.n_permutation = n_permutation
             self.n_jobs = n_jobs
         else:
             pass
