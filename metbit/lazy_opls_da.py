@@ -88,9 +88,9 @@ class lazy_opls_da:
 
     def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_names: list = None, n_components: int = 2, scaling: str = 'pareto', 
                     estimator: str = 'opls', kfold: int = 3, random_state: int = 94, auto_ncomp: bool = True,  
-                    permutation: bool = True, 
-                    VIP: bool = True, 
-                    linear_regression: bool = True) -> None:
+                    permutation: bool = True, n_permutation: int = 500, n_jobs: int = 4,
+                    VIP: bool = True, VIP_threshold: float = 1.5, 
+                    linear_regression: bool = True, FC_threshold: float = 1.5, p_val_threshold: float = 2) -> None:
 
         import os
         from glob import glob
@@ -135,19 +135,23 @@ class lazy_opls_da:
 
         self.permutation = permutation
         if permutation == True:
-            self.n_permutation = int(input('Enter the number of permutation: '))
-            self.n_jobs = int(input('Enter the number of jobs: '))
+            self.n_permutation = n_components
+            self.n_jobs = n_jobs
         else:
             pass
         
         self.VIP = VIP
         if VIP == True:
-            self.VIP_threshold = float(input('Enter the VIP threshold: '))
+            self.VIP_threshold = VIP_threshold
+        else:
+            pass
 
         self.linear_regression = linear_regression
         if linear_regression == True:
-            self.FC_threshold = float(input('Enter the fold change threshold: '))
-            self.p_val_threshold = float(input('Enter the -log10 p-value threshold: '))
+            self.FC_threshold = FC_threshold
+            self.p_val_threshold = p_val_threshold
+        else:
+            pass
 
         """
         This function takes in a dataframe and a list of y values and returns the project_name model.
