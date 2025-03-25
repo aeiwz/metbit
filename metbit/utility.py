@@ -542,7 +542,7 @@ class Normalise:
         norm_df = data.div(pqn_coef, axis=0)
 
         norm_df.columns = features
-        norm_df.index = data.index   
+        norm_df.index = index  
 
         if plot:
             plt.figure()
