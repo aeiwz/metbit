@@ -512,7 +512,7 @@ class Normalise:
         return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
 
-    def pqn_normalise(self, plot: bool = True):
+    def pqn_normalise(self, ref_index: list = None, plot: bool = True):
         import numpy as np
         import pandas as pd
         import matplotlib.pyplot as plt
@@ -528,8 +528,12 @@ class Normalise:
         """
         data = self.data
         features = data.columns
+        index = data.index
 
-        median_spectra = data.median(axis=0)
+        if ref_index is None:
+            median_spectra = data.median(axis=0)
+        else:
+            median_spectra = data.loc[ref_index, :].median(axis=0)
 
         foldChangeMatrix = data.div(median_spectra, axis=1)
         # PQN normalisation with median
