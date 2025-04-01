@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from .metbit import opls_da, pca
-from .utility import *
+from .utility import univar_stats, Normalise
 from .lazy_opls_da import lazy_opls_da
 from .spec_norm import *
 from .peak_processe import peak_chops
