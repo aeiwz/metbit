@@ -1,0 +1,14 @@
+scikit-learn
+pandas
+numpy
+matplotlib
+seaborn
+scipy
+statsmodels
+plotly
+pyChemometrics
+lingress
+tqdm
+dash
+pingouin
+nmrglue
