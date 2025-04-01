@@ -5,7 +5,7 @@ import tempfile
 import shutil
 import pandas as pd
 import matplotlib.pyplot as plt
-from nmr_preprocessing import nmr_preprocessing
+from metbit.nmr_preprocess import nmr_preprocessing
 
 st.set_page_config(page_title="NMR Preprocessing Tool", layout="wide")
 

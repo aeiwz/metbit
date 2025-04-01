@@ -212,7 +212,6 @@ class nmr_preprocessing:
         self.data_path = data_path
         self.bin_size = bin_size
         self.auto_phasing = auto_phasing
-        self.phase_fn = phase_fn
         self.baseline_correction = baseline_correction
         self.calibration = calibration
         self.calib_type = calib_type
