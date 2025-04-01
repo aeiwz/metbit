@@ -15,7 +15,7 @@ st.title("🧪 NMR Data Preprocessing App")
 uploaded_file = st.file_uploader("Upload zipped Bruker FID folder", type=['zip'])
 
 with st.expander("⚙️ Preprocessing Options"):
-    bin_size = st.number_input("Bin size", min_value=0.0001, max_value=0.01, value=0.0003, step=0.0001)
+    bin_size = st.number_input("Bin size", min_value=0.0001, max_value=0.0100, value=0.0003, step=0.0001)
     auto_phasing = st.checkbox("Automatic Phase Correction", value=True)
     baseline_correction = st.checkbox("Apply Baseline Correction", value=True)
     baseline_type = st.selectbox("Baseline Correction Type", options=['linear', 'constant', 'median', 'solvent filter'])

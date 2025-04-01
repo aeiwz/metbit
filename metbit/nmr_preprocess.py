@@ -297,10 +297,6 @@ class nmr_preprocessing:
                 data = ng.proc_base.ps(data, p0=p0, p1=p1)
                 phase = [p0, p1]
 
-            
-            data = auto_phase[0]
-            phase = auto_phase[1]
-
             # Perform baseline correction
             if baseline_correction:
                 if baseline_type == 'linear':
