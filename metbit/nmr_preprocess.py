@@ -205,7 +205,7 @@ class nmr_preprocessing:
     '''
     
     def __init__(self, data_path: str, bin_size: float = 0.0003, 
-                auto_phasing: bool = True, phase_fn: str = 'peak_minima', 
+                auto_phasing: bool = True, 
                 baseline_correction: bool = True, baseline_type: str = 'linear', 
                 calibration: bool = True, calib_type: str = 'tsp'):
 
@@ -288,11 +288,14 @@ class nmr_preprocessing:
             data = ng.proc_base.zf_size(data, zf_size)       # Zero fill
             data = ng.proc_base.fft(data)                    # Fourier transform
 
-            # Perform automatic phase correction
-            if auto_phasing:
-                auto_phase = ng.process.proc_autophase.autops(data, fn=phase_fn, p0=0.0, p1=0.0, return_phases=True) # Phase correction
+            # Perform phase correction
+            if self.auto_phasing:
+                data, (p0, p1) = ng.process.proc_autophase.autops(data, return_phases=True)  # Auto phase
+                phase = [p0, p1]
             else:
-                pass
+                p0, p1 = 0.0, 0.0  # default to zero-phase if not auto
+                data = ng.proc_base.ps(data, p0=p0, p1=p1)
+                phase = [p0, p1]
 
             
             data = auto_phase[0]
@@ -380,3 +383,16 @@ class nmr_preprocessing:
         return self.phase_data
 
 
+
+if __name__ == '__main__':
+    # Example usage
+    data_path = 'path/to/your/data'
+    nmr_data = nmr_preprocessing(data_path=data_path, bin_size=0.0003, auto_phasing=True, phase_fn='peak_minima', baseline_correction=True, calibration=True, calib_type='tsp')
+    
+    processed_data = nmr_data.get_data()
+    ppm_scale = nmr_data.get_ppm()
+    metadata = nmr_data.get_metadata()
+    phase_data = nmr_data.get_phase()
+    print(processed_data)
+    print(ppm_scale)
+    print(metadata)
