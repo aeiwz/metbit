@@ -1,0 +1,7 @@
+streamlit
+pandas
+numpy
+nmrglue
+tqdm
+matplotlib
+scipy

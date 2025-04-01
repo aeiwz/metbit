@@ -382,17 +382,3 @@ class nmr_preprocessing:
     def get_phase(self):
         return self.phase_data
 
-
-
-if __name__ == '__main__':
-    # Example usage
-    data_path = 'path/to/your/data'
-    nmr_data = nmr_preprocessing(data_path=data_path, bin_size=0.0003, auto_phasing=True, phase_fn='peak_minima', baseline_correction=True, calibration=True, calib_type='tsp')
-    
-    processed_data = nmr_data.get_data()
-    ppm_scale = nmr_data.get_ppm()
-    metadata = nmr_data.get_metadata()
-    phase_data = nmr_data.get_phase()
-    print(processed_data)
-    print(ppm_scale)
-    print(metadata)
