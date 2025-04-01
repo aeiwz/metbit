@@ -679,3 +679,269 @@ def project_name_generator():
 
 
 
+class univar_stats:
+    """
+    A class for creating univariate box or violin plots with statistical annotations.
+
+    This class supports group comparisons using t-tests, ANOVA, or nonparametric tests,
+    along with effect size computation and multiple testing correction. It outputs
+    interactive Plotly figures.
+
+    Parameters
+    ----------
+    df : pd.DataFrame
+        Input DataFrame containing the data to plot.
+    x_col : str
+        Column name to use for grouping (x-axis categories).
+    y_col : str
+        Column name for numeric values (y-axis).
+    group_order : list, optional
+        Custom group ordering (default: inferred from data).
+    custom_colors : dict, optional
+        Mapping of group names to Plotly color codes.
+    stats_options : list of str, optional
+        Statistical options to apply. Choices: ['t-test', 'anova', 'nonparametric', 'effect-size'].
+    p_value_threshold : float, default=0.05
+        Significance threshold for annotations.
+    annotate_style : str, default='value'
+        Annotation format. 'value' shows p-values, 'symbol' shows *, **, ***.
+    y_offset_factor : float, default=0.35
+        Controls vertical spacing of annotation lines.
+    show_non_significant : bool, default=True
+        Show non-significant comparisons or not.
+    correct_p : str or None, default='bonferroni'
+        Correction method for multiple comparisons (e.g., 'bonferroni', 'fdr_bh').
+    title_ : str, optional
+        Plot title. Defaults to y_col if not set.
+    y_label : str, optional
+        Label for y-axis. Defaults to y_col.
+    x_label : str, optional
+        Label for x-axis. Defaults to x_col.
+    fig_height : int, default=800
+        Height of the plot in pixels.
+    fig_width : int, default=600
+        Width of the plot in pixels.
+    plot_type : str, default='box'
+        Type of plot: 'box' or 'violin'.
+    show_axis_lines : bool, default=True
+        Whether to show axis lines around the plot.
+
+    Returns
+    -------
+    plotly.graph_objects.Figure
+        Interactive Plotly figure.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> from univar_stats import univar_stats
+    >>> import numpy as np
+
+    >>> # Create example data
+    >>> df = pd.DataFrame({
+    ...     "group": np.repeat(["A", "B", "C"], 30),
+    ...     "value": np.concatenate([
+    ...         np.random.normal(5, 1, 30),
+    ...         np.random.normal(6, 1, 30),
+    ...         np.random.normal(7, 1, 30)
+    ...     ])
+    ... })
+
+    >>> # Initialize the plotting object
+    >>> plotter = univar_stats(
+    ...     df, x_col="group", y_col="value",
+    ...     stats_options=["t-test", "effect-size"],
+    ...     annotate_style="symbol", plot_type="box"
+    ... )
+
+    >>> # Generate and show the plot
+    >>> fig = plotter.plot()
+    >>> fig.show()
+    """
+    #include packages
+    import pandas as pd
+    import numpy as np
+    import plotly.express as px
+    import plotly.graph_objects as go
+    from scipy.stats import ttest_ind, f_oneway, mannwhitneyu
+    from statsmodels.stats.multitest import multipletests
+    from itertools import combinations
+    import warnings
+    from typing import List, Optional, Dict, Any
+    import plotly.io as pio
+    #pio.templates.default = "plotly_white"
+    import plotly.figure_factory as ff
+    import plotly.express as px
+    import plotly.graph_objects as go
+    import statsmodels.api as sm
+
+    
+
+    def __init__(
+        self, df, x_col, y_col,
+        group_order=None, custom_colors=None,
+        stats_options=None, p_value_threshold=0.05,
+        annotate_style="value", y_offset_factor=0.35,
+        show_non_significant=True, correct_p="bonferroni",
+        title_=None, y_label=None, x_label=None,
+        fig_height=800, fig_width=600,
+        plot_type="box", show_axis_lines=True  # ← NEW PARAMETERS
+    ):
+        self.df = df
+        self.x_col = x_col
+        self.y_col = y_col
+        self.group_order = group_order
+        self.custom_colors = custom_colors
+        self.stats_options = stats_options or ["t-test"]
+        self.p_value_threshold = p_value_threshold
+        self.annotate_style = annotate_style
+        self.y_offset_factor = y_offset_factor
+        self.show_non_significant = show_non_significant
+        self.correct_p = correct_p
+        self.title_ = title_ or y_col
+        self.y_label = y_label or y_col
+        self.x_label = x_label or x_col
+        self.fig_height = fig_height
+        self.fig_width = fig_width
+        self.plot_type = plot_type
+        self.show_axis_lines = show_axis_lines
+
+
+    def plot(self):
+
+        #import packages
+        import pandas as pd
+        import numpy as np
+        import plotly.express as px
+        import plotly.graph_objects as go
+        from scipy.stats import ttest_ind, f_oneway, mannwhitneyu
+        from statsmodels.stats.multitest import multipletests
+        from itertools import combinations
+        from typing import List, Optional, Dict, Any
+        import plotly.io as pio
+        #pio.templates.default = "plotly_white"
+        import statsmodels.api as sm
+        import warnings
+        warnings.filterwarnings("ignore")
+
+        df = self.df
+        if df.empty:
+            raise ValueError("The DataFrame is empty.")
+
+        grouped = df.groupby(self.x_col)[self.y_col]
+        group_order = self.group_order or list(grouped.groups.keys())
+        comparisons = list(combinations(group_order, 2))
+
+        y_range = df[self.y_col].max() - df[self.y_col].min()
+        y_offset = self.y_offset_factor * y_range
+        max_y = df[self.y_col].max()
+
+        p_values, effect_sizes, annotations, lines = [], [], [], []
+
+        if "anova" in self.stats_options and len(group_order) > 2:
+            f_stat, anova_p = f_oneway(*(grouped.get_group(g).values for g in group_order))
+            p_values = [anova_p] * len(comparisons)
+        else:
+            for g1, g2 in comparisons:
+                group1 = grouped.get_group(g1).values
+                group2 = grouped.get_group(g2).values
+
+                if "t-test" in self.stats_options:
+                    _, p_val = ttest_ind(group1, group2)
+                elif "nonparametric" in self.stats_options:
+                    _, p_val = mannwhitneyu(group1, group2, alternative="two-sided")
+                else:
+                    raise ValueError("Invalid stats_options.")
+
+                p_values.append(p_val)
+
+                if "effect-size" in self.stats_options:
+                    effect_sizes.append(compute_effsize(group1, group2, eftype="cohen"))
+
+        if self.correct_p and "anova" not in self.stats_options:
+            _, corrected, _, _ = multipletests(p_values, method=self.correct_p)
+            p_values = corrected
+
+        # Plot selection
+        if self.plot_type == "box":
+            fig = px.box(
+                df, x=self.x_col, y=self.y_col, color=self.x_col,
+                points="all", category_orders={self.x_col: group_order},
+                color_discrete_map=self.custom_colors
+            )
+        elif self.plot_type == "violin":
+            fig = px.violin(
+                df, x=self.x_col, y=self.y_col, color=self.x_col,
+                box=True, points="all", category_orders={self.x_col: group_order},
+                color_discrete_map=self.custom_colors
+            )
+        else:
+            raise ValueError("Invalid plot_type. Use 'box' or 'violin'.")
+
+        # Annotations
+        for i, ((g1, g2), p_val) in enumerate(zip(comparisons, p_values)):
+            if not self.show_non_significant and p_val > self.p_value_threshold:
+                continue
+
+            y_pos = max_y + 0.15 + (i + 1) * y_offset
+
+            if self.annotate_style == "value":
+                p_text = f"p={p_val:.4f}" if p_val >= 0.0001 else "p<0.0001"
+            elif self.annotate_style == "symbol":
+                if p_val < 0.001:
+                    p_text = "***"
+                elif p_val < 0.01:
+                    p_text = "**"
+                elif p_val < 0.05:
+                    p_text = "*"
+                else:
+                    p_text = "ns"
+            else:
+                raise ValueError("Invalid annotate_style.")
+
+            if "effect-size" in self.stats_options and "anova" not in self.stats_options:
+                p_text += f", d={effect_sizes[i]:.2f}"
+
+            annotations.append(dict(
+                x=(group_order.index(g1) + group_order.index(g2)) / 2,
+                y=y_pos + y_offset * 0.75,
+                text=p_text,
+                showarrow=False,
+                xref="x", yref="y",
+                font=dict(size=12),
+            ))
+
+            lines.append(go.Scatter(
+                x=[g1, g1, g2, g2],
+                y=[y_pos, y_pos + y_offset * 0.5, y_pos + y_offset * 0.5, y_pos],
+                mode="lines",
+                line=dict(color="black", width=1),
+                hoverinfo="skip"
+            ))
+
+        for line in lines:
+            fig.add_trace(line)
+
+        # Axis styling
+        axis_line_config = dict(
+            showline=self.show_axis_lines,
+            linewidth=2,
+            linecolor="black"
+        )
+
+        fig.update_layout(
+            annotations=annotations,
+            title=dict(text=f"<b>{self.title_}</b>", x=0.5, y=0.95, xanchor='center', yanchor='top'),
+            yaxis_title=self.y_label,
+            xaxis_title=self.x_label,
+            legend_title=self.x_col,
+            width=self.fig_width,
+            height=self.fig_height,
+            showlegend=False,
+            yaxis=dict(tickformat=".2e", **axis_line_config),
+            xaxis=axis_line_config,
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)',
+        )
+
+        return fig
