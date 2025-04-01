@@ -205,7 +205,7 @@ class nmr_preprocessing:
     '''
     
     def __init__(self, data_path: str, bin_size: float = 0.0003, 
-                auto_phasing: bool = True, 
+                auto_phasing: bool = True, fn_ = 'acme',
                 baseline_correction: bool = True, baseline_type: str = 'linear', 
                 calibration: bool = True, calib_type: str = 'tsp'):
 
@@ -216,6 +216,7 @@ class nmr_preprocessing:
         self.calibration = calibration
         self.calib_type = calib_type
         self.baseline_type = baseline_type
+        self.fn_ = fn_
 
         
         import os
@@ -289,7 +290,7 @@ class nmr_preprocessing:
 
             # Perform phase correction
             if self.auto_phasing:
-                data, (p0, p1) = ng.process.proc_autophase.autops(data, return_phases=True)  # Auto phase
+                data, (p0, p1) = ng.process.proc_autophase.autops(data, fn=fn_,return_phases=True)  # Auto phase
                 phase = [p0, p1]
             else:
                 p0, p1 = 0.0, 0.0  # default to zero-phase if not auto
