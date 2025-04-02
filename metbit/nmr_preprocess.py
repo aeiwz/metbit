@@ -1,133 +1,91 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
+__author__ = 'aeiwz'
 author_email='theerayut_aeiw_123@hotmail.com'
 __copyright__="Copyright 2024, Theerayut"
-
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
 __status__ = "Develop"
 
-
-
-
 def read_fid(data_path: str):
-    """
-    Read in NMR data from a Bruker FID file.
-    
-    Parameters:
-        data_path (str): Path to the Bruker FID file.
-    
-    Returns:
-        tuple: Tuple containing the data dictionary and the data array.
-    """
     import nmrglue as ng
-    
-    # Read in the Bruker formatted data
+    print(f"[DEBUG] Reading FID from: {data_path}")
     dic, data = ng.bruker.read(data_path)
-    
     return dic, data
 
 def remove_digital_filter(dic, data):
-    """
-    Remove the digital filter from NMR data.
-    
-    Parameters:
-        dic (dict): Data dictionary.
-        data (np.ndarray): NMR data array.
-    
-    Returns:
-        np.ndarray: NMR data array with digital filter removed.
-    """
     import nmrglue as ng
-    
-    # Remove the digital filter
+    print("[DEBUG] Removing digital filter")
     data = ng.bruker.remove_digital_filter(dic, data)
-    
     return data
 
 def generate_ppm_scale(dic, data):
-    """
-    Generate a PPM scale for NMR data.
-    
-    Parameters:
-        dic (dict): Data dictionary.
-        bin_size (float): Bin size for the PPM scale.
-    
-    Returns:
-        np.ndarray: PPM scale array.
-    """
     import numpy as np
-    
-    # Generate PPM scale manually
     size = len(data)
-    sweep_width = dic['acqus']['SW']            # Spectral width in ppm
-    spectrometer_freq = dic['acqus']['SFO1']    # Spectrometer frequency in MHz
-    offset = dic['procs']['OFFSET']             # Offset in ppm
-
-    # Generate PPM scale
+    print(f"[DEBUG] Data size: {size}")
+    sweep_width = dic['acqus']['SW']
+    spectrometer_freq = dic['acqus']['SFO1']
+    offset = dic['procs']['OFFSET']
+    print(f"[DEBUG] SW={sweep_width}, SFO1={spectrometer_freq}, OFFSET={offset}")
     ppm = np.linspace(offset, offset - sweep_width, size)
-    
     return ppm
 
 def phasing(data, index, auto=True, fn='peak_minima', p0=0.0, p1=0.0):
-    """
-    Apply phase correction to NMR data.
-    
-    Parameters:
-        data (np.ndarray): NMR data array.
-        fn (str): Phase correction function ('peak_minima', 'peak_maxima', 'min_imag', 'max_imag').
-        auto (bool): Perform automatic phase correction.
-    
-    Returns:
-        np.ndarray: Phased NMR data array.
-    """
     import nmrglue as ng
-    
-    # Perform phase correction
+    print(f"[DEBUG] Phasing spectrum at index {index}, auto={auto}, fn={fn}")
     if auto:
-        data[index] = ng.process.proc_autophase.autops(data[index], fn='peak_minima', p0=0.0, p1=0.0, return_phases=False)
-
+        data[index] = ng.process.proc_autophase.autops(data[index], fn=fn, p0=p0, p1=p1, return_phases=False)
     return data
 
+import numpy as np
+import pandas as pd
+from pybaselines.whittaker import asls
+
+def bline(X: pd.DataFrame, lam: float = 1e7, max_iter: int = 30) -> pd.DataFrame:
+    """
+    Baseline correction for 1D NMR spectra using asymmetric least squares (ALS).
+    
+    Parameters:
+        X (pd.DataFrame): DataFrame where rows are spectra, columns are PPM values.
+        lam (float): Smoothing parameter (lambda). Higher = smoother baseline.
+        max_iter (int): Max iterations for ALS.
+    
+    Returns:
+        pd.DataFrame: Baseline-corrected spectra (same shape as input).
+    """
+    if X.isnull().values.any():
+        print("[WARNING] Data contains missing values. Replacing with zeros.")
+        X = X.fillna(0)
+
+    corrected = []
+    for idx, spectrum in X.iterrows():
+        baseline, _ = asls(spectrum.values, lam=lam, max_iter=max_iter)
+        corrected.append(spectrum.values - baseline)
+
+    corrected_df = pd.DataFrame(corrected, index=X.index, columns=X.columns)
+    return corrected_df
 
 
 
 def calibrate(X, ppm, calib_type='tsp', custom_range=None):
-    """
-    Calibrate chemical shifts in NMR spectra.
-    
-    Parameters:
-        X (np.ndarray): 2D array, NMR data (rows: spectra, columns: PPM positions).
-        ppm (np.ndarray): 1D array, chemical shift values aligned with columns of X.
-        calib_type (str): Calibration type ('tsp', 'glucose', 'alanine').
-        custom_range (tuple): PPM range (start, end) for custom calibration.
-    
-    Returns:
-        np.ndarray: Calibrated NMR data matrix.
-
-    Example:
-        # Ensure X is a 2D numpy array
-        X = data.to_numpy()
-
-        # Ensure ppm is a 1D numpy array
-        ppm = data.columns[:-1].astype(float).to_numpy()
-
-        # Call the calibrate function
-        calibrated_X = calibrate(X=X, ppm=ppm, calib_type='tsp', custom_range=None)
-    """    
-    import numpy as np
     from scipy.signal import savgol_filter
     import pandas as pd
-    # Define calibration ranges
+    import numpy as np
+
+    print(f"[DEBUG] Starting calibration: type={calib_type}, custom_range={custom_range}")
+
+    if not isinstance(X, pd.DataFrame):
+        print("[DEBUG] Converting X to DataFrame")
+        X = pd.DataFrame(X)
+        X.columns = ppm
+
     calib_ranges = {
         'tsp': (-0.2, 0.2),
         'glucose': (5.15, 5.3),
         'alanine': (1.4, 1.56)
     }
 
-    # Determine calibration range
     if calib_type in calib_ranges:
         ppm_range = calib_ranges[calib_type]
         target_ppm = {
@@ -141,74 +99,37 @@ def calibrate(X, ppm, calib_type='tsp', custom_range=None):
     else:
         raise ValueError("Invalid calibration type or custom range.")
 
-    # Find indices within the calibration range
+    print(f"[DEBUG] Calibration range: {ppm_range}, target: {target_ppm}")
+
     range_mask = (ppm >= ppm_range[0]) & (ppm <= ppm_range[1])
     if not np.any(range_mask):
         raise ValueError(f"No ppm values found within range {ppm_range}.")
 
-    # Perform calibration
-    calibrated_X = np.zeros_like(X)
-    for i, spectrum in enumerate(X):
-        # Extract the spectrum segment within the range
+    calibrated_X = np.zeros_like(X.values)
+    for i, spectrum in enumerate(X.values):
         segment = spectrum[range_mask]
         segment_ppm = ppm[range_mask]
-
-        # Find the peak position
         peak_idx = np.argmax(segment)
         peak_ppm = segment_ppm[peak_idx]
-
-        # Compute the shift to align with target PPM
         shift = peak_ppm - target_ppm
-
-        # Apply the shift to the entire PPM scale
         adjusted_ppm = ppm - shift
         calibrated_X[i, :] = np.interp(ppm, adjusted_ppm, spectrum)
+        print(f"[DEBUG] Sample {i}: peak={peak_ppm}, shift={shift}")
 
     calibrated_X_df = pd.DataFrame(calibrated_X)
     calibrated_X_df.columns = ppm
     calibrated_X_df.index = X.index
 
+    print("[DEBUG] Calibration completed.")
     return calibrated_X_df
 
 class nmr_preprocessing:
-
-    '''
-    nmr_preprocessing is a class for processing NMR data.
-
-    Parameters:
-        data_path (str): Path to the directory containing the Bruker formatted data.
-        bin_size (float): Bin size for the PPM scale.
-        auto_phasing (bool): Perform automatic phase correction.
-        phase_fn (str): Phase correction function ("acme", "peak_minima").
-        baseline_correction (bool): Perform baseline correction ('linear', 'constant', 'median', 'solvent filter').
-        calib_type (str): Calibration type ('tsp', 'glucose', 'alanine').
-        
-    Returns:
-        nmr_preprocessing: An instance of the nmr_preprocessing class.
-
-    Example:
-        # Create an instance of the nmr_preprocessing class
-        nmr_data = nmr_preprocessing(data_path='path/to/data', bin_size=0.0003, auto_phasing=True, phase_fn='peak_minima', baseline_correction=True, calibration=True, calib_type='tsp')
-
-        # Get the processed NMR data
-        nmr_data.get_data()
-
-        # Get the PPM scale
-        nmr_data.get_ppm()
-
-        # Get the metadata
-        nmr_data.get_metadata()
-
-        # Get the phase correction
-        nmr_data.get_phase()
-    
-    '''
-    
     def __init__(self, data_path: str, bin_size: float = 0.0003, 
                 auto_phasing: bool = True, fn_ = 'acme',
                 baseline_correction: bool = True, baseline_type: str = 'linear', 
                 calibration: bool = True, calib_type: str = 'tsp'):
 
+        print("[DEBUG] Initializing nmr_preprocessing class")
         self.data_path = data_path
         self.bin_size = bin_size
         self.auto_phasing = auto_phasing
@@ -218,163 +139,170 @@ class nmr_preprocessing:
         self.baseline_type = baseline_type
         self.fn_ = fn_
 
-        
         import os
         from glob import glob
         import tqdm
         import nmrglue as ng
         import pandas as pd
-        
-        # Check if the data path is valid
+        import numpy as np
+
+        print(f"[DEBUG] Checking path: {data_path}")
         if not os.path.exists(data_path):
             raise FileNotFoundError(f"Data path '{data_path}' not found.")
-        
-
-        #If last of data_path is / remove it
         if data_path.endswith('/'):
             data_path = data_path[:-1]
         
-        #Get all subdirectories
-        sub_dirs = glob(f'{data_path}/*/fid')
-        #make dataframes
-        import pandas as pd
-        import numpy as np
+        # Search for fid directories at different depths
+        sub_dirs = glob(f'{data_path}/fid')
+        if not sub_dirs:
+            sub_dirs = glob(f'{data_path}/*/fid')
+        if not sub_dirs:
+            sub_dirs = glob(f'{data_path}/*/*/fid')
 
-        dir_ = pd.DataFrame(sub_dirs, columns = ['dir'])
+        # Fail if still nothing found
+        if not sub_dirs:
+            raise ValueError(f"No 'fid' files found in '{data_path}'. Please check your folder structure.")
 
+        print(f"[DEBUG] Found {len(sub_dirs)} fid directories:")
+        for p in sub_dirs:
+            print("  └", p)
 
-        #Replace \ with /
+        dir_ = pd.DataFrame(sub_dirs, columns=['dir'])
         dir_['dir'] = dir_['dir'].apply(lambda x: x.replace('\\', '/'))
-
-
-        #Split last part of the path to columns folder name
-
         dir_['folder name'] = dir_['dir'].apply(lambda x: x.split('/')[-2])
-
-
         dir_['dir'].replace('fid', '', regex=True, inplace=True)
-        
+
         nmr_data = pd.DataFrame()
         phase_data = pd.DataFrame(columns=['p0', 'p1'])
         dic_list = {}
-        
+        ppm = None
+
         for i in tqdm.tqdm(dir_.index):
-            
-            
             path_to_process = dir_['dir'][i]
-            
-            print(f'Processing file {path_to_process}')
-            
-            
-            # Read in the Bruker formatted data
+            print(f"[DEBUG] Processing sample {i}: {path_to_process}")
+
             try:
                 dic, data = ng.bruker.read(path_to_process)
             except Exception as e:
-                print(f"Error reading Bruker data: {e}")
+                print(f"[ERROR] Reading Bruker data failed: {e}")
                 raise
-            
-            # Remove the digital filter
+
+            print("[DEBUG] Removing digital filter")
             data = ng.bruker.remove_digital_filter(dic, data)
-                        # Generate PPM scale manually
             size = len(data)
-            sweep_width = dic['acqus']['SW']            # Spectral width in ppm
-            spectrometer_freq = dic['acqus']['SFO1']    # Spectrometer frequency in MHz
-            offset = dic['procs']['OFFSET']                 # Offset in ppm
+            sweep_width = dic['acqus']['SW']
+            spectrometer_freq = dic['acqus']['SFO1']
+            offset = dic['procs']['OFFSET']
 
-
-            # Process the spectrum
-            #zf_size = 2 ** int(np.ceil(np.log2(len(data))))  # Next power of 2 for efficient FFT
+            print(f"[DEBUG] ZF size calc: sweep_width={sweep_width}, bin_size={bin_size}")
             zf_size = int(sweep_width / bin_size)
-            data = ng.proc_base.zf_size(data, zf_size)       # Zero fill
-            data = ng.proc_base.fft(data)                    # Fourier transform
+            data = ng.proc_base.zf_size(data, zf_size)
+            print(f"[DEBUG] FFT")
+            data = ng.proc_base.fft(data)
 
-            # Perform phase correction
-            if self.auto_phasing:
-                data, (p0, p1) = ng.process.proc_autophase.autops(data, fn=fn_,return_phases=True)  # Auto phase
+            if auto_phasing:
+                print("[DEBUG] Auto phasing")
+                data, (p0, p1) = ng.process.proc_autophase.autops(data, fn=fn_, return_phases=True)
                 phase = [p0, p1]
+                print(f"[DEBUG] Phase angles: p0={p0}, p1={p1}")
             else:
-                p0, p1 = 0.0, 0.0  # default to zero-phase if not auto
-                data = ng.proc_base.ps(data, p0=p0, p1=p1)
-                phase = [p0, p1]
+                pass
 
-            # Perform baseline correction
-            if baseline_correction:
-                if baseline_type == 'linear':
-                    data = ng.process.pipe_proc.base(dic, data)
-                elif baseline_type == 'constant':
-                    data = ng.process.pipe_proc.cbf(data)
-                elif baseline_type == 'median':
-                    data = ng.process.pipe_proc.med(data)
-                elif baseline_type == 'solvent filter':
-                    data = ng.process.pipe_proc.sol(data)
-                else:
-                    continue
-            else:
-                continue
-
-            # Discard the imaginaries and reverse data if needed
             data = ng.proc_base.di(data)
             data = ng.proc_base.rev(data)
 
 
-            # Generate PPM scale
+
+            # Perform baseline correction
+            if baseline_correction:
+                if baseline_type == 'corrector':
+                    data = ng.process.proc_bl.baseline_corrector(data)
+                elif baseline_type == 'constant':
+                    data = ng.process.proc_bl.cbf(data)
+                elif baseline_type == 'explicit':
+                    data = ng.process.proc_bl.cbf_explicit(data)
+                elif baseline_type == 'median':
+                    data = ng.process.proc_bl.med(data)
+                elif baseline_type == 'solvent filter':
+                    data = ng.process.proc_bl.sol_gaussian(data)
+                else:
+                    pass
+            else:
+                pass
+
             ppm = np.linspace(offset, offset - sweep_width, zf_size)
+            print(f"[DEBUG] Generated PPM scale (length={len(ppm)})")
 
-
-            # Metadata
-            print(f"Sweep Width: {sweep_width} ppm")
-            print(f"Spectrometer Frequency: {spectrometer_freq} MHz")
-            print(f"Offset: {offset} ppm")
-            print(f"Data size: {data.size} data points")
-            
-            nmr_data = pd.concat([nmr_data, pd.DataFrame(spectra).T], axis=0)
+            nmr_data = pd.concat([nmr_data, pd.DataFrame([data.real])], axis=0)
             dic_list.update({dir_['folder name'][i]: dic})
             phase_data = pd.concat([phase_data, pd.DataFrame(phase).T], axis=0)
 
+        '''
+        if self.baseline_correction:
+            print("[DEBUG] Starting baseline correction")
+            nmr_data = bline(nmr_data, lam=1e7, max_iter=30)
+        '''
 
-        
+        print("[DEBUG] Setting column names and index")
+        nmr_data.columns = ppm
         try:
             nmr_data.index = dir_['folder name'].astype(int).to_list()
         except:
             nmr_data.index = dir_['folder name'].to_list()
-
-        nmr_data.columns = ppm
-        nmr_data.sort_index(inplace=True)
-
         phase_data.index = nmr_data.index
 
 
-        text_completed = '''\n
-                        -----------------------------------------\n
-                        \n      
-                                Data processing completed
-                        \n
-                        -----------------------------------------\n
-                        '''
-        print(text_completed)
-        
-        
+        if self.calibration:
+            print("[DEBUG] Starting calibration step")
+            self.nmr_data = calibrate(nmr_data, ppm, calib_type)
+
+
+
+        print("\n[INFO] Data processing completed\n")
         self.nmr_data = nmr_data
         self.ppm = ppm
         self.dic_array = dic_list
         self.phase_data = phase_data
-        
-        
-        
-    def get_data(self):
-        
-        #flip the data
-        nmr_data_2 = self.nmr_data.iloc[:, ::-1]
-        return nmr_data_2
+        print("[DEBUG] Type of nmr_data:", type(self.nmr_data))
 
+
+
+    def get_data(self):
+        print("[DEBUG] get_data() called")
+        if self.nmr_data is None or not isinstance(self.nmr_data, pd.DataFrame):
+            raise ValueError("NMR data is not available or not in DataFrame format.")
+        if self.nmr_data.empty:
+            raise ValueError("NMR data is empty.")
+        if self.nmr_data.isnull().values.any():
+            raise ValueError("NMR data contains missing values.")
+        # Check if the index is numeric
+        if not pd.api.types.is_numeric_dtype(self.nmr_data.index):
+            raise ValueError("NMR data index is not numeric.")
+        return self.nmr_data
 
     def get_ppm(self):
-        ppm = self.ppm
-        return ppm
+        print("[DEBUG] get_ppm() called")
+        return self.ppm
 
     def get_metadata(self):
+        print("[DEBUG] get_metadata() called")
         return self.dic_array
 
     def get_phase(self):
+        print("[DEBUG] get_phase() called")
         return self.phase_data
 
+if __name__ == '__main__':
+    print("[DEBUG] Starting NMR processing script")
+    fid = '/Volumes/CAS9/Aeiwz/Project/Thesis/Archive'
+    nmr = nmr_preprocessing(fid, bin_size=0.0003, auto_phasing=True, fn_='acme',
+                            baseline_correction=True, baseline_type='linear',
+                            calibration=True, calib_type='glucose')
+    #print(nmr.get_data().shape())
+    #print(nmr.get_data().head())
+    
+    nmr_data = nmr.get_data()
+    #plot data
+    from lingress import plot_NMR_spec
+    fig = plot_NMR_spec(spectra=nmr_data, ppm=nmr.get_ppm(), label=None).single_spectra()
+    fig.show()
