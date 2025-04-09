@@ -5,3 +5,5 @@ nmrglue
 tqdm
 matplotlib
 scipy
+metbit
+lingress

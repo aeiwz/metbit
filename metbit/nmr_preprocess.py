@@ -65,67 +65,97 @@ def bline(X: pd.DataFrame, lam: float = 1e7, max_iter: int = 30) -> pd.DataFrame
 
     corrected_df = pd.DataFrame(corrected, index=X.index, columns=X.columns)
     return corrected_df
-
-
-
 def calibrate(X, ppm, calib_type='tsp', custom_range=None):
-    from scipy.signal import savgol_filter
-    import pandas as pd
+    """
+    Calibrate chemical shifts in NMR spectra using known reference peaks.
+
+    Parameters:
+        X (np.ndarray or pd.DataFrame): NMR data matrix (rows: spectra, columns: PPM positions).
+        ppm (np.ndarray): 1D array of chemical shift values.
+        calib_type (str): 'tsp', 'glucose', 'alanine', or 'custom'.
+        custom_range (tuple): Optional (start, end) PPM range for custom calibration.
+
+    Returns:
+        pd.DataFrame: Calibrated NMR data matrix.
+    """
     import numpy as np
+    import pandas as pd
+    from scipy.signal import find_peaks
 
-    print(f"[DEBUG] Starting calibration: type={calib_type}, custom_range={custom_range}")
-
-    if not isinstance(X, pd.DataFrame):
-        print("[DEBUG] Converting X to DataFrame")
-        X = pd.DataFrame(X)
-        X.columns = ppm
-
+    # Define calibration ranges and targets
     calib_ranges = {
         'tsp': (-0.2, 0.2),
-        'glucose': (5.15, 5.3),
-        'alanine': (1.4, 1.56)
+        'acetate': (1.8, 2.2),
+        'glucose': (5.0, 5.4),
+        'alanine': (1.2, 1.6)
+    }
+    target_ppm_dict = {
+        'tsp': 0.000,
+        'acetate': 1.910,
+        'glucose': 5.230,
+        'alanine': 1.480
     }
 
+    # Determine calibration range and target ppm
     if calib_type in calib_ranges:
         ppm_range = calib_ranges[calib_type]
-        target_ppm = {
-            'tsp': 0.0,
-            'glucose': 5.23,
-            'alanine': 1.48
-        }[calib_type]
+        target_ppm = target_ppm_dict[calib_type]
     elif custom_range:
         ppm_range = custom_range
         target_ppm = np.mean(custom_range)
     else:
         raise ValueError("Invalid calibration type or custom range.")
 
-    print(f"[DEBUG] Calibration range: {ppm_range}, target: {target_ppm}")
+    # Ensure X is 2D NumPy array
+    is_dataframe = isinstance(X, pd.DataFrame)
+    if is_dataframe:
+        X_index = X.index
+        X = X.to_numpy()
+    else:
+        X_index = range(np.atleast_2d(X).shape[0])
+        X = np.atleast_2d(X)
 
+    # Check that ppm range is valid
     range_mask = (ppm >= ppm_range[0]) & (ppm <= ppm_range[1])
     if not np.any(range_mask):
         raise ValueError(f"No ppm values found within range {ppm_range}.")
 
-    calibrated_X = np.zeros_like(X.values)
-    for i, spectrum in enumerate(X.values):
+    calibrated_X = np.zeros_like(X)
+
+    for i, spectrum in enumerate(X):
         segment = spectrum[range_mask]
         segment_ppm = ppm[range_mask]
-        peak_idx = np.argmax(segment)
-        peak_ppm = segment_ppm[peak_idx]
+
+        if calib_type in ['glucose', 'alanine']:
+            # Detect peaks in the segment
+            peaks, _ = find_peaks(segment, prominence=0.01)
+            if len(peaks) >= 2:
+                # Get top 2 peaks (most intense)
+                top2_idx = peaks[np.argsort(segment[peaks])[-2:]]
+                top2_ppms = segment_ppm[top2_idx]
+                peak_ppm = np.mean(top2_ppms)
+            elif len(peaks) == 1:
+                peak_ppm = segment_ppm[peaks[0]]
+            else:
+                peak_ppm = segment_ppm[np.argmax(segment)]
+        else:
+            # Use max intensity in region
+            peak_idx = np.argmax(segment)
+            peak_ppm = segment_ppm[peak_idx]
+
         shift = peak_ppm - target_ppm
         adjusted_ppm = ppm - shift
-        calibrated_X[i, :] = np.interp(ppm, adjusted_ppm, spectrum)
-        print(f"[DEBUG] Sample {i}: peak={peak_ppm}, shift={shift}")
 
-    calibrated_X_df = pd.DataFrame(calibrated_X)
-    calibrated_X_df.columns = ppm
-    calibrated_X_df.index = X.index
+        # Sort before interpolation to avoid np.interp issues
+        sort_idx = np.argsort(adjusted_ppm)
+        calibrated_X[i, :] = np.interp(ppm, adjusted_ppm[sort_idx], spectrum[sort_idx])
 
-    print("[DEBUG] Calibration completed.")
-    return calibrated_X_df
+    # Return as DataFrame
+    return pd.DataFrame(calibrated_X, columns=ppm, index=X_index)
 
 class nmr_preprocessing:
     def __init__(self, data_path: str, bin_size: float = 0.0003, 
-                auto_phasing: bool = True, fn_ = 'acme',
+                auto_phasing: bool = False, fn_ = 'acme',
                 baseline_correction: bool = True, baseline_type: str = 'linear', 
                 calibration: bool = True, calib_type: str = 'tsp'):
 
@@ -177,6 +207,8 @@ class nmr_preprocessing:
         dic_list = {}
         ppm = None
 
+        #sort index of dir_ by folder name
+        dir_.sort_values('folder name', inplace=True)
         for i in tqdm.tqdm(dir_.index):
             path_to_process = dir_['dir'][i]
             print(f"[DEBUG] Processing sample {i}: {path_to_process}")
@@ -206,7 +238,9 @@ class nmr_preprocessing:
                 phase = [p0, p1]
                 print(f"[DEBUG] Phase angles: p0={p0}, p1={p1}")
             else:
-                pass
+                print("[DEBUG] Manual phasing")
+                data = ng.process.proc_base.ps(data, p0=dic['procs']['PHC0'], p1=dic['procs']['PHC1'], inv=True)
+                phase = [dic['procs']['PHC0'], dic['procs']['PHC1']]
 
             data = ng.proc_base.di(data)
             data = ng.proc_base.rev(data)
@@ -254,30 +288,24 @@ class nmr_preprocessing:
 
         if self.calibration:
             print("[DEBUG] Starting calibration step")
-            self.nmr_data = calibrate(nmr_data, ppm, calib_type)
-
-
+            self.nmr_data2 = calibrate(nmr_data, ppm, calib_type)
 
         print("\n[INFO] Data processing completed\n")
-        self.nmr_data = nmr_data
+        if self.calibration:
+            print("[DEBUG] Calibration completed")
+            self.nmr_data = self.nmr_data2
+        else:
+            print("[DEBUG] No calibration applied")
+            self.nmr_data = nmr_data
+        #self.nmr_data = nmr_data
         self.ppm = ppm
         self.dic_array = dic_list
         self.phase_data = phase_data
         print("[DEBUG] Type of nmr_data:", type(self.nmr_data))
 
 
-
     def get_data(self):
         print("[DEBUG] get_data() called")
-        if self.nmr_data is None or not isinstance(self.nmr_data, pd.DataFrame):
-            raise ValueError("NMR data is not available or not in DataFrame format.")
-        if self.nmr_data.empty:
-            raise ValueError("NMR data is empty.")
-        if self.nmr_data.isnull().values.any():
-            raise ValueError("NMR data contains missing values.")
-        # Check if the index is numeric
-        if not pd.api.types.is_numeric_dtype(self.nmr_data.index):
-            raise ValueError("NMR data index is not numeric.")
         return self.nmr_data
 
     def get_ppm(self):
@@ -291,6 +319,8 @@ class nmr_preprocessing:
     def get_phase(self):
         print("[DEBUG] get_phase() called")
         return self.phase_data
+
+
 
 if __name__ == '__main__':
     print("[DEBUG] Starting NMR processing script")

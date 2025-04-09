@@ -21,7 +21,7 @@ with st.expander("⚙️ Preprocessing Options"):
                                        options=['acme', 'peak_minima'])
     baseline_correction = st.checkbox("Apply Baseline Correction", value=True)
     baseline_type = st.selectbox("Baseline Correction Type",
-                                 options=['linear', 'constant', 'median', 'solvent filter'])
+                                 options=['corrector', 'constant', 'explicit',  'median', 'solvent filter'])
     calibrate_data = st.checkbox("Calibrate Spectrum", value=True)
     calib_type = st.selectbox("Calibration Type", options=['tsp', 'glucose', 'alanine'])
 
@@ -72,8 +72,8 @@ if uploaded_file and process_button:
                 raise ValueError("❌ Invalid or non-iterable ppm returned from get_ppm()")
 
             st.success("✅ Preprocessing completed successfully!")
-            st.write("📋 Processed NMR Data (first few rows):")
-            st.dataframe(df.head())
+            #st.write("📋 Processed NMR Data (first few rows):")
+            #st.dataframe(df.head())
 
             # Plotting
             try:
