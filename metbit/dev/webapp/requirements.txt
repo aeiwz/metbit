@@ -1,9 +1,0 @@
-streamlit
-pandas
-numpy
-nmrglue
-tqdm
-matplotlib
-scipy
-metbit
-lingress
