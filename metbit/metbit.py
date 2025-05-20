@@ -1743,227 +1743,114 @@ class pca:
 
 
 
-    def plot_pca_trajectory(self, time_, time_order, stat_ = ['mean', 'sem'], pc=['PC1', 'PC2'],
-                            color_dict = None, 
-                            symbol_dict = None, 
+    def plot_pca_trajectory(self, time_, time_order, stat_=['mean', 'sem'], pc=['PC1', 'PC2'],
+                            color_dict=None, symbol_dict=None, 
                             fig_height=900, fig_width=1300,
                             marker_size=35, marker_opacity=0.7,
                             title_font_size=20, font_size=20,
                             legend_name=['Group', 'Time point']):
-
-        '''
-
-        Visualise PCA trajectory
-
-        Parameters
-        ----------
-        time_ : array-like, shape (n_samples,)
-            Time point of samples.
-        time_order : dictionary
-            Order of time point.
-        stat_ : list, default=['mean', 'sem']  
-            Statistic to calculate. First element is mean or median, second element is sem or std.
-        pc : list, default=['PC1', 'PC2']
-            Principle component to plot.
-        color_dict : dictionary, default=None
-            Dictionary of color_ for each group.
-        symbol_dict : dictionary, default=None
-            Dictionary of symbol_ for each time point.
-        fig_height : int, default=900
-            Height of figure.
-        fig_width : int, default=1300
-            Width of figure.
-        marker_size : int, default=35
-            Size of marker.
-        marker_opacity : float, default=0.7
-            Opacity of marker.
-
-        Returns
-        -------
-        fig : plotly.graph_objects.Figure
-            Plotly figure.
-
-        '''
-
-
         from .pca_ellipse import confidence_ellipse
+        import plotly.graph_objects as go
+        import plotly.express as px
+        import pandas as pd
+        import numpy as np
 
-
-        #check time_order must be a dictionary
         if not isinstance(time_order, dict):
-            raise ValueError("time_order must be a dictionary \n Example: time_order = {'Day 1': 0, 'Day 2': 1, 'Day 3': 2}")
+            raise ValueError("`time_order` must be a dictionary.")
+        if time_ is None or len(time_) != len(self.label):
+            raise ValueError("`time_` must match the length of label and not be None.")
+        if stat_[0] not in ['mean', 'median'] or stat_[1] not in ['sem', 'std']:
+            raise ValueError("`stat_` must be ['mean' or 'median', 'sem' or 'std'].")
 
-        #check time are not missing
-        if time_ is None:
-            raise ValueError('time_ must be provided fot time trajectory analysis')
-
-        #check time_ must be pandas series, list or array
-        if not isinstance(time_, (pd.Series, np.ndarray, list)):
-            raise ValueError('time_ must be a series, list or array')
-        if len(time_) != len(self.label):
-            raise ValueError('time_ must have the same number of samples as group')
-
-        
-
-
-        df_scores_ = self.df_scores_
-        r2 = self.df_explained_variance_
-        q2_test = self.q2_test
+        # Copy scores and add time point
+        df_scores_ = self.df_scores_.copy()
         df_scores_['Time point'] = time_
-        
 
-
-
-        #check stat_[0] must be mean or median
-        if stat_[0] not in ['mean', 'median']:
-            raise ValueError('stat_[0] must be mean or median')
-        #check stat_[1] must be sem, std
-        if stat_[1] not in ['sem','std']:
-            raise ValueError('stat_[1] must be sem or std')
-
+        # Aggregate means/medians
         if stat_[0] == 'mean':
             df_scores_point = df_scores_.groupby(['Group', 'Time point']).mean()
-        if stat_[0] == 'median':
+        else:
             df_scores_point = df_scores_.groupby(['Group', 'Time point']).median()
 
+        # Aggregate errors
         if stat_[1] == 'sem':
             err_df = df_scores_.groupby(['Group', 'Time point']).sem()
-        if stat_[1] == 'std':
+        else:
             err_df = df_scores_.groupby(['Group', 'Time point']).std()
 
+        # Map order for sorting
+        df_scores_point['Time order'] = df_scores_point.index.get_level_values('Time point').map(time_order)
+        err_df['Time order'] = err_df.index.get_level_values('Time point').map(time_order)
 
         df_scores_point.reset_index(inplace=True)
-        df_scores_point['Time order'] = df_scores_point['Time point'].map(time_order)
-        df_scores_point.sort_values(by=['Group', 'Time order'], inplace=True)
-
         err_df.reset_index(inplace=True)
-        err_df['Time order'] = err_df['Time point'].map(time_order)
+
+        df_scores_point.sort_values(by=['Group', 'Time order'], inplace=True)
         err_df.sort_values(by=['Group', 'Time order'], inplace=True)
 
+        # Default color palette if not provided
+        if color_dict is None:
+            import plotly.colors as plotly_color
+            palette = sum([getattr(plotly_color.qualitative, name) for name in ['Plotly', 'D3', 'Set2']], [])
+            groups = df_scores_['Group'].unique()
+            color_dict = {group: palette[i % len(palette)] for i, group in enumerate(groups)}
 
+        if symbol_dict is None:
+            symbol_dict = {}
 
-        #check color_dict must be a dictionary
-        if color_dict is not None:
-            if not isinstance(color_dict, dict):
-                raise ValueError('color_dict must be a dictionary')
-        else:
-            color_dict = None
+        r2 = self.df_explained_variance_
+        q2_test = self.q2_test
 
+        # Main line+error plot
+        fig = px.line(df_scores_point, x=pc[0], y=pc[1], line_group='Group',
+                    error_x=err_df[pc[0]], error_y=err_df[pc[1]],
+                    color='Group', color_discrete_map=color_dict,
+                    symbol='Time point', symbol_map=symbol_dict,
+                    title=f'<b>Principle component analysis ({self.scaling_method})<b>',
+                    height=fig_height, width=fig_width,
+                    labels={
+                        pc[0]: f"{pc[0]} R<sup>2</sup>X: {np.round(r2.loc[r2['PC'] == pc[0], 'Explained variance'].values[0]*100, 2)} %",
+                        pc[1]: f"{pc[1]} R<sup>2</sup>X: {np.round(r2.loc[r2['PC'] == pc[1], 'Explained variance'].values[0]*100, 2)} %",
+                        'Group': legend_name[0],
+                        'Time point': legend_name[1]
+                    })
 
-        if symbol_dict is not None:
-            if not isinstance(symbol_dict, dict):
-                raise ValueError('symbol_dict must be a dictionary')
-        else:
-            symbol_dict = None
-        
-
-
-        #If user not input color_dict then get unique of label and create color_dict
-        if color_dict is not None:
-            color_dict_2 = color_dict
-        else:
-            
-            import plotly.colors as plotly_colour
-
-            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
-                                'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
-                                'Vivid', 'Prism']
-
-            palette = []
-            for name in name_color_set:
-                palette += getattr(plotly_colour.qualitative, name) # This is a list of colors
-
-            color_dict = {i: palette[i] for i in range(len(df_scores_['Group'].unique()))}
-
-            group_unique = df_scores_['Group'].unique()
-            color_dict_2 = {group_unique[i]: list(color_dict.values())[i] for i in range(len(group_unique))}
-                
-
-        fig = px.line(df_scores_point, x=pc[0], y=pc[1], line_group='Time point', 
-                        error_x=err_df[pc[0]], error_y=err_df[pc[1]],
-                        color='Group', color_discrete_map=color_dict_2,
-                        symbol='Time point', symbol_map=symbol_dict,
-                        title='<b>Principle component analysis ({})<b>'.format(self.scaling_method), 
-                        height=fig_height, width=fig_width,
-                        labels={
-                            pc[0]: "{} R<sup>2</sup>X: {} %".format(pc[0], np.round(r2.loc[r2.loc[r2['PC']==pc[0]].index, 'Explained variance'].values[0]*100, decimals=2)),
-                            pc[1]: "{} R<sup>2</sup>X: {} %".format(pc[1], np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Explained variance'].values[0]*100, decimals=2)),
-                            'Group': legend_name[0],
-                            'Time point': legend_name[1],
-                            })
-
-
-        
-
-
-
-        for connect_line in range(len(group_unique)):
-            # create a new trace for the connecting line
+        # Connect lines
+        for group in df_scores_point['Group'].unique():
+            df_group = df_scores_point[df_scores_point['Group'] == group]
             fig.add_trace(go.Scatter(
-                x=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[0]], # x-coordinates of the line
-                y=df_scores_point.loc[list(df_scores_point.loc[df_scores_point['Group'] == df_scores_point['Group'].unique()[connect_line]].index), pc[1]], # y-coordinates of the line
-                mode='lines', # specify the trace type as lines
-                line=dict(color=color_dict_2[group_unique[connect_line]], width=2), # set the color_ and width of the line
-                showlegend=False # hide the trace from the legend
+                x=df_group[pc[0]], y=df_group[pc[1]],
+                mode='lines',
+                line=dict(color=color_dict[group], width=2),
+                showlegend=False
             ))
 
-
-
-        fig.add_annotation(dict(font=dict(color="black",size=font_size),
-                                #x=x_loc,
-                                x=1.0,
-                                y=0.05,
-                                showarrow=False,
-                                text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2.loc[r2['PC']==pc[1]].index, 'Cumulative variance'].values[0]*100, decimals=2)}%<b>",
-                                textangle=0,
-                                xref="paper",
-                                yref="paper"),
-                                # set alignment of text to left side of entry
-                                align="left")
-
-        fig.add_annotation(dict(font=dict(color="black",size=font_size),
-                                #x=x_loc,
-                                x=1.0,
-                                y=0.01,
-                                showarrow=False,
-                                text=f"<b>Q<sup>2</sup>X (Cum): {np.round(q2_test*100, decimals=2)}%<b>",
-                                textangle=0,
-                                xref="paper",
-                                yref="paper"),
-                                # set alignment of text to left side of entry
-                                align="left")
-
+        # Ellipse for global trajectory center
         fig.add_shape(type='path',
-                path=confidence_ellipse(df_scores_point[pc[0]], df_scores_point[pc[1]]))
+                    path=confidence_ellipse(df_scores_point[pc[0]], df_scores_point[pc[1]]),
+                    line=dict(color='black', width=2))
 
-
-                    #update axis as scitifics
-        fig.update_xaxes(tickformat=".1e")
-        fig.update_yaxes(tickformat=".1e")
-
-
-
-        fig.update_xaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
-        fig.update_yaxes(zeroline=True, zerolinewidth=2, zerolinecolor='Black')
-        fig.update_xaxes(showline=True, linewidth=2, linecolor='black')
-        fig.update_yaxes(showline=True, linewidth=2, linecolor='black')
+        # Axis and annotations
+        fig.update_xaxes(tickformat=".1e", zeroline=True, zerolinewidth=2, zerolinecolor='Black', showline=True, linewidth=2, linecolor='black')
+        fig.update_yaxes(tickformat=".1e", zeroline=True, zerolinewidth=2, zerolinecolor='Black', showline=True, linewidth=2, linecolor='black')
         fig.update_layout(
-            title={
-                'y':0.95,
-                'x':0.5,
-                'xanchor': 'center',
-                'yanchor': 'top'},
-            font=dict(size=title_font_size))
+            title={'y': 0.95, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+            font=dict(size=title_font_size),
+            paper_bgcolor='rgba(0,0,0,0)',
+            plot_bgcolor='rgba(0,0,0,0)'
+        )
 
+        fig.update_traces(marker=dict(size=marker_size, opacity=marker_opacity, line=dict(width=2, color='DarkSlateGrey')))
 
-        fig.update_traces(marker=dict(size=marker_size, 
-                                      opacity=marker_opacity, 
-                                      line=dict(width=2, 
-                                                color='DarkSlateGrey')))
+        fig.add_annotation(dict(font=dict(color="black", size=font_size),
+                                x=1.0, y=0.05, showarrow=False,
+                                text=f"<b>R<sup>2</sup>X (Cum): {np.round(r2.loc[r2['PC'] == pc[1], 'Cumulative variance'].values[0]*100, 2)}%<b>",
+                                xref="paper", yref="paper"))
+        fig.add_annotation(dict(font=dict(color="black", size=font_size),
+                                x=1.0, y=0.01, showarrow=False,
+                                text=f"<b>Q<sup>2</sup>X (Cum): {np.round(q2_test*100, 2)}%<b>",
+                                xref="paper", yref="paper"))
 
-        fig.update_layout(paper_bgcolor='rgba(0,0,0,0)',plot_bgcolor='rgba(0,0,0,0)')
-        
-        
         return fig
     
 
