@@ -12,7 +12,6 @@ metbit/dev.py
 metbit/genpage.py
 metbit/lazy_opls_da.py
 metbit/metbit.py
-metbit/nmr_preprocess.py
 metbit/opls.py
 metbit/pca_ellipse.py
 metbit/peak_processe.py
