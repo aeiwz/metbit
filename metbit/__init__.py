@@ -9,7 +9,8 @@ from .STOCSY import STOCSY
 from .ui_stocsy import STOCSY_app
 from .ui_picky_peak import pickie_peak
 from .take_intensity import *
-from .metbit_nmr import *
+from .metbit_nmr import nmr_preprocess
+from .metbit_nmr import calibrate
 
 
 # -*- coding: utf-8 -*-

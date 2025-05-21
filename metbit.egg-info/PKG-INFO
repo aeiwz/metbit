@@ -1,9 +1,9 @@
 Metadata-Version: 2.4
 Name: metbit
-Version: 7.3.13
+Version: 7.3.14
 Summary: Metabolomics data analysis and visualization tools.
 Home-page: https://github.com/aeiwz/metbit.git
-Download-URL: https://github.com/aeiwz/metbit/archive/refs/tags/V7.3.13.tar.gz
+Download-URL: https://github.com/aeiwz/metbit/archive/refs/tags/V7.3.14.tar.gz
 Author: aeiwz
 Author-email: theerayut_aeiw_123@hotmail.com
 License: MIT
