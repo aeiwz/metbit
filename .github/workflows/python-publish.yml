@@ -18,20 +18,20 @@ permissions:
 jobs:
   release-build:
     runs-on: ubuntu-latest
-
+  
     steps:
       - uses: actions/checkout@v4
-
+  
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-
-      - name: Build release distributions
+  
+      - name: Clean and build release distributions
         run: |
-          # NOTE: put your own distribution build steps here.
-          python -m pip install build
-          python -m build
-
+          python -m pip install --upgrade pip setuptools wheel
+          rm -rf dist/*
+          python setup.py sdist bdist_wheel
+  
       - name: Upload distributions
         uses: actions/upload-artifact@v4
         with:
