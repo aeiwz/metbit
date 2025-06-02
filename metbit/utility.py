@@ -107,19 +107,12 @@ class lazypair:
 
 class gen_page:
 
-
-
-
-
     import sys
     import os
     import re
     import shutil
     from glob import glob
     import pandas as pd
-
-
-
 
     def __init__(self, data_path):
         '''
@@ -475,6 +468,8 @@ class Normalise:
     import numpy as np
 
     def __init__(self, data: pd.DataFrame, compute_missing: bool = True):
+        import pandas as pd
+        import numpy as np
         """
         This function takes in a dataframe and returns the normalised dataframe.
         Parameters
@@ -634,11 +629,13 @@ def project_name_generator():
     #random project name
     #get random time
     import random
-    import time
-    # Get local time
-    current_time = time.localtime()
-    # Set format for time
-    time_format = time.strftime('%Y-%m-%d_%H-%M-%S', current_time)
+    from datetime import datetime
+	# Get current local time with microseconds
+	now = datetime.now()
+	# Format: YYYYMMDDHHMMSSmS (milliseconds)
+	time_format = now.strftime('%Y%m%d%H%M%S') + f'{int(now.microsecond / 1000):03d}'
+	print(time_format)
+    
     project_names = [
     "ApolloPulse", "OrbitOmni", "NebulaNexus", "StarStream", "CometCore",
     "AstralAxis", "CelestialSync", "MeteorMerge", "GalaxusGate", "StellarScope",
