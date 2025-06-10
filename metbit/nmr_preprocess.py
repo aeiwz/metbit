@@ -124,7 +124,7 @@ class nmr_preprocessing:
     
     '''
     def __init__(self, data_path: str, bin_size: float = 0.0003, 
-                auto_phasing: bool = True, fn_ = 'acme',
+                auto_phasing: bool = False, fn_ = 'acme',
                 baseline_correction: bool = True, baseline_type: str = 'linear', 
                 calibration: bool = True, calib_type: str = 'tsp'):
 

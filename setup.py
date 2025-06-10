@@ -35,6 +35,7 @@ setup(
           'dash',
           'pingouin',
           'nmrglue',
+          'pybaselines'
           ],
   classifiers=[
     'Development Status :: 3 - Alpha',     
