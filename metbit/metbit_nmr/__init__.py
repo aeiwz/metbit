@@ -1,7 +1,4 @@
-# -*- coding: utf-8 -*-
 
-from .nmr_preprocess import *
-from .calibrate import *
 
 # -*- coding: utf-8 -*-
 
