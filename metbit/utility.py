@@ -630,12 +630,12 @@ def project_name_generator():
     #get random time
     import random
     from datetime import datetime
-	# Get current local time with microseconds
+    # Get current local time with microseconds
     now = datetime.now()
-	# Format: YYYYMMDDHHMMSSmS (milliseconds)
+    # Format: YYYYMMDDHHMMSSmS (milliseconds)
     time_format = now.strftime('%Y%m%d%H%M%S') + f'{int(now.microsecond / 1000):03d}'
     print(time_format)
-    
+
     project_names = [
     "ApolloPulse", "OrbitOmni", "NebulaNexus", "StarStream", "CometCore",
     "AstralAxis", "CelestialSync", "MeteorMerge", "GalaxusGate", "StellarScope",
