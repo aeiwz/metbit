@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
+__author__ ='aeiwz'
 author_email='theerayut_aeiw_123@hotmail.com'
 __copyright__="Copyright 2024, Theerayut"
 
@@ -8,6 +8,19 @@ __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
 __status__ = "Develop"
+
+import os
+import random
+import pandas as pd
+import numpy as np
+from glob import glob
+import plotly.colors as plotly_colour
+from plotly.validators.scatter.marker import SymbolValidator
+
+from .metbit import opls_da
+from .utility import project_name_generator, lazypair
+from lingress import lin_regression
+
 class lazy_opls_da:
 
     '''
@@ -69,12 +82,17 @@ class lazy_opls_da:
         5.	Permutation Test Plot: Conducts permutation tests and saves permutation scores as CSV if permutation=True.
         6.	Volcano Plot (Linear Regression): Generates volcano plot and saves data if linear_regression=True.
     '''
-
     import os
-    from glob import glob
+    import random
     import pandas as pd
     import numpy as np
-    import random
+    from glob import glob
+    import plotly.colors as plotly_colour
+    from plotly.validators.scatter.marker import SymbolValidator
+    
+    from .metbit import opls_da
+    from .utility import project_name_generator, lazypair
+    from lingress import lin_regression
 
     if __name__ == '__main__':
         from metbit import opls_da
