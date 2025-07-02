@@ -10,23 +10,23 @@ DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
 ])
 
 setup(
-  name = 'metbit',      
-  packages = ['metbit'], 
-  version = '7.3.21',  
-  license='MIT', 
+  name = 'metbit',
+  packages = ['metbit'],
+  version = '7.3.21',
+  license='MIT',
   description = 'Metabolomics data analysis and visualization tools.',
-  author = 'aeiwz',                 
-  author_email = 'theerayut_aeiw_123@hotmail.com',   
-  url = 'https://github.com/aeiwz/metbit.git',  
-  download_url = 'https://github.com/aeiwz/metbit/archive/refs/tags/V7.3.21.tar.gz',  
+  author = 'aeiwz',
+  author_email = 'theerayut_aeiw_123@hotmail.com',
+  url = 'https://github.com/aeiwz/metbit.git',
+  download_url = 'https://github.com/aeiwz/metbit/archive/refs/tags/V7.3.21.tar.gz',
   keywords = ['Omics', 'Multivariate analysis', 'Visualization', 'Data Analysis', 'Metabolomics', 'Chemometrics'],
-  install_requires=[            
+  install_requires=[
           'scikit-learn',
           'pandas',
           'numpy',
           'matplotlib',
           'seaborn',
-          'scipy',
+          'scipy==1.14.1',
           'statsmodels',
           'plotly',
           'pyChemometrics',
@@ -38,10 +38,10 @@ setup(
           'pybaselines'
           ],
   classifiers=[
-    'Development Status :: 3 - Alpha',     
-    'Intended Audience :: Education',     
+    'Development Status :: 3 - Alpha',
+    'Intended Audience :: Education',
     'Topic :: Software Development :: Build Tools',
-    'License :: OSI Approved :: MIT License',        
+    'License :: OSI Approved :: MIT License',
     'Programming Language :: Python :: 3.12',
   ],
 )
