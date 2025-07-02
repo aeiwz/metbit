@@ -8,6 +8,27 @@ import json
 import base64
 
 class annotate_peak:
+
+    '''
+    A Dash application for annotating NMR spectra with interactive features.
+    This application allows users to visualize NMR spectra, add annotations,
+    style lines, and export annotations in HTML and JSON formats.
+    Parameters:
+    - spectra: DataFrame containing NMR spectra data.
+    - ppm: List of ppm values corresponding to the spectra.
+    - label: Series or DataFrame containing labels for the spectra.
+    Usage:
+    ```python
+    import pandas as pd
+    df = pd.read_csv('path_to_your_data.csv')
+    spectra = df.iloc[:, 1:]  # Assuming first column is not part of spectra
+    ppm = spectra.columns.astype(float).to_list()
+    label = df['Group']  # Assuming 'Group' is the label column
+    annotator = annotate_peak(spectra, ppm, label)
+    annotator.run(debug=True, port=8050)
+    ```
+
+    '''
     def __init__(self, spectra, ppm, label):
         self.spectra = spectra
         self.ppm = ppm
@@ -255,3 +276,16 @@ class annotate_peak:
 
     def run(self, debug=True, port=8050):
         self.app.run(debug=debug, port=port)
+
+
+if __name__ == "__main__":
+    import nmrglue as ng
+    import pandas as pd
+
+    df = pd.read_csv('https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv')
+    spectra = df.iloc[:, 1:]
+    ppm = spectra.columns.astype(float).to_list()
+    label = df['Group']
+
+    annotator = annotate_peak(spectra, ppm, label)
+    annotator.run(debug=True, port=8051)
