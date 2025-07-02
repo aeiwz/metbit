@@ -11,6 +11,7 @@ from .ui_picky_peak import pickie_peak
 from .take_intensity import *
 from .nmr_preprocess import nmr_preprocessing
 from .calibrate import calibrate
+from .annotate_peak import annotate_peak
 
 
 
