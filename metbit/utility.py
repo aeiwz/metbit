@@ -673,65 +673,102 @@ def project_name_generator():
     project_name = time_format + '_' + random.choice(project_names)
     return project_name
 
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from scipy.stats import ttest_ind, f_oneway, mannwhitneyu
+from statsmodels.stats.multitest import multipletests
+from itertools import combinations
+import warnings
+from typing import List, Optional, Dict
+
+
 class univar_stats:
     """
-    A class for creating univariate box or violin plots with statistical annotations.
-
-    This class supports group comparisons using t-tests, ANOVA, or nonparametric tests,
-    along with effect size computation and multiple testing correction. It outputs
-    interactive Plotly figures.
+    A class for generating univariate box or violin plots with statistical annotations
+    using Plotly. Supports group-wise comparisons using t-tests, ANOVA, or nonparametric
+    tests, along with effect size calculation and multiple testing correction.
 
     Parameters
     ----------
-    df : pd.DataFrame
-        Input DataFrame containing the data to plot.
-    x_col : str
-        Column name to use for grouping (x-axis categories).
-    y_col : str
-        Column name for numeric values (y-axis).
-    group_order : list, optional
-        Custom group ordering (default: inferred from data).
-    custom_colors : dict, optional
-        Mapping of group names to Plotly color codes.
-    stats_options : list of str, optional
-        Statistical options to apply. Choices: ['t-test', 'anova', 'nonparametric', 'effect-size'].
-    p_value_threshold : float, default=0.05
-        Significance threshold for annotations.
-    annotate_style : str, default='value'
-        Annotation format. 'value' shows p-values, 'symbol' shows *, **, ***.
-    y_offset_factor : float, default=0.35
-        Controls vertical spacing of annotation lines.
-    show_non_significant : bool, default=True
-        Show non-significant comparisons or not.
-    correct_p : str or None, default='bonferroni'
-        Correction method for multiple comparisons (e.g., 'bonferroni', 'fdr_bh').
-    title_ : str, optional
-        Plot title. Defaults to y_col if not set.
-    y_label : str, optional
-        Label for y-axis. Defaults to y_col.
-    x_label : str, optional
-        Label for x-axis. Defaults to x_col.
-    fig_height : int, default=800
-        Height of the plot in pixels.
-    fig_width : int, default=600
-        Width of the plot in pixels.
-    plot_type : str, default='box'
-        Type of plot: 'box' or 'violin'.
-    show_axis_lines : bool, default=True
-        Whether to show axis lines around the plot.
+    df : pandas.DataFrame
+        The input dataframe containing numeric and grouping columns.
 
-    Returns
-    -------
-    plotly.graph_objects.Figure
-        Interactive Plotly figure.
+    x_col : str
+        Column name used for group/category (x-axis).
+
+    y_col : str
+        Column name used for values (y-axis).
+
+    group_order : list of str, optional
+        Custom ordering of groups on the x-axis. Defaults to the order in the dataframe.
+
+    custom_colors : dict, optional
+        Dictionary mapping group names to Plotly color codes.
+
+    stats_options : list of str, optional
+        Statistical tests to perform. Choices:
+        - 't-test'         : independent two-sample t-test
+        - 'anova'          : one-way ANOVA
+        - 'nonparametric'  : Mann-Whitney U test
+        - 'effect-size'    : Computes Cohen's d
+
+    p_value_threshold : float, default=0.05
+        Threshold for marking comparisons as significant.
+
+    annotate_style : str, default="value"
+        How to display p-values. Options:
+        - 'value'  : show exact p-values (e.g., p=0.0031)
+        - 'symbol' : show significance level (*, **, ***) or 'ns'
+
+    y_offset_factor : float, default=0.35
+        Controls spacing between stacked annotation lines (relative to y-axis range).
+
+    show_non_significant : bool, default=True
+        If False, non-significant comparisons are hidden from the plot.
+
+    correct_p : str or None, default="bonferroni"
+        Method for multiple testing correction (e.g., "bonferroni", "fdr_bh", or None).
+
+    title_ : str, optional
+        Title for the plot. Defaults to y_col.
+
+    y_label : str, optional
+        Custom label for the y-axis. Defaults to y_col.
+
+    x_label : str, optional
+        Custom label for the x-axis. Defaults to x_col.
+
+    fig_height : int, default=800
+        Height of the figure in pixels.
+
+    fig_width : int, default=600
+        Width of the figure in pixels.
+
+    plot_type : str, default="box"
+        Type of plot. Choices:
+        - "box"
+        - "violin"
+
+    show_axis_lines : bool, default=True
+        Whether to show border lines on axes.
+
+    Attributes
+    ----------
+    df : pandas.DataFrame
+        The input data.
+
+    plot() : plotly.graph_objects.Figure
+        Generates the interactive annotated plot.
 
     Examples
     --------
     >>> import pandas as pd
-    >>> from univar_stats import univar_stats
     >>> import numpy as np
+    >>> from univar_stats import univar_stats
 
-    >>> # Create example data
+    >>> # Create mock data
     >>> df = pd.DataFrame({
     ...     "group": np.repeat(["A", "B", "C"], 30),
     ...     "value": np.concatenate([
@@ -741,45 +778,37 @@ class univar_stats:
     ...     ])
     ... })
 
-    >>> # Initialize the plotting object
+    >>> # Initialize and plot
     >>> plotter = univar_stats(
     ...     df, x_col="group", y_col="value",
     ...     stats_options=["t-test", "effect-size"],
-    ...     annotate_style="symbol", plot_type="box"
+    ...     annotate_style="symbol", plot_type="box",
+    ...     show_non_significant=False
     ... )
-
-    >>> # Generate and show the plot
     >>> fig = plotter.plot()
     >>> fig.show()
     """
-    #include packages
-    import pandas as pd
-    import numpy as np
-    import plotly.express as px
-    import plotly.graph_objects as go
-    from scipy.stats import ttest_ind, f_oneway, mannwhitneyu
-    from statsmodels.stats.multitest import multipletests
-    from itertools import combinations
-    import warnings
-    from typing import List, Optional, Dict, Any
-    import plotly.io as pio
-    #pio.templates.default = "plotly_white"
-    import plotly.figure_factory as ff
-    import plotly.express as px
-    import plotly.graph_objects as go
-    import statsmodels.api as sm
-
-    
 
     def __init__(
-        self, df, x_col, y_col,
-        group_order=None, custom_colors=None,
-        stats_options=None, p_value_threshold=0.05,
-        annotate_style="value", y_offset_factor=0.35,
-        show_non_significant=True, correct_p="bonferroni",
-        title_=None, y_label=None, x_label=None,
-        fig_height=800, fig_width=600,
-        plot_type="box", show_axis_lines=True  # ← NEW PARAMETERS
+        self,
+        df: pd.DataFrame,
+        x_col: str,
+        y_col: str,
+        group_order: Optional[List[str]] = None,
+        custom_colors: Optional[Dict[str, str]] = None,
+        stats_options: Optional[List[str]] = None,
+        p_value_threshold: float = 0.05,
+        annotate_style: str = "value",
+        y_offset_factor: float = 0.35,
+        show_non_significant: bool = True,
+        correct_p: Optional[str] = "bonferroni",
+        title_: Optional[str] = None,
+        y_label: Optional[str] = None,
+        x_label: Optional[str] = None,
+        fig_height: int = 800,
+        fig_width: int = 600,
+        plot_type: str = "box",
+        show_axis_lines: bool = True,
     ):
         self.df = df
         self.x_col = x_col
@@ -800,41 +829,40 @@ class univar_stats:
         self.plot_type = plot_type
         self.show_axis_lines = show_axis_lines
 
+    @staticmethod
+    def compute_effsize(a, b, eftype: str = "cohen") -> float:
+        """Compute effect size (Cohen's d)."""
+        if eftype == "cohen":
+            pooled_std = np.sqrt((np.std(a, ddof=1)**2 + np.std(b, ddof=1)**2) / 2)
+            return (np.mean(a) - np.mean(b)) / pooled_std
+        raise ValueError("Unsupported effect size type.")
 
-    def plot(self):
-
-        #import packages
-        import pandas as pd
-        import numpy as np
-        import plotly.express as px
-        import plotly.graph_objects as go
-        from scipy.stats import ttest_ind, f_oneway, mannwhitneyu
-        from statsmodels.stats.multitest import multipletests
-        from itertools import combinations
-        from typing import List, Optional, Dict, Any
-        import plotly.io as pio
-        #pio.templates.default = "plotly_white"
-        import statsmodels.api as sm
-        import warnings
+    def plot(self) -> go.Figure:
         warnings.filterwarnings("ignore")
-
         df = self.df
         if df.empty:
             raise ValueError("The DataFrame is empty.")
 
         grouped = df.groupby(self.x_col)[self.y_col]
         group_order = self.group_order or list(grouped.groups.keys())
-        comparisons = list(combinations(group_order, 2))
 
+        if self.custom_colors:
+            missing = set(group_order) - set(self.custom_colors)
+            if missing:
+                raise ValueError(f"Missing colors for groups: {missing}")
+
+        comparisons = list(combinations(group_order, 2))
         y_range = df[self.y_col].max() - df[self.y_col].min()
         y_offset = self.y_offset_factor * y_range
         max_y = df[self.y_col].max()
 
-        p_values, effect_sizes, annotations, lines = [], [], [], []
+        raw_p_values = []
+        effect_sizes = []
 
+        # Statistical testing
         if "anova" in self.stats_options and len(group_order) > 2:
             f_stat, anova_p = f_oneway(*(grouped.get_group(g).values for g in group_order))
-            p_values = [anova_p] * len(comparisons)
+            raw_p_values = [anova_p] * len(comparisons)
         else:
             for g1, g2 in comparisons:
                 group1 = grouped.get_group(g1).values
@@ -847,40 +875,52 @@ class univar_stats:
                 else:
                     raise ValueError("Invalid stats_options.")
 
-                p_values.append(p_val)
+                raw_p_values.append(p_val)
 
                 if "effect-size" in self.stats_options:
-                    effect_sizes.append(compute_effsize(group1, group2, eftype="cohen"))
+                    d = self.compute_effsize(group1, group2)
+                    effect_sizes.append(d)
 
+        # Apply correction if needed
         if self.correct_p and "anova" not in self.stats_options:
-            _, corrected, _, _ = multipletests(p_values, method=self.correct_p)
-            p_values = corrected
+            _, corrected_p_values, _, _ = multipletests(raw_p_values, method=self.correct_p)
+        else:
+            corrected_p_values = raw_p_values
 
-        # Plot selection
+
+        # Create base plot
         if self.plot_type == "box":
             fig = px.box(
                 df, x=self.x_col, y=self.y_col, color=self.x_col,
                 points="all", category_orders={self.x_col: group_order},
-                color_discrete_map=self.custom_colors
+                color_discrete_map=self.custom_colors,
             )
         elif self.plot_type == "violin":
             fig = px.violin(
                 df, x=self.x_col, y=self.y_col, color=self.x_col,
                 box=True, points="all", category_orders={self.x_col: group_order},
-                color_discrete_map=self.custom_colors
+                color_discrete_map=self.custom_colors,
             )
         else:
             raise ValueError("Invalid plot_type. Use 'box' or 'violin'.")
 
         # Annotations
-        for i, ((g1, g2), p_val) in enumerate(zip(comparisons, p_values)):
-            if not self.show_non_significant and p_val > self.p_value_threshold:
+        annotations = []
+        lines = []
+        for i, ((g1, g2), p_val) in enumerate(zip(comparisons, corrected_p_values)):
+            if p_val > self.p_value_threshold and not self.show_non_significant:
                 continue
-
+            # if p_val is nan replace it with 1
+            if np.isnan(p_val):
+                p_val = 1.0
+            x1 = group_order.index(g1)
+            x2 = group_order.index(g2)
+            x_center = (x1 + x2) / 2
             y_pos = max_y + 0.15 + (i + 1) * y_offset
 
+            # Build p-value text
             if self.annotate_style == "value":
-                p_text = f"p={p_val:.4f}" if p_val >= 0.0001 else "p<0.0001"
+                p_text = f"p={p_val:.4f}"
             elif self.annotate_style == "symbol":
                 if p_val < 0.001:
                     p_text = "***"
@@ -890,6 +930,8 @@ class univar_stats:
                     p_text = "*"
                 else:
                     p_text = "ns"
+                    if not self.show_non_significant:
+                        continue
             else:
                 raise ValueError("Invalid annotate_style.")
 
@@ -897,7 +939,7 @@ class univar_stats:
                 p_text += f", d={effect_sizes[i]:.2f}"
 
             annotations.append(dict(
-                x=(group_order.index(g1) + group_order.index(g2)) / 2,
+                x=x_center,
                 y=y_pos + y_offset * 0.75,
                 text=p_text,
                 showarrow=False,
@@ -916,7 +958,6 @@ class univar_stats:
         for line in lines:
             fig.add_trace(line)
 
-        # Axis styling
         axis_line_config = dict(
             showline=self.show_axis_lines,
             linewidth=2,
@@ -937,5 +978,24 @@ class univar_stats:
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
         )
+
+        #Add text to under the plot if style is value show legend of *
+        if self.annotate_style == "symbol":
+            if self.show_non_significant:
+                fig.add_annotation(
+                    text="* p < 0.05, ** p < 0.01, *** p < 0.001, ns = not significant",
+                    xref="paper", yref="paper",
+                    x=0.5, y=-0.1,
+                    showarrow=False,
+                    font=dict(size=12)
+                )
+            else:
+                fig.add_annotation(
+                    text="* p < 0.05, ** p < 0.01, *** p < 0.001",
+                    xref="paper", yref="paper",
+                    x=0.5, y=-0.1,
+                    showarrow=False,
+                    font=dict(size=12)
+            )
 
         return fig
