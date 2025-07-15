@@ -683,110 +683,62 @@ from itertools import combinations
 import warnings
 from typing import List, Optional, Dict
 
+import pandas as pd
+import numpy as np
+import plotly.express as px
+import plotly.graph_objects as go
+from scipy.stats import ttest_ind, f_oneway, mannwhitneyu
+from statsmodels.stats.multitest import multipletests
+from itertools import combinations
+from typing import List, Optional, Dict
+import warnings
 
-class univar_stats:
+
+class UnivarStats:
     """
-    A class for generating univariate box or violin plots with statistical annotations
-    using Plotly. Supports group-wise comparisons using t-tests, ANOVA, or nonparametric
-    tests, along with effect size calculation and multiple testing correction.
+    Perform univariate statistical analysis and visualization using Plotly.
 
     Parameters
     ----------
-    df : pandas.DataFrame
-        The input dataframe containing numeric and grouping columns.
-
+    df : pd.DataFrame
+        Input DataFrame containing the measurement and group columns.
     x_col : str
-        Column name used for group/category (x-axis).
-
+        Column name for the grouping variable.
     y_col : str
-        Column name used for values (y-axis).
-
+        Column name for the measurement variable.
     group_order : list of str, optional
-        Custom ordering of groups on the x-axis. Defaults to the order in the dataframe.
-
-    custom_colors : dict, optional
-        Dictionary mapping group names to Plotly color codes.
-
+        Custom group plotting order.
+    custom_colors : dict of str -> str, optional
+        Mapping from group name to color.
     stats_options : list of str, optional
-        Statistical tests to perform. Choices:
-        - 't-test'         : independent two-sample t-test
-        - 'anova'          : one-way ANOVA
-        - 'nonparametric'  : Mann-Whitney U test
-        - 'effect-size'    : Computes Cohen's d
-
+        Supported: ["t-test", "anova", "nonparametric", "effect-size"].
     p_value_threshold : float, default=0.05
-        Threshold for marking comparisons as significant.
-
-    annotate_style : str, default="value"
-        How to display p-values. Options:
-        - 'value'  : show exact p-values (e.g., p=0.0031)
-        - 'symbol' : show significance level (*, **, ***) or 'ns'
-
+        Significance threshold.
+    annotate_style : {'value', 'symbol'}, default='value'
+        Annotation style: numeric or stars.
     y_offset_factor : float, default=0.35
-        Controls spacing between stacked annotation lines (relative to y-axis range).
-
+        Vertical spacing factor for annotations.
     show_non_significant : bool, default=True
-        If False, non-significant comparisons are hidden from the plot.
-
-    correct_p : str or None, default="bonferroni"
-        Method for multiple testing correction (e.g., "bonferroni", "fdr_bh", or None).
-
+        Whether to display 'ns'.
+    correct_p : str or None, default='bonferroni'
+        Method for multiple testing correction. Supported:
+            - 'bonferroni', 'holm', 'hochberg', 'hommel'
+            - 'fdr_bh', 'fdr_by', 'fdr_tsbh', 'fdr_tsbky'
+            - None or 'none' = no correction
     title_ : str, optional
-        Title for the plot. Defaults to y_col.
-
+        Plot title.
     y_label : str, optional
-        Custom label for the y-axis. Defaults to y_col.
-
+        Y-axis label.
     x_label : str, optional
-        Custom label for the x-axis. Defaults to x_col.
-
+        X-axis label.
     fig_height : int, default=800
-        Height of the figure in pixels.
-
+        Figure height.
     fig_width : int, default=600
-        Width of the figure in pixels.
-
-    plot_type : str, default="box"
-        Type of plot. Choices:
-        - "box"
-        - "violin"
-
+        Figure width.
+    plot_type : {'box', 'violin'}, default='box'
+        Plot type.
     show_axis_lines : bool, default=True
-        Whether to show border lines on axes.
-
-    Attributes
-    ----------
-    df : pandas.DataFrame
-        The input data.
-
-    plot() : plotly.graph_objects.Figure
-        Generates the interactive annotated plot.
-
-    Examples
-    --------
-    >>> import pandas as pd
-    >>> import numpy as np
-    >>> from univar_stats import univar_stats
-
-    >>> # Create mock data
-    >>> df = pd.DataFrame({
-    ...     "group": np.repeat(["A", "B", "C"], 30),
-    ...     "value": np.concatenate([
-    ...         np.random.normal(5, 1, 30),
-    ...         np.random.normal(6, 1, 30),
-    ...         np.random.normal(7, 1, 30)
-    ...     ])
-    ... })
-
-    >>> # Initialize and plot
-    >>> plotter = univar_stats(
-    ...     df, x_col="group", y_col="value",
-    ...     stats_options=["t-test", "effect-size"],
-    ...     annotate_style="symbol", plot_type="box",
-    ...     show_non_significant=False
-    ... )
-    >>> fig = plotter.plot()
-    >>> fig.show()
+        Whether to show axis lines.
     """
 
     def __init__(
@@ -831,13 +783,12 @@ class univar_stats:
 
     @staticmethod
     def compute_effsize(a, b, eftype: str = "cohen") -> float:
-        """Compute effect size (Cohen's d)."""
         if eftype == "cohen":
             pooled_std = np.sqrt((np.std(a, ddof=1)**2 + np.std(b, ddof=1)**2) / 2)
             return (np.mean(a) - np.mean(b)) / pooled_std
         raise ValueError("Unsupported effect size type.")
 
-    def plot(self) -> go.Figure:
+    def plot(self, show_description: bool = True) -> go.Figure:
         warnings.filterwarnings("ignore")
         df = self.df
         if df.empty:
@@ -859,17 +810,27 @@ class univar_stats:
         raw_p_values = []
         effect_sizes = []
 
-        # Statistical testing
         if "anova" in self.stats_options and len(group_order) > 2:
             f_stat, anova_p = f_oneway(*(grouped.get_group(g).values for g in group_order))
             raw_p_values = [anova_p] * len(comparisons)
+            corrected_p_values = raw_p_values
+            if "effect-size" in self.stats_options:
+                print("⚠️ Effect sizes are skipped when using only ANOVA.")
         else:
             for g1, g2 in comparisons:
-                group1 = grouped.get_group(g1).values
-                group2 = grouped.get_group(g2).values
+                group1 = grouped.get_group(g1).dropna().values
+                group2 = grouped.get_group(g2).dropna().values
+                print(f"Comparing {g1} vs {g2}: {len(group1)} vs {len(group2)} samples")
+
+                if len(group1) < 2 or len(group2) < 2:
+                    warnings.warn(f"Skipping {g1} vs {g2}: one of the groups has <2 samples.")
+                    raw_p_values.append(np.nan)
+                    if "effect-size" in self.stats_options:
+                        effect_sizes.append(np.nan)
+                    continue
 
                 if "t-test" in self.stats_options:
-                    _, p_val = ttest_ind(group1, group2)
+                    _, p_val = ttest_ind(group1, group2, equal_var=False)
                 elif "nonparametric" in self.stats_options:
                     _, p_val = mannwhitneyu(group1, group2, alternative="two-sided")
                 else:
@@ -881,14 +842,26 @@ class univar_stats:
                     d = self.compute_effsize(group1, group2)
                     effect_sizes.append(d)
 
-        # Apply correction if needed
-        if self.correct_p and "anova" not in self.stats_options:
-            _, corrected_p_values, _, _ = multipletests(raw_p_values, method=self.correct_p)
-        else:
-            corrected_p_values = raw_p_values
+            # ⬇️ Correct p-values safely
+            raw_array = np.array(raw_p_values, dtype=np.float64)
+            corrected_array = np.full_like(raw_array, np.nan)
 
+            valid_idx = [i for i, p in enumerate(raw_array) if not np.isnan(p)]
+            if valid_idx:
+                _, corrected_vals, _, _ = multipletests(raw_array[valid_idx], method=self.correct_p)
+                corrected_array[valid_idx] = corrected_vals
 
-        # Create base plot
+            corrected_p_values = corrected_array.tolist()
+
+        # Store results
+        self._results = {
+            "comparisons": comparisons,
+            "raw_p_values": raw_p_values,
+            "corrected_p_values": corrected_p_values,
+            "effect_sizes": effect_sizes if effect_sizes else [None] * len(comparisons),
+        }
+
+        # Plot
         if self.plot_type == "box":
             fig = px.box(
                 df, x=self.x_col, y=self.y_col, color=self.x_col,
@@ -904,21 +877,19 @@ class univar_stats:
         else:
             raise ValueError("Invalid plot_type. Use 'box' or 'violin'.")
 
-        # Annotations
         annotations = []
         lines = []
         for i, ((g1, g2), p_val) in enumerate(zip(comparisons, corrected_p_values)):
+            if np.isnan(p_val):
+                continue
             if p_val > self.p_value_threshold and not self.show_non_significant:
                 continue
-            # if p_val is nan replace it with 1
-            if np.isnan(p_val):
-                p_val = 1.0
+
             x1 = group_order.index(g1)
             x2 = group_order.index(g2)
             x_center = (x1 + x2) / 2
             y_pos = max_y + 0.15 + (i + 1) * y_offset
 
-            # Build p-value text
             if self.annotate_style == "value":
                 p_text = f"p={p_val:.4f}"
             elif self.annotate_style == "symbol":
@@ -930,13 +901,12 @@ class univar_stats:
                     p_text = "*"
                 else:
                     p_text = "ns"
-                    if not self.show_non_significant:
-                        continue
             else:
                 raise ValueError("Invalid annotate_style.")
 
-            if "effect-size" in self.stats_options and "anova" not in self.stats_options:
-                p_text += f", d={effect_sizes[i]:.2f}"
+            if "effect-size" in self.stats_options and len(effect_sizes) > i:
+                if not np.isnan(effect_sizes[i]):
+                    p_text += f", d={effect_sizes[i]:.2f}"
 
             annotations.append(dict(
                 x=x_center,
@@ -958,44 +928,49 @@ class univar_stats:
         for line in lines:
             fig.add_trace(line)
 
-        axis_line_config = dict(
-            showline=self.show_axis_lines,
-            linewidth=2,
-            linecolor="black"
-        )
-
+        axis_config = dict(showline=self.show_axis_lines, linewidth=2, linecolor="black")
         fig.update_layout(
             annotations=annotations,
-            title=dict(text=f"<b>{self.title_}</b>", x=0.5, y=0.95, xanchor='center', yanchor='top'),
+            title=dict(text=f"<b>{self.title_}</b>", x=0.5),
             yaxis_title=self.y_label,
             xaxis_title=self.x_label,
             legend_title=self.x_col,
             width=self.fig_width,
             height=self.fig_height,
             showlegend=False,
-            yaxis=dict(tickformat=".2e", **axis_line_config),
-            xaxis=axis_line_config,
+            yaxis=dict(tickformat=".2e", **axis_config),
+            xaxis=axis_config,
             paper_bgcolor='rgba(0,0,0,0)',
             plot_bgcolor='rgba(0,0,0,0)',
+            margin=dict(b=140)
         )
 
-        #Add text to under the plot if style is value show legend of *
-        if self.annotate_style == "symbol":
+        if show_description and self.annotate_style == "symbol":
+            legend_text = (
+                f"<b>stat:</b> {' '.join(self.stats_options)}<br>"
+                f"<b>corrected:</b> {self.correct_p}<br>"
+                "* p < 0.05, ** p < 0.01, *** p < 0.001"
+            )
             if self.show_non_significant:
-                fig.add_annotation(
-                    text="* p < 0.05, ** p < 0.01, *** p < 0.001, ns = not significant",
-                    xref="paper", yref="paper",
-                    x=0.5, y=-0.1,
-                    showarrow=False,
-                    font=dict(size=12)
-                )
-            else:
-                fig.add_annotation(
-                    text="* p < 0.05, ** p < 0.01, *** p < 0.001",
-                    xref="paper", yref="paper",
-                    x=0.5, y=-0.1,
-                    showarrow=False,
-                    font=dict(size=12)
+                legend_text += ", ns = not significant"
+            fig.add_annotation(
+                text=legend_text,
+                xref="paper", yref="paper",
+                x=0.5, y=-0.18,
+                showarrow=False,
+                font=dict(size=12),
+                align="left"
             )
 
+        fig.update_yaxes(range=[None, max_y + y_offset * (len(comparisons) + 2)])
         return fig
+
+    def get_stats_table(self) -> pd.DataFrame:
+        """Return a DataFrame of statistical results."""
+        res = self._results
+        return pd.DataFrame({
+            "Comparison": [f"{a} vs {b}" for a, b in res["comparisons"]],
+            "Raw P-Value": res["raw_p_values"],
+            "Corrected P-Value": res["corrected_p_values"],
+            "Effect Size (Cohen's d)": res["effect_sizes"]
+        })
