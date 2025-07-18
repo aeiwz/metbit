@@ -72,6 +72,7 @@ class annotate_peak:
         </body>
         </html>
         '''
+
         self.app.layout = html.Div([
             html.H2("🧪 NMR Annotator"),
             html.Div([
@@ -103,8 +104,10 @@ class annotate_peak:
                         html.Button("Download HTML", id='download-html-btn'),
                         html.Button("Download JSON", id='download-json-btn'),
                         dcc.Upload(id='upload-json', children=html.Button("Upload JSON")),
+                        html.Button("Download Intensity Table (CSV)", id='download-intensity-btn'),
                         dcc.Download(id='html-download'),
                         dcc.Download(id='json-download'),
+                        dcc.Download(id='intensity-download'),
                     ])
                 ], className="card"),
 
@@ -274,14 +277,34 @@ class annotate_peak:
         def export_json(_, annotations):
             return dcc.send_string(json.dumps(annotations, indent=2), filename="annotations.json")
 
+        @app.callback(
+            Output('intensity-download', 'data'),
+            Input('download-intensity-btn', 'n_clicks'),
+            State('annotations-store', 'data'),
+            prevent_initial_call=True
+        )
+        def export_intensity_table(n_clicks, annotations):
+            if not annotations:
+                return dash.no_update
+
+            intensity_data = {}
+            for ann in annotations:
+                label = ann['text']
+                x_ppm = float(ann['x'])
+                closest_ppm = min(self.ppm, key=lambda p: abs(p - x_ppm))
+                column_name = f"{label}_{closest_ppm:.3f}"
+                intensity_data[column_name] = self.spectra[closest_ppm].values
+
+            intensity_df = pd.DataFrame(intensity_data, index=self.spectra.index)
+            buffer = io.StringIO()
+            intensity_df.to_csv(buffer)
+            return dcc.send_string(buffer.getvalue(), filename="annotated_intensities.csv")
+
     def run(self, debug=True, port=8050):
         self.app.run(debug=debug, port=port)
 
 
 if __name__ == "__main__":
-    import nmrglue as ng
-    import pandas as pd
-
     df = pd.read_csv('https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv')
     spectra = df.iloc[:, 1:]
     ppm = spectra.columns.astype(float).to_list()
