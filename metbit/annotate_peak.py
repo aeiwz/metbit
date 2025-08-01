@@ -24,12 +24,13 @@ class annotate_peak:
     spectra = df.iloc[:, 1:]  # Assuming first column is not part of spectra
     ppm = spectra.columns.astype(float).to_list()
     label = df['Group']  # Assuming 'Group' is the label column
-    annotator = annotate_peak(spectra, ppm, label)
+    annotator = annotate_peak(label, spectra, ppm, label)
     annotator.run(debug=True, port=8050)
     ```
-
     '''
-    def __init__(self, spectra, ppm, label):
+
+    def __init__(self, meta, spectra, ppm, label):
+        self.meta = meta
         self.spectra = spectra
         self.ppm = ppm
         self.label = label
@@ -60,6 +61,32 @@ class annotate_peak:
                 .label-list li { display: flex; justify-content: space-between; background-color: #ecf0f1; margin-bottom: 5px; padding: 6px 10px; border-radius: 6px; }
                 .label-list button { background-color: #e74c3c; padding: 4px 8px; }
                 .label-list button:hover { background-color: #c0392b; }
+                table {
+                    width: 100%;
+                    border-collapse: collapse;
+                    background-color: #ffffff;
+                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    border-radius: 8px;
+                    overflow: hidden;
+                    margin-top: 10px;
+                    font-size: 14px;
+                }
+
+                th, td {
+                    text-align: left;
+                    padding: 12px 15px;
+                    border-bottom: 1px solid #eee;
+                }
+
+                th {
+                    background-color: #3498db;
+                    color: white;
+                    font-weight: 600;
+                }
+
+                tr:hover {
+                    background-color: #f0f9ff;
+                }
             </style>
         </head>
         <body>
@@ -249,8 +276,8 @@ class annotate_peak:
         def render_labels(annotations):
             return [
                 html.Li([
-                    f"{ann['text']} @ x={ann['x']:.2f}",
-                    html.Button("❌", id={'type': 'delete-btn', 'index': i}, n_clicks=0)
+                    html.Button("❌", id={'type': 'delete-btn', 'index': i}, n_clicks=0),
+                    f"{ann['text']} @ x={ann['x']:.2f}"
                 ]) for i, ann in enumerate(annotations)
             ]
 
@@ -296,8 +323,12 @@ class annotate_peak:
                 intensity_data[column_name] = self.spectra[closest_ppm].values
 
             intensity_df = pd.DataFrame(intensity_data, index=self.spectra.index)
+            meta_df = pd.DataFrame(self.meta)
+            merged_df = pd.concat([meta_df, intensity_df], axis=1)
+
+            # Export to CSV
             buffer = io.StringIO()
-            intensity_df.to_csv(buffer)
+            merged_df.to_csv(buffer, index=False)
             return dcc.send_string(buffer.getvalue(), filename="annotated_intensities.csv")
 
     def run(self, debug=True, port=8050):
@@ -310,5 +341,5 @@ if __name__ == "__main__":
     ppm = spectra.columns.astype(float).to_list()
     label = df['Group']
 
-    annotator = annotate_peak(spectra, ppm, label)
+    annotator = annotate_peak(label, spectra, ppm, label)
     annotator.run(debug=True, port=8051)
