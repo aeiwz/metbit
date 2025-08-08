@@ -292,7 +292,7 @@ class lazy_opls_da:
         n_components = self.n_components
         path = self.path
         scale = self.scale
-        feature_names = self.feature_names
+        feature_names = self.feature_
 
 
         raw_symbols = [
