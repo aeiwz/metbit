@@ -54,7 +54,7 @@ class lazy_opls_da:
         •	custom_color (list, optional): Custom color grouping.
         •	custom_shape (list, optional): Custom shape grouping.
         •	symbol_dict (dict, optional): Dictionary mapping groups to marker symbols.
-        •	custom_legend_name (list, optional): Custom names for the legend, defaults to ['Group', 'Sub-group'].
+        •	custom_legend_name (list, optional): Custom  for the legend, defaults to ['Group', 'Sub-group'].
         •	marker_label (str or None, optional): Specifies marker labels ('class', 'group', or 'sub-group').
         •	marker_size (int or None, optional): Size of markers in plots.
         •	marker_opacity (float or None, optional): Opacity level of markers in plots.
@@ -103,7 +103,7 @@ class lazy_opls_da:
         from .utility import lazypair
     
 
-    def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_names: list = None, n_components: int = 2, scaling: str = 'pareto', 
+    def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_: list = None, n_components: int = 2, scaling: str = 'pareto', 
                     estimator: str = 'opls', kfold: int = 3, random_state: int = 94, auto_ncomp: bool = True,  
                     permutation: bool = True, n_permutation: int = 500, n_jobs: int = 4,
                     VIP: bool = True, VIP_threshold: float = 1.5, 
@@ -138,7 +138,7 @@ class lazy_opls_da:
         self.groups = groups
         self.n_components = n_components
         self.working_dir = working_dir
-        self.feature_names = feature_names
+        self.feature_ = feature_
 
         self.random_state = random_state        
         self.estimator = estimator
@@ -306,10 +306,7 @@ class lazy_opls_da:
                         "y-up", "y-down", "y-left", "y-right",
                         "line-ew", "line-ns", "line-ne", "line-nw"
                     ]
-        namestems = []
-        for i in range(0,len(raw_symbols),3):
-            name = raw_symbols[i+2]
-            namestems.append(name)
+        namestems = raw_symbols[2::3]
 
         if marker_color is None:
 
