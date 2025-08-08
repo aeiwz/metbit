@@ -15,7 +15,7 @@ import pandas as pd
 import numpy as np
 from glob import glob
 import plotly.colors as plotly_colour
-from plotly.validators.scatter.marker import SymbolValidator
+
 
 from .metbit import opls_da
 from .utility import project_name_generator, lazypair
@@ -88,7 +88,6 @@ class lazy_opls_da:
     import numpy as np
     from glob import glob
     import plotly.colors as plotly_colour
-    from plotly.validators.scatter.marker import SymbolValidator
     
     from .metbit import opls_da
     from .utility import project_name_generator, lazypair
@@ -295,8 +294,18 @@ class lazy_opls_da:
         scale = self.scale
         feature_names = self.feature_names
 
-        from plotly.validators.scatter.marker import SymbolValidator
-        raw_symbols = SymbolValidator().values
+
+        raw_symbols = [
+                        "circle", "circle-open", "circle-dot", "circle-open-dot",
+                        "square", "square-open", "square-dot", "square-open-dot",
+                        "diamond", "diamond-open", "diamond-dot", "diamond-open-dot",
+                        "cross", "x", "cross-dot", "x-dot", "cross-open", "x-open",
+                        "triangle-up", "triangle-down", "triangle-left", "triangle-right",
+                        "triangle-up-open", "triangle-down-open", "triangle-left-open", "triangle-right-open",
+                        "star", "hexagram", "hourglass", "bowtie", "asterisk", "hash",
+                        "y-up", "y-down", "y-left", "y-right",
+                        "line-ew", "line-ns", "line-ne", "line-nw"
+                    ]
         namestems = []
         for i in range(0,len(raw_symbols),3):
             name = raw_symbols[i+2]
