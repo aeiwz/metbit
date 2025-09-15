@@ -88,7 +88,7 @@ class lazy_opls_da:
     import numpy as np
     from glob import glob
     import plotly.colors as plotly_colour
-    
+
     from .metbit import opls_da
     from .utility import project_name_generator, lazypair
     from lingress import lin_regression
@@ -101,12 +101,12 @@ class lazy_opls_da:
         from .metbit import opls_da
         from .utility import project_name_generator
         from .utility import lazypair
-    
 
-    def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_: list = None, n_components: int = 2, scaling: str = 'pareto', 
-                    estimator: str = 'opls', kfold: int = 3, random_state: int = 94, auto_ncomp: bool = True,  
+
+    def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_: list = None, n_components: int = 2, scaling: str = 'pareto',
+                    estimator: str = 'opls', kfold: int = 3, random_state: int = 94, auto_ncomp: bool = True,
                     permutation: bool = True, n_permutation: int = 500, n_jobs: int = 4,
-                    VIP: bool = True, VIP_threshold: float = 1.5, 
+                    VIP: bool = True, VIP_threshold: float = 1.5,
                     linear_regression: bool = True, FC_threshold: float = 1.5, p_val_threshold: float = 2) -> None:
 
         import os
@@ -140,12 +140,12 @@ class lazy_opls_da:
         self.working_dir = working_dir
         self.feature_ = feature_
 
-        self.random_state = random_state        
+        self.random_state = random_state
         self.estimator = estimator
         self.scale = scaling
         self.kfold = kfold
         self.auto_ncomp = auto_ncomp
-        
+
 
         data['Class'] = groups
         self.data = data
@@ -156,7 +156,7 @@ class lazy_opls_da:
             self.n_jobs = n_jobs
         else:
             pass
-        
+
         self.VIP = VIP
         if VIP == True:
             self.VIP_threshold = VIP_threshold
@@ -183,9 +183,9 @@ class lazy_opls_da:
         lazy_opls_da(data, y, n_components).fit()
 
         """
-        
+
         project_name = project_name_generator()
-        
+
 
         #Remove last / from working_dir
         if working_dir[-1] == '/':
@@ -270,10 +270,10 @@ class lazy_opls_da:
 
 
 
-    def fit(self, marker_color: dict = None, custom_color: list = None, 
-            custom_shape: list = None, symbol_dict: dict = None, 
-            custom_legend_name = ['Group', 'Sub-group'], 
-            marker_label=None, marker_size=None, marker_opacity=None, 
+    def fit(self, marker_color: dict = None, custom_color: list = None,
+            custom_shape: list = None, symbol_dict: dict = None,
+            custom_legend_name = ['Group', 'Sub-group'],
+            marker_label=None, marker_size=None, marker_opacity=None,
             individual_ellipse=False) -> None:
 
 
@@ -287,7 +287,7 @@ class lazy_opls_da:
         import random
         import plotly
 
-     
+
         data = self.data
         n_components = self.n_components
         path = self.path
@@ -311,8 +311,8 @@ class lazy_opls_da:
         if marker_color is None:
 
             import plotly.colors as plotly_colour
-            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1', 
-                        'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel', 
+            name_color_set = ['Plotly', 'D3', 'G10', 'T10', 'Alphabet', 'Dark24', 'Light24', 'Set1', 'Pastel1',
+                        'Dark2', 'Set2', 'Pastel2', 'Set3', 'Antique', 'Safe', 'Bold', 'Pastel',
                         'Vivid', 'Prism']
 
             palette = []
@@ -357,7 +357,7 @@ class lazy_opls_da:
         name_save = lazy.get_name()
 
         for i in range(len(data_list)):
-            
+
             df = data_list[i]
             name = name_save[i]
 
@@ -368,14 +368,14 @@ class lazy_opls_da:
                     feature_names = X.columns.astype(float).to_list()
                 except:
                     feature_names = X.columns.to_list()
-            else: 
+            else:
                 feature_names = feature_names
             y = meta['Class']
 
 
             if marker_label is None:
                 marker_label_2 = marker_label
-            
+
             else:
                 if marker_label == 'class':
                     marker_label_2 = meta['class']
@@ -390,8 +390,8 @@ class lazy_opls_da:
 
 
             #OPLS-DA
-            oplsda_mod = opls_da(X=X, y=y, features_name = feature_names, n_components=n_components, scaling_method=scale, 
-                                    estimator=self.estimator, kfold=self.kfold, random_state=self.random_state, 
+            oplsda_mod = opls_da(X=X, y=y, features_name = feature_names, n_components=n_components, scaling_method=scale,
+                                    estimator=self.estimator, kfold=self.kfold, random_state=self.random_state,
                                     auto_ncomp = self.auto_ncomp)
             oplsda_mod.fit()
 
@@ -407,17 +407,17 @@ class lazy_opls_da:
                 marker_opacity = marker_opacity
             else:
                 marker_opacity = 0.7
-                
+
             #Score plot
             if custom_shape is not None:
-                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2,
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_html(path['score_plot'] + name + '_score_plot.html')
-                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
+                oplsda_mod.plot_oplsda_scores(color_=meta['Group'], color_dict=marker_color, symbol_=meta['Sub-group'], symbol_dict=symbol_dict, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2,
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_image(path['score_plot'] + name + '_score_plot.png')
             else:
-                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
+                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2,
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_html(path['score_plot'] + name + '_score_plot.html')
-                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2, 
+                oplsda_mod.plot_oplsda_scores(color_dict=marker_color, marker_size=marker_score_size, marker_opacity=marker_opacity, marker_label=marker_label_2,
                 legend_name=custom_legend_name, individual_ellipse=individual_ellipse).write_image(path['score_plot'] + name + '_score_plot.png')
 
 
@@ -466,6 +466,5 @@ class lazy_opls_da:
                 lin_.report().to_csv(path['Lingress_data'] + name + '_Lingress_data.csv', index=False)
             else:
                 pass
-        
-        return print('Model has been fitted successfully')
 
+        return print('Model has been fitted successfully')

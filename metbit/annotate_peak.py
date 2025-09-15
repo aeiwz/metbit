@@ -228,8 +228,8 @@ class annotate_peak:
             prevent_initial_call=True
         )
         def update_all(add_btn, delete_btns, apply_btn, upload_content, mode,
-                       clickData, label_text, label_angle, annotations,
-                       color, dash_style, line_width, style_data, selected_line):
+                        clickData, label_text, label_angle, annotations,
+                        color, dash_style, line_width, style_data, selected_line):
             ctx = dash.callback_context
             trig = ctx.triggered[0]['prop_id'].split('.')[0]
             annotations = annotations or []
