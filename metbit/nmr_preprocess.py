@@ -56,7 +56,7 @@ class nmr_preprocessing:
     7. Data storage in a pandas DataFrame
     8. Data visualization
     9. Data export
-    
+
     Parameters:
     ----------
     data_path : str
@@ -85,18 +85,18 @@ class nmr_preprocessing:
         Format to save the processed data (default: 'csv').
         export_name : str
         Name of the exported file (default: 'processed_nmr_data').
-        
+
     Attributes:
     ----------
     nmr_data : pd.DataFrame
         Processed NMR data.
     ppm : np.ndarray
         PPM scale.
-    dic_array : dict    
+    dic_array : dict
         Dictionary containing metadata from the FID files.
     phase_data : pd.DataFrame
         DataFrame containing phase information.
-    
+
     Methods:
     -------
     get_data() : pd.DataFrame
@@ -111,7 +111,7 @@ class nmr_preprocessing:
         Plots the processed NMR data.
     export_data() : None
         Exports the processed NMR data to a specified format.
-    
+
     Example:
     -------
     >>> fid = 'dev/launch/data/test_nmr_data'
@@ -121,11 +121,11 @@ class nmr_preprocessing:
     >>> data = nmr.get_data()
     >>> ppm = nmr.get_ppm()
     >>> metadata = nmr.get_metadata()
-    
+
     '''
-    def __init__(self, data_path: str, bin_size: float = 0.0003, 
+    def __init__(self, data_path: str, bin_size: float = 0.0003,
                 auto_phasing: bool = False, fn_ = 'acme',
-                baseline_correction: bool = True, baseline_type: str = 'linear', 
+                baseline_correction: bool = True, baseline_type: str = 'linear',
                 calibration: bool = True, calib_type: str = 'tsp'):
 
         print("[DEBUG] Initializing nmr_preprocessing class")
@@ -150,7 +150,7 @@ class nmr_preprocessing:
             raise FileNotFoundError(f"Data path '{data_path}' not found.")
         if data_path.endswith('/'):
             data_path = data_path[:-1]
-        
+
         # Search for fid directories at different depths
         sub_dirs = glob(f'{data_path}/fid')
         if not sub_dirs:
@@ -276,7 +276,8 @@ class nmr_preprocessing:
 
     def get_data(self):
         print("[DEBUG] get_data() called")
-        return self.nmr_data
+        nmr_data = self.nmr_data.sort_index(inplace=True)
+        return nmr_data.iloc[:, ::-1]
 
     def get_ppm(self):
         print("[DEBUG] get_ppm() called")
@@ -298,7 +299,7 @@ if __name__ == '__main__':
                             calibration=True, calib_type='glucose')
     #print(nmr.get_data().shape())
     #print(nmr.get_data().head())
-    
+
     nmr_data = nmr.get_data()
     print(nmr_data.columns)
     #plot data
