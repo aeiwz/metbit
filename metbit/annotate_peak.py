@@ -31,8 +31,10 @@ class annotate_peak:
 
     def __init__(self, meta, spectra, ppm, label):
         self.meta = meta
-        self.spectra = spectra
-        self.ppm = ppm
+        # --- FIX 1: ensure numeric ppm columns & align ppm axis ---
+        self.spectra = spectra.copy()
+        self.spectra.columns = self.spectra.columns.astype(float)
+        self.ppm = self.spectra.columns.to_numpy(dtype=float)
         self.label = label
         self.app = dash.Dash(__name__)
         self.app.title = "🧪 NMR Annotator"
@@ -249,7 +251,8 @@ class annotate_peak:
                 index = int(json.loads(trig)['index'])
                 if 0 <= index < len(annotations):
                     annotations.pop(index)
-            elif trig == 'upload-json':
+            # --- FIX 2: guard upload contents ---
+            elif trig == 'upload-json' and upload_content:
                 try:
                     _, content_string = upload_content.split(',')
                     decoded = base64.b64decode(content_string).decode()
@@ -314,19 +317,27 @@ class annotate_peak:
             if not annotations:
                 return dash.no_update
 
+            # --- FIX 3: use positional nearest-column lookup to avoid float KeyError ---
+            ppm_axis = self.ppm
+            cols = self.spectra.columns
             intensity_data = {}
+
             for ann in annotations:
-                label = ann['text']
+                label_txt = ann['text']
                 x_ppm = float(ann['x'])
-                closest_ppm = min(self.ppm, key=lambda p: abs(p - x_ppm))
-                column_name = f"{label}_{closest_ppm:.3f}"
-                intensity_data[column_name] = self.spectra[closest_ppm].values
+                j = int(np.argmin(np.abs(ppm_axis - x_ppm)))   # nearest index
+                col_ppm = float(cols[j])                        # actual column label
+                column_name = f"{label_txt}_{col_ppm:.3f}"
+                intensity_data[column_name] = self.spectra.iloc[:, j].to_numpy()
 
             intensity_df = pd.DataFrame(intensity_data, index=self.spectra.index)
             meta_df = pd.DataFrame(self.meta)
+            try:
+                meta_df = meta_df.loc[self.spectra.index]
+            except Exception:
+                pass
             merged_df = pd.concat([meta_df, intensity_df], axis=1)
 
-            # Export to CSV
             buffer = io.StringIO()
             merged_df.to_csv(buffer, index=False)
             return dcc.send_string(buffer.getvalue(), filename="annotated_intensities.csv")
@@ -342,4 +353,4 @@ if __name__ == "__main__":
     label = df['Group']
 
     annotator = annotate_peak(label, spectra, ppm, label)
-    annotator.run(debug=True, port=8051)
+    annotator.run(debug=True, port=8052)
