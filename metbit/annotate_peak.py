@@ -30,11 +30,12 @@ class annotate_peak:
     ```
     """
 
-    def __init__(self, meta, spectra, ppm=None, label=None):
+    def __init__(self, meta, spectra, ppm=None, label=None, colour_dict: dict=None):
         # ---------- data
         self.spectra = spectra.copy()
         self.spectra.columns = self.spectra.columns.astype(float)
         self.ppm = self.spectra.columns.to_numpy(dtype=float)
+        self.colour_dict = colour_dict
 
         # label/meta
         if label is None and isinstance(meta, pd.Series):
@@ -276,26 +277,54 @@ class annotate_peak:
     # ===================== PLOTTING =====================
     def _figure(self, mode, annotations, style_data, font_size):
         fig = go.Figure()
-        if mode == 'median':
+
+        style_data = style_data or {}
+        colour_map = dict(getattr(self, "colour_dict", {}) or {})  # optional group/sample -> color
+
+        # priority: UI override (style_data) > colour_dict > Plotly default
+        def pick_color(trace_key: str, group_key: str | None = None):
+            st = style_data.get(trace_key, {})
+            if st.get("color"):
+                return st["color"]
+            if trace_key in colour_map:
+                return colour_map[trace_key]
+            if group_key and group_key in colour_map:
+                return colour_map[group_key]
+            return None  # let Plotly choose
+
+        if mode == "median":
             grp = self.label.astype(str)
             for g, idx in grp.groupby(grp).groups.items():
                 Y = self.spectra.loc[idx].to_numpy(dtype=float)
                 y_med = np.median(Y, axis=0)
-                st = style_data.get(g, {})
+                key = str(g)
+                st = style_data.get(key, {})
+                color = pick_color(trace_key=key, group_key=key)
                 fig.add_trace(go.Scatter(
-                    x=self.ppm, y=y_med, name=str(g), mode='lines',
-                    line=dict(dash=st.get('dash', 'solid'),
-                              width=st.get('width', 1.6),
-                              color=st.get('color', None))
+                    x=self.ppm, y=y_med, name=key, mode="lines",
+                    line=dict(
+                        dash=st.get("dash", "solid"),
+                        width=st.get("width", 1.6),
+                        color=color
+                    )
                 ))
         else:
+            # single spectra: allow per-sample override; fall back to its group's color
             for s, row in self.spectra.iterrows():
-                st = style_data.get(s, {})
+                key = str(s)
+                try:
+                    group_key = str(self.label.loc[s])
+                except Exception:
+                    group_key = None
+                st = style_data.get(key, {})
+                color = pick_color(trace_key=key, group_key=group_key)
                 fig.add_trace(go.Scatter(
-                    x=self.ppm, y=row.to_numpy(dtype=float), name=str(s), mode='lines',
-                    line=dict(dash=st.get('dash', 'solid'),
-                              width=st.get('width', 1.2),
-                              color=st.get('color', None))
+                    x=self.ppm, y=row.to_numpy(dtype=float), name=key, mode="lines",
+                    line=dict(
+                        dash=st.get("dash", "solid"),
+                        width=st.get("width", 1.2),
+                        color=color
+                    )
                 ))
 
         # apply uniform annotation font
@@ -549,5 +578,5 @@ if __name__ == "__main__":
     df = pd.read_csv('https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv')
     spectra = df.iloc[:, 1:]
     label = df['Group']
-    annotator = annotate_peak(meta=label, spectra=spectra, label=label)
+    annotator = annotate_peak(meta=label, spectra=spectra, label=label, colour_dict={"A":"green"})
     annotator.run(debug=True, port=8052)
