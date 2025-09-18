@@ -335,15 +335,31 @@ class annotate_peak:
             a2['font']['size'] = font_size
             anns.append(a2)
 
-        fig.update_xaxes(autorange="reversed",
-                         title="<b>δ <sup>1</sup>H<b>", title_font=dict(size=font_size*1.5),
-                         tickfont=dict(size=max(font_size-2, 8)),
-                         showgrid=True, gridcolor="rgba(0,0,0,0.05)", zeroline=False)
-        fig.update_yaxes(title="<b>Intensity</b>", title_font=dict(size=font_size),
-                         tickfont=dict(size=max(font_size-2, 8)),
-                         showgrid=True, gridcolor="rgba(0,0,0,0.05)", zeroline=False)
+        fig.update_xaxes(
+            autorange="reversed",
+            title=dict(
+                text="<b>δ <sup>1</sup>H</b>",
+                font=dict(size=int(font_size*1.5))
+            ),
+            tickfont=dict(size=max(font_size-2, 8)),
+            showgrid=True,
+            gridcolor="rgba(0,0,0,0.05)",
+            zeroline=False
+        )
+
+        fig.update_yaxes(
+            title=dict(
+                text="<b>Intensity</b>",
+                font=dict(size=int(font_size*1.5))
+            ),
+            tickfont=dict(size=max(font_size-2, 8)),
+            showgrid=True,
+            gridcolor="rgba(0,0,0,0.05)",
+            zeroline=False
+        )
 
         fig.update_layout(
+            uirevision="constant",
             template="plotly_white",
             annotations=anns,
             autosize=True,
@@ -371,15 +387,22 @@ class annotate_peak:
                 showline=True,          # enable axis line
                 linecolor="black",      # axis line color
                 linewidth=2,            # axis line width
-                mirror=False            # show line on both bottom & top
+                mirror=False,           # show line only on bottom
+                title=dict(
+                    text="<b>δ <sup>1</sup>H</b>",
+                    font=dict(size=int(font_size*1.5), color="black")
+                ),
+                tickfont=dict(size=max(font_size-2, 9), color="black")
             ),
             yaxis=dict(
                 showline=True,
                 linecolor="black",
                 linewidth=2,
-                mirror=False,
-                title="<b>Intensity</b>",
-                titlefont=dict(size=font_size*1.5, color="black"),
+                mirror=False,           # show line only on left
+                title=dict(
+                    text="<b>Intensity</b>",
+                    font=dict(size=int(font_size*1.5), color="black")
+                ),
                 tickfont=dict(size=max(font_size-2, 9), color="black"),
                 exponentformat="power",   # use 10^n style
                 showexponent="all"
@@ -578,5 +601,5 @@ if __name__ == "__main__":
     df = pd.read_csv('https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv')
     spectra = df.iloc[:, 1:]
     label = df['Group']
-    annotator = annotate_peak(meta=label, spectra=spectra, label=label, colour_dict={"A":"green"})
+    annotator = annotate_peak(meta=label, spectra=spectra, label=label)
     annotator.run(debug=True, port=8052)
