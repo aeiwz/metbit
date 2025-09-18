@@ -378,8 +378,8 @@ class annotate_peak:
                 linecolor="black",
                 linewidth=2,
                 mirror=False,
-                title="Intensity",
-                titlefont=dict(size=font_size+2, color="black"),
+                title="<b>Intensity</b>",
+                titlefont=dict(size=font_size*1.5, color="black"),
                 tickfont=dict(size=max(font_size-2, 9), color="black"),
                 exponentformat="power",   # use 10^n style
                 showexponent="all"
