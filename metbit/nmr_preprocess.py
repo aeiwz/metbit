@@ -277,12 +277,7 @@ class nmr_preprocessing:
     def get_data(self, flip_data=True):
         print("[DEBUG] get_data() called")
         nmr_data = self.nmr_data.sort_index(inplace=True)
-        data = pd.DataFrame(nmr_data)
-        if flip_data:
-            data = data.iloc[:, ::-1]
-        else:
-            data = data
-        return data
+        return nmr_data
 
     def get_ppm(self):
         print("[DEBUG] get_ppm() called")
