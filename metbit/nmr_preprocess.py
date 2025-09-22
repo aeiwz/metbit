@@ -274,10 +274,10 @@ class nmr_preprocessing:
         print("[DEBUG] Type of nmr_data:", type(self.nmr_data))
 
 
-    def get_data(self):
+    def get_data(self, flip_data=True):
         print("[DEBUG] get_data() called")
         nmr_data = self.nmr_data.sort_index(inplace=True)
-        return nmr_data.iloc[:, ::-1]
+        return nmr_data
 
     def get_ppm(self):
         print("[DEBUG] get_ppm() called")
