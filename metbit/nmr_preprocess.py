@@ -212,7 +212,7 @@ class nmr_preprocessing:
                 phase = [dic['procs']['PHC0'], dic['procs']['PHC1']]
 
             data = ng.proc_base.di(data)
-            data = ng.proc_base.rev(data)
+            #data = ng.proc_base.rev(data)
 
 
 
@@ -271,12 +271,18 @@ class nmr_preprocessing:
         self.ppm = ppm
         self.dic_array = dic_list
         self.phase_data = phase_data
+        self.nmr_data = nmr_data
         print("[DEBUG] Type of nmr_data:", type(self.nmr_data))
 
 
     def get_data(self, flip_data=True):
         print("[DEBUG] get_data() called")
-        nmr_data = self.nmr_data.sort_index(inplace=True)
+        nmr_data = self.nmr_data
+        nmr_data.sort_index(inplace=True)
+        if self.flip_data:
+            nmr_data = nmr_data.iloc[:, ::-1]
+        else:
+            nmr_data = nmr_data
         return nmr_data
 
     def get_ppm(self):
