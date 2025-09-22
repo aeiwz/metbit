@@ -279,7 +279,7 @@ class nmr_preprocessing:
         print("[DEBUG] get_data() called")
         nmr_data = self.nmr_data
         nmr_data.sort_index(inplace=True)
-        if self.flip_data:
+        if flip_data:
             nmr_data = nmr_data.iloc[:, ::-1]
         else:
             nmr_data = nmr_data
