@@ -406,7 +406,7 @@ class annotate_peak:
                 tickfont=dict(size=max(font_size-2, 9), color="black"),
                 exponentformat="power",   # use 10^n style
                 showexponent="all"
-            )
+            ),
         )
         return fig
 
