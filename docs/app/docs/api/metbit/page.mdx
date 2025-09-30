@@ -1,0 +1,276 @@
+# metbit
+
+> Category: Statistical Models
+
+## Classes
+
+### opls_da 
+
+#### Methods
+
+<details>
+<summary><code>__init__(X, y, features_name, n_components, scaling_method, kfold, estimator, random_state, auto_ncomp)</code></summary>
+
+Purpose:
+Initializes the model, validates the inputs, and preprocesses the data for further analysis.
+
+</details>
+
+<details>
+<summary><code>fit()</code></summary>
+
+Purpose:
+Fits the OPLS-DA model to the data and computes model performance metrics.
+
+</details>
+
+<details>
+<summary><code>get_oplsda_scores()</code></summary>
+
+Get OPLS-DA scores
+
+</details>
+
+<details>
+<summary><code>get_s_scores()</code></summary>
+
+Get S scores
+
+</details>
+
+<details>
+<summary><code>get_oplsda_model()</code></summary>
+
+Get OPLS-DA model
+
+</details>
+
+<details>
+<summary><code>get_cv_model()</code></summary>
+
+Get cross-validation model
+
+</details>
+
+<details>
+<summary><code>permutation_test(n_permutations, cv, n_jobs, verbose)</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_permutation_scores()</code></summary>
+
+Get permutation scores
+
+</details>
+
+<details>
+<summary><code>vip_scores(model, features_name)</code></summary>
+
+Get VIP score
+
+##### Parameters
+
+- `model`: object, default=None OPLS-DA model.
+- `features_name`: array-like, shape (n_features,), default=None Name of features.
+
+</details>
+
+<details>
+<summary><code>get_vip_scores(filter_, threshold)</code></summary>
+
+Get VIP score
+
+##### Parameters
+
+- `filter_`: bool, default=False If True, filter VIP score based on threshold.
+- `threshold`: int, default=1 Threshold of VIP score.
+
+</details>
+
+<details>
+<summary><code>vip_plot(x_range, threshold, marker_size, fig_width, fig_height, filter_, vip_transform, font_size, title_font_size, xaxis_direction)</code></summary>
+
+Purpose:
+Plots the VIP scores for the features, allowing for customization and thresholding.
+
+</details>
+
+<details>
+<summary><code>plot_oplsda_scores(x_, y_, color_, color_dict, symbol_, symbol_dict, fig_height, fig_width, marker_size, marker_opacity, marker_label, font_size, title_font_size, legend_name, individual_ellipse)</code></summary>
+
+Plot OPLS-DA scores plot
+
+##### Parameters
+
+- `color_`: array-like, shape (n_samples,), default=None color_ of the group. If None, color_ will be based on the group in y.
+- `color_dict`: dict, default=None Dictionary of color_ for the group. If None, color_ will be based on the group in y.
+- `symbol_`: array-like, shape (n_samples,), default=None symbol_ of the group. If None, symbol_ will be based on the group in y.
+- `symbol_dict`: dict, default=None Dictionary of symbol_ for the group. If None, symbol_ will be based on the group in y.
+- `fig_height`: int, default=900 Height of the figure.
+- `fig_width`: int, default=1300 Width of the figure.
+- `marker_size`: int, default=35 Size of the marker.
+- `marker_opacity`: float, default=0.7 Opacity of the marker. •       Purpose: This function generates an OPLS-DA (Orthogonal Partial Least Squares Discriminant Analysis) scores plot, showing how samples are positioned based on their scores in two principal components (t_scores and t_ortho). •       Parameters: •   x_, y_: The names of the columns in the DataFrame (df_opls_scores) that contain the scores for the x and y axes (default to 't_scores' and 't_ortho'). •   color_: An array that assigns a color to each sample (optional). •   color_dict: A dictionary of color mappings for the groups (optional). •   symbol_: An array of symbols for the samples (optional). •   fig_height, fig_width: Dimensions for the plot. •   marker_size, marker_opacity: Control the appearance of the markers. •   legend_name: Custom labels for the legend. •   individual_ellipse: Whether to add ellipses to individual groups (default True). •       Plot Details: •   Uses Plotly (px.scatter) to create an interactive scatter plot. •   Can display confidence ellipses around each group. •   Adds annotations for R²X, R²Y, and Q² statistics. •   The plot is highly customizable (marker size, opacity, labels, colors, etc.).
+
+</details>
+
+<details>
+<summary><code>plot_hist(nbins_, fig_height, fig_width, font_size, title_font_size)</code></summary>
+
+Plot histogram of permutation scores
+
+##### Parameters
+
+- `nbins_`: int, default=50 Number of bins for histogram.
+- `fig_height`: int, default=500 Height of the figure.
+- `fig_width`: int, default=1000 Width of the figure. •   Purpose: This function creates a histogram of permutation scores from a permutation test, commonly used to evaluate model stability and significance. •   Parameters: •   nbins_: Number of bins in the histogram. •   fig_height, fig_width: Dimensions of the plot. •   font_size, title_font_size: Font size for labels and title. •   Plot Details: •   Plots the permutation scores as a histogram with Plotly. •   Marks the actual model accuracy score with a red dashed line. •   Adds additional annotations for the number of permutations, the accuracy score, and the p-value.
+
+</details>
+
+<details>
+<summary><code>plot_s_scores(fig_height, fig_width, range_color_, color_continuous_scale_, marker_size, font_size, title_font_size)</code></summary>
+
+Plot S-plot
+
+##### Parameters
+
+- `fig_height`: int, default=900 Height of the figure.
+- `fig_width`: int, default=2000 Width of the figure.
+- `range_color`: list, default=[-0.05,0.05] Range of color_ for the plot.
+- `color_continuous_scale_`: str, default='jet' color_ scale for the plot. •       Purpose: This function generates a scatter plot (S-plot), which visualizes the covariance and correlation between the scores of the model. •   Parameters: •   fig_height, fig_width: Dimensions of the plot. •   range_color_: Range of colors to display. •   color_continuous_scale_: Color scale for the plot. •   marker_size, font_size, title_font_size: Customize marker size and font sizes. •   Plot Details: •   The plot visualizes the relationship between covariance and correlation for features. •   Uses Plotly’s scatter plot to create an interactive S-plot. •   The axes are customizable, and the plot is set to be visually clean (e.g., axes lines and tick marks).
+
+</details>
+
+<details>
+<summary><code>plot_loading(fig_height, fig_width, range_color_, color_continuous_scale_, marker_size, font_size, title_font_size, xaxis_direction, xaxis_title)</code></summary>
+
+Plot loading plot
+
+##### Parameters
+
+- `fig_height`: int, default=900 Height of the figure.
+- `fig_width`: int, default=2000 Width of the figure.
+- `range_color`: list, default=[-0.05,0.05] Range of color_ for the plot.
+- `color_continuous_scale_`: str, default='jet' color_ scale for the plot. •   Purpose: This function generates a loading plot, typically used in multivariate analysis to visualize the relationship between features and the scores. •   Parameters: •   fig_height, fig_width: Dimensions of the plot. •   range_color_: Color range to represent the covariance values. •   color_continuous_scale_: Color scale used for continuous color mapping. •   marker_size, font_size, title_font_size: Customize the appearance of the markers and fonts. •   xaxis_direction: Set the direction for the x-axis (e.g., reversed or not). •   xaxis_title: Title for the x-axis. •   Plot Details: •   The loading plot shows the relationship between features (usually a set of variables or compounds) and the model scores. •   The correlation for each feature is displayed alongside its covariance, with colors representing the covariance values. •   The plot is interactive and customizable (e.g., marker size, color scale, axis settings).
+
+</details>
+
+### pca 
+
+PCA model
+
+#### Constructor Parameters
+
+- `X`: array-like, shape (n_samples, n_features) Training data, where n_samples is the number of samples and n_features is the number of features.
+- `label`: array-like, shape (n_samples,) Target data, where n_samples is the number of samples.
+- `features_name`: array-like, shape (n_features,), default=None Name of features.
+- `n_components`: int, default=2 Number of components to keep.
+- `scale`: str, default='pareto' Method of scaling. 'pareto' for pareto scaling, 'mean' for mean centering, 'uv' for unitvarian scaling.
+- `random_state`: int, default=42 Random state for permutation test.
+- `test_size`: float, default=0.3 Size of test set.
+- `Examples`: ---------- import pandas as pd import numpy as np from metbit import pca # Create a dataset data = pd.DataFrame(np.random.rand(500, 50000)) class_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group') time = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point') # Assign X and target X = datasets.iloc[:, 2:] y = datasets['Group'] time = datasets['Time point'] features_name = list(X.columns.astype(float)) ## Perform PCA model pca_mod = pca(X = X, label = y, features_name=features_name, n_components=2, scaling_method='pareto', random_state=42, test_size=0.3) pca_mod.fit() # Visualisation of PCA model pca_mod.plot_observe_variance() pca_mod.plot_cumulative_observed() shape_ = {'1-wk': 'circle', '2-wk': 'square', '3-wk': 'diamond', '4-wk': 'cross'} pca_mod.plot_pca_scores(symbol=time, symbol_dict=shape_) pca_mod.plot_loading_() pca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)
+
+#### Methods
+
+<details>
+<summary><code>__init__(X, label, features_name, n_components, scaling_method, random_state, test_size)</code></summary>
+
+</details>
+
+<details>
+<summary><code>fit()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_explained_variance()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_scores()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_loadings()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_q2_test()</code></summary>
+
+</details>
+
+<details>
+<summary><code>plot_observe_variance(fig_height, fig_width, font_size)</code></summary>
+
+Visualise explained variance plot
+
+##### Returns
+
+- `fig`: plotly.graph_objects.Figure Explained variance plot.
+
+</details>
+
+<details>
+<summary><code>plot_cumulative_observed(fig_height, fig_width, font_size, marker_size)</code></summary>
+
+Visualise cumulative variance plot
+
+##### Returns
+
+- `fig`: plotly.graph_objects.Figure Cumulative variance plot.
+
+</details>
+
+<details>
+<summary><code>plot_pca_scores(pc, color_, color_dict, symbol_, symbol_dict, marker_label, fig_height, fig_width, marker_size, marker_opacity, font_size, title_font_size, individual_ellipse, legend_name)</code></summary>
+
+Visualise PCA scores plot
+
+##### Parameters
+
+- `pc`: list, default=['PC1', 'PC2'] List of principal components to plot.
+- `color`: array-like, shape (n_samples,), default=None Target data, where n_samples is the number of samples.
+- `color_dict`: dict, default=None Dictionary of color_ mapping.
+- `symbol_`: array-like, shape (n_samples,), default=None Target data, where n_samples is the number of samples.
+- `symbol_dict`: dict, default=None Dictionary of symbol_ mapping.
+- `fig_height`: int, default=900 Height of figure.
+- `fig_width`: int, default=1300 Width of figure.
+- `marker_size`: int, default=35 Size of marker.
+- `marker_opacity`: float, default=0.7 Opacity of marker.
+- `text_`: array-like, shape (n_samples,), default=None Text to display on each point.
+
+##### Returns
+
+- `fig`: plotly.graph_objects.Figure PCA scores plot.
+
+</details>
+
+<details>
+<summary><code>plot_loading_(pc, fig_height, fig_width, font_size, title_font_size, marker_size, x_axis_title, xaxis_direction)</code></summary>
+
+Visualise PCA loadings
+
+##### Parameters
+
+- `pc`: list, default=['PC1', 'PC2'] Principle component to plot.
+- `fig_height`: int, default=600 Height of figure.
+- `fig_width`: int, default=1800 Width of figure.
+
+##### Returns
+
+- `fig`: plotly.graph_objects.Figure Plotly figure. ----------
+
+</details>
+
+<details>
+<summary><code>plot_pca_trajectory(time_, time_order, stat_, pc, color_dict, symbol_dict, fig_height, fig_width, marker_size, marker_opacity, title_font_size, font_size, legend_name)</code></summary>
+
+</details>
+
+<details>
+<summary><code>plot_3d_pca(pc, color_, color_dict, symbol_, symbol_dict, fig_height, fig_width, marker_size, marker_opacity, marker_label, font_size, title_font_size, legend_name)</code></summary>
+
+</details>

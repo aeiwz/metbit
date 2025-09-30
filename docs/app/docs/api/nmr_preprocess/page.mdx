@@ -1,0 +1,56 @@
+# nmr_preprocess
+
+> Category: Data Processing
+
+## Classes
+
+### nmr_preprocessing 
+
+A class for preprocessing NMR data.
+This class handles the following preprocessing steps:
+1. Reading FID files
+2. Zero-filling
+3. Fourier Transform
+4. Phasing
+5. Baseline correction
+6. Calibration
+7. Data storage in a pandas DataFrame
+8. Data visualization
+9. Data export
+
+#### Methods
+
+<details>
+<summary><code>__init__(data_path, bin_size, auto_phasing, fn_, baseline_correction, baseline_type, calibration, calib_type)</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_data(flip_data)</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_ppm()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_metadata()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_phase()</code></summary>
+
+</details>
+
+## Functions
+
+### `read_fid(data_path)`
+
+### `remove_digital_filter(dic, data)`
+
+### `generate_ppm_scale(dic, data)`
+
+### `phasing(data, index, auto, fn, p0, p1)`

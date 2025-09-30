@@ -1,0 +1,72 @@
+<div className="prose">
+  <div className="hero">
+    <h1 className="heroTitle">Getting Started</h1>
+    <p className="heroSubtitle">Install Metbit from PyPI and run your first analysis.</p>
+  </div>
+
+  <div className="callout info">
+    <strong>Requirements:</strong> Python 3.9+ (3.10/3.11 recommended), pip or conda/mamba with pip.
+  </div>
+
+  <h2>Install</h2>
+  <pre><code>pip install metbit</code></pre>
+
+  <details>
+    <summary><b>Use a virtual environment</b></summary>
+    <pre><code>{`python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+pip install metbit`}</code></pre>
+  </details>
+
+  <h2>Minimal Example</h2>
+  <div className="twoCol">
+    <div>
+      <ol className="steps">
+        <li>Load your data (X = features, y = classes)</li>
+        <li>Fit OPLS‑DA and compute VIP scores</li>
+        <li>Visualize important features</li>
+      </ol>
+    </div>
+    <div>
+      <pre><code>{`import pandas as pd
+from metbit.metbit import opls_da
+
+df = pd.read_csv('your_data.csv')
+y = df['Group']
+X = df.drop(columns=['Group'])
+
+model = opls_da(
+    X, y,
+    features_name=list(X.columns), n_components=2,
+    scaling_method='pareto', kfold=3,
+    estimator='opls', random_state=94, auto_ncomp=True
+)
+model.fit()
+fig = model.vip_plot(threshold=1.0)
+fig.show()`}</code></pre>
+    </div>
+  </div>
+
+  <h2>Preprocessing (optional)</h2>
+  <div className="callout">
+    Use Metbit utilities to prepare spectra before modeling.
+  </div>
+  <pre><code>{`from metbit.nmr_preprocess import nmr_preprocessing
+from metbit.utility import Normalise
+
+prep = nmr_preprocessing(...)
+X = prep.X  # DataFrame`}</code></pre>
+
+  <h2>Next Steps</h2>
+  <p>
+    <a className="btn" href="/docs/api">Browse Full API →</a>
+    <span style={{ marginLeft: 8 }} />
+    <a className="btn secondary" href="/docs/overview">Explore Overview</a>
+  </p>
+
+  <ul>
+    <li>nmr_preprocess: <a href="/docs/api/nmr_preprocess">/docs/api/nmr_preprocess</a></li>
+    <li>Modeling (opls_da, pca): <a href="/docs/api/metbit">/docs/api/metbit</a></li>
+    <li>Utilities (Normalise, UnivarStats): <a href="/docs/api/utility">/docs/api/utility</a></li>
+  </ul>
+</div>

@@ -1,0 +1,54 @@
+# Overview
+
+<div className="prose">
+  <div className="hero">
+    <h1 className="heroTitle">Metbit — Python API</h1>
+    <p className="heroSubtitle">Preprocess spectra, build PCA/OPLS-DA models, and visualize results with clean, high‑level functions.</p>
+  </div>
+
+  <div className="callout success"><strong>Install</strong> with <code>pip install metbit</code> and jump into a typical workflow below.</div>
+
+  <h2>Key Features</h2>
+  <div className="grid" style={{gridTemplateColumns:'repeat(2,minmax(0,1fr))'}}>
+    <div className="card"><h3>Data Processing</h3><p>Baseline, calibration, normalization, preprocessing.</p><p><a href="/docs/api/nmr_preprocess">nmr_preprocess</a> • <a href="/docs/api/spec_norm">spec_norm</a> • <a href="/docs/api/scaler">scaler</a></p></div>
+    <div className="card"><h3>Statistical Models</h3><p>PCA/OPLS-DA, cross‑validation, VIP.</p><p><a href="/docs/api/metbit">metbit</a> • <a href="/docs/api/opls">opls</a> • <a href="/docs/api/pls">pls</a></p></div>
+    <div className="card"><h3>Visualization</h3><p>Scores/loadings, boxplots, STOCSY, ellipses.</p><p><a href="/docs/api/plotting">plotting</a> • <a href="/docs/api/boxplot">boxplot</a> • <a href="/docs/api/STOCSY">STOCSY</a></p></div>
+    <div className="card"><h3>Utilities</h3><p>Univariate stats, VIP helpers, paths.</p><p><a href="/docs/api/utility">utility</a></p></div>
+  </div>
+
+  <h2>Typical Workflow</h2>
+  <div className="twoCol">
+    <div>
+      <ol className="steps">
+        <li>Preprocess your spectra (optional)</li>
+        <li>Fit an OPLS‑DA model</li>
+        <li>Assess VIP and visualize results</li>
+      </ol>
+    </div>
+    <div>
+      <pre><code>{`import pandas as pd
+from metbit.nmr_preprocess import nmr_preprocessing
+from metbit.metbit import opls_da
+
+prep = nmr_preprocessing(...)
+X, y = prep.X, prep.y
+
+model = opls_da(
+    X, y,
+    features_name=list(X.columns), n_components=2,
+    scaling_method='pareto', kfold=3,
+    estimator='opls', random_state=94, auto_ncomp=True
+)
+model.fit()
+vip_fig = model.vip_plot(threshold=1.0)
+vip_fig.show()`}</code></pre>
+    </div>
+  </div>
+
+  <h2>Where Next</h2>
+  <p>
+    <a className="btn" href="/docs/getting-started">Get Started →</a>
+    <span style={{ marginLeft: 8 }} />
+    <a className="btn secondary" href="/docs/api">Browse API</a>
+  </p>
+</div>

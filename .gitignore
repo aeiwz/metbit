@@ -10,3 +10,5 @@ metbit/__pycache__/pretreatment.cpython-311.pyc
 
 .codegpt
 .DS_Store
+/docs/node_modules
+/docs/.next

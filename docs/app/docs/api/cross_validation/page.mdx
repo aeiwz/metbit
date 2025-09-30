@@ -1,0 +1,136 @@
+# cross_validation
+
+> Category: Statistical Models
+
+## Classes
+
+### CrossValidation 
+
+#### Methods
+
+<details>
+<summary><code>__init__(estimator, kfold, scaler)</code></summary>
+
+</details>
+
+<details>
+<summary><code>fit(x, y)</code></summary>
+
+Fitting variable matrix X
+
+##### Parameters
+
+- `x`: np.ndarray Variable matrix with size n samples by p variables.
+- `y`: np.ndarray | list Dependent matrix with size n samples by 1. The values in this vector must be 0 and 1, otherwise the classification performance will be wrongly concluded.
+
+</details>
+
+<details>
+<summary><code>predict(x)</code></summary>
+
+Do prediction using optimal model.
+
+##### Parameters
+
+- `x`: np.ndarray Variable matrix with size n samples by p variables.
+
+</details>
+
+<details>
+<summary><code>reset_optimal_num_component(k)</code></summary>
+
+Reset the optimal number of components for manual setup.
+
+##### Parameters
+
+- `k`: int Number of components according to the error plot.
+
+</details>
+
+<details>
+<summary><code>orthogonal_score()</code></summary>
+
+Cross validated orthogonal score.
+
+</details>
+
+<details>
+<summary><code>predictive_score()</code></summary>
+
+Cross validated predictive score.
+
+</details>
+
+<details>
+<summary><code>scores()</code></summary>
+
+</details>
+
+<details>
+<summary><code>q2()</code></summary>
+
+Q2
+
+##### Returns
+
+- `q2`: float
+
+</details>
+
+<details>
+<summary><code>optimal_component_num()</code></summary>
+
+Number of components determined by CV.
+
+</details>
+
+<details>
+<summary><code>R2Xcorr()</code></summary>
+
+</details>
+
+<details>
+<summary><code>R2XYO()</code></summary>
+
+</details>
+
+<details>
+<summary><code>R2X()</code></summary>
+
+</details>
+
+<details>
+<summary><code>R2y()</code></summary>
+
+</details>
+
+<details>
+<summary><code>correlation()</code></summary>
+
+Correlation
+
+</details>
+
+<details>
+<summary><code>covariance()</code></summary>
+
+Covariance
+
+</details>
+
+<details>
+<summary><code>loadings_cv()</code></summary>
+
+Loadings from cross validation.
+
+</details>
+
+<details>
+<summary><code>min_nmc()</code></summary>
+
+</details>
+
+<details>
+<summary><code>mis_classifications()</code></summary>
+
+</details>

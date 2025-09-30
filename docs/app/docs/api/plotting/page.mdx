@@ -1,0 +1,75 @@
+# plotting
+
+> Category: Data Visualization
+
+## Classes
+
+### Plots 
+
+Plot cross validation results
+
+#### Constructor Parameters
+
+- `cvmodel`: CrossValidation object Cross validation model constructed in cross_validation module.
+
+#### Methods
+
+<details>
+<summary><code>__init__(cvmodel)</code></summary>
+
+</details>
+
+<details>
+<summary><code>plot_scores(save_plot, file_name)</code></summary>
+
+Plot scores. If OPLS/OPLS-DA is specified, the score plot for
+OPLS/OPLS-DA is used, i.e., the first component of orthogonal
+versus predictive scores are used for the plot, otherwise, the
+first two components of score plots are used.
+
+##### Parameters
+
+- `save_plot`: bool Whether the plot should be saved. Default is False.
+- `file_name`: str | None File name for saving the plot. They should be compatible in Matplotlib. The figure format supported by Matplotlib can be found at
+- `https`: //matplotlib.org/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.get_supported_filetypes Default is "png". If the file_name doesn't have dot, an extension of "png" will be added, but if the string after the dot is not supported by Matplotlib, an error will be raised. Thus if the extension is not intended to be specified, dot shouldn't be present in file_name.
+
+</details>
+
+<details>
+<summary><code>splot(save_plot, file_name)</code></summary>
+
+S-plot
+
+##### Parameters
+
+- `save_plot`: bool Whether the plot should be saved. Default is False.
+- `file_name`: str | None File name for saving the plot. They should be compatible in Matplotlib. The figure format supported by Matplotlib can be found at
+- `https`: //matplotlib.org/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.get_supported_filetypes Default is "png". If the file_name doesn't have dot, an extension of "png" will be added, but if the string after the dot is not supported by Matplotlib, an error will be raised. Thus if the extension is not intended to be specified, dot shouldn't be present in file_name.
+
+</details>
+
+<details>
+<summary><code>jackknife_loading_plot(alpha, save_plot, file_name)</code></summary>
+
+Loading plot with Jack-knife intervals.
+
+##### Parameters
+
+- `alpha`: float Significance level for calculating the intervals. Default is 0.05.
+- `save_plot`: bool Whether the plot should be saved. Default is False.
+- `file_name`: str | None File name for saving the plot. They should be compatible in Matplotlib. The figure format supported by Matplotlib can be found at
+- `https`: //matplotlib.org/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.get_supported_filetypes Default is "png". If the file_name doesn't have dot, an extension of "png" will be added, but if the string after the dot is not supported by Matplotlib, an error will be raised. Thus if the extension is not intended to be specified, dot shouldn't be present in file_name.
+
+##### Returns
+
+- `loading_mean`: np.ndarray Mean of cross validated loadings.
+- `loading_interval`: np.ndarray Jack-knife confidence intervals
+
+</details>
+
+<details>
+<summary><code>plot_cv_errors(save_plot, file_name)</code></summary>
+
+Plot cross validation classification errors.
+
+</details>

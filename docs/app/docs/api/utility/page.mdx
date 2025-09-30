@@ -1,0 +1,216 @@
+# utility
+
+> Category: Data Processing
+
+## Classes
+
+### lazypair 
+
+#### Methods
+
+<details>
+<summary><code>__init__(dataset, column_name)</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_index()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_name()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_meta()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_column_name()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_dataset()</code></summary>
+
+</details>
+
+### gen_page 
+
+#### Methods
+
+<details>
+<summary><code>__init__(data_path)</code></summary>
+
+This function takes in the path to the data folder and returns the HTML files for the OPLS-DA plots.
+
+##### Parameters
+
+- `data_path`: str The path to the data folder. gen_page(data_path).get_files()
+
+</details>
+
+<details>
+<summary><code>get_files()</code></summary>
+
+</details>
+
+### oplsda_path 
+
+#### Methods
+
+<details>
+<summary><code>__init__(data_path)</code></summary>
+
+</details>
+
+<details>
+<summary><code>make_path()</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_path()</code></summary>
+
+</details>
+
+### Normality_distribution 
+
+#### Methods
+
+<details>
+<summary><code>__init__(data)</code></summary>
+
+</details>
+
+<details>
+<summary><code>plot_distribution(feature)</code></summary>
+
+</details>
+
+<details>
+<summary><code>pca_distributions()</code></summary>
+
+</details>
+
+### Normalise 
+
+#### Methods
+
+<details>
+<summary><code>__init__(data, compute_missing)</code></summary>
+
+</details>
+
+<details>
+<summary><code>pqn_normalise(ref_index, plot)</code></summary>
+
+</details>
+
+<details>
+<summary><code>decimal_place_normalisation(decimals)</code></summary>
+
+This function returns the dataframe with values rounded to a specified number of decimal places.
+
+##### Parameters
+
+- `decimals`: int The number of decimal places to round to.
+
+</details>
+
+<details>
+<summary><code>z_score_normalisation()</code></summary>
+
+This function returns the dataframe normalized using Z-Score.
+
+</details>
+
+<details>
+<summary><code>linear_normalisation()</code></summary>
+
+This function returns the dataframe normalized using Min-Max (linear normalization).
+
+</details>
+
+<details>
+<summary><code>normalize_to_100()</code></summary>
+
+This function returns the dataframe with values normalized to 100.
+
+</details>
+
+<details>
+<summary><code>clipping_normalisation(lower, upper)</code></summary>
+
+This function returns the dataframe with values clipped to the specified range.
+
+##### Parameters
+
+- `lower`: float The lower bound for clipping.
+- `upper`: float The upper bound for clipping.
+
+</details>
+
+<details>
+<summary><code>standard_deviation_normalisation()</code></summary>
+
+This function returns the dataframe normalized using Standard Deviation.
+
+</details>
+
+### UnivarStats 
+
+Perform univariate statistical analysis and visualization using Plotly.
+
+#### Constructor Parameters
+
+- `df`: pd.DataFrame Input DataFrame containing the measurement and group columns.
+- `x_col`: str Column name for the grouping variable.
+- `y_col`: str Column name for the measurement variable.
+- `group_order`: list of str, optional Custom group plotting order.
+- `custom_colors`: dict of str -> str, optional Mapping from group name to color.
+- `stats_options`: list of str, optional
+- `Supported`: ["t-test", "anova", "nonparametric", "effect-size"].
+- `p_value_threshold`: float, default=0.05 Significance threshold.
+- `annotate_style`: {'value', 'symbol'}, default='value' Annotation style: numeric or stars.
+- `y_offset_factor`: float, default=0.35 Vertical spacing factor for annotations.
+- `show_non_significant`: bool, default=True Whether to display 'ns'.
+- `correct_p`: str or None, default='bonferroni' Method for multiple testing correction. Supported: - 'bonferroni', 'holm', 'hochberg', 'hommel' - 'fdr_bh', 'fdr_by', 'fdr_tsbh', 'fdr_tsbky' - None or 'none' = no correction
+- `title_`: str, optional Plot title.
+- `y_label`: str, optional Y-axis label.
+- `x_label`: str, optional X-axis label.
+- `fig_height`: int, default=800 Figure height.
+- `fig_width`: int, default=600 Figure width.
+- `plot_type`: {'box', 'violin'}, default='box' Plot type.
+- `show_axis_lines`: bool, default=True Whether to show axis lines.
+
+#### Methods
+
+<details>
+<summary><code>__init__(df, x_col, y_col, group_order, custom_colors, stats_options, p_value_threshold, annotate_style, y_offset_factor, show_non_significant, correct_p, title_, y_label, x_label, fig_height, fig_width, plot_type, show_axis_lines)</code></summary>
+
+</details>
+
+<details>
+<summary><code>compute_effsize(a, b, eftype)</code></summary>
+
+</details>
+
+<details>
+<summary><code>plot(show_description)</code></summary>
+
+</details>
+
+<details>
+<summary><code>get_stats_table()</code></summary>
+
+Return a DataFrame of statistical results.
+
+</details>
+
+## Functions
+
+### `project_name_generator()`

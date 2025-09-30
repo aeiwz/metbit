@@ -1,0 +1,48 @@
+# scaler
+
+> Category: Data Processing
+
+## Classes
+
+### Scaler (BaseEstimator, TransformerMixin)
+
+Extension of Scikit-learn's StandardScaler which allows scaling by different powers of the standard deviation.
+
+#### Methods
+
+<details>
+<summary><code>__init__(scale_power, copy, with_mean, with_std)</code></summary>
+
+</details>
+
+<details>
+<summary><code>fit(X, y)</code></summary>
+
+Compute the mean and standard deviation from a dataset to use in future scaling operations.
+
+</details>
+
+<details>
+<summary><code>partial_fit(X, y)</code></summary>
+
+Performs online computation of mean and standard deviation on X for later scaling.
+All of X is processed as a single batch.
+This is intended for cases when `fit` is
+not feasible due to very large number of `n_samples`
+or because X is read from a continuous stream.
+
+</details>
+
+<details>
+<summary><code>transform(X, y, copy)</code></summary>
+
+Perform standardization by centering and scaling using the parameters.
+
+</details>
+
+<details>
+<summary><code>inverse_transform(X, copy)</code></summary>
+
+Scale back the data to the original representation.
+
+</details>

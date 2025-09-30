@@ -1,0 +1,35 @@
+# lazy_opls_da
+
+> Category: Statistical Models
+
+## Classes
+
+### lazy_opls_da 
+
+Parameters:
+-----------
+- data (pd.DataFrame): DataFrame containing the dataset.
+- groups (list): List of class labels for each data sample.
+- working_dir (str): Directory path for storing output files.
+- feature_names (list, optional): Names of features, defaults to None.
+- n_components (int, optional): Number of components for OPLS-DA, defaults to 2.
+- scaling (str, optional): Scaling method ('pareto'), defaults to 'pareto'.
+- estimator (str, optional): Model estimator, defaults to 'opls'.
+- kfold (int, optional): Number of folds in cross-validation, defaults to 3.
+- random_state (int, optional): Random seed, defaults to 94.
+- auto_ncomp (bool, optional): Automatically choose the optimal number of components, defaults to True.
+- permutation (bool, optional): Conduct permutation tests, defaults to True.
+- VIP (bool, optional): Calculate VIP scores, defaults to True.
+- linear_regression (bool, optional): Conduct linear regression analysis, defaults to True.
+
+#### Methods
+
+<details>
+<summary><code>__init__(data, groups, working_dir, feature_, n_components, scaling, estimator, kfold, random_state, auto_ncomp, permutation, n_permutation, n_jobs, VIP, VIP_threshold, linear_regression, FC_threshold, p_val_threshold)</code></summary>
+
+</details>
+
+<details>
+<summary><code>fit(marker_color, custom_color, custom_shape, symbol_dict, custom_legend_name, marker_label, marker_size, marker_opacity, individual_ellipse)</code></summary>
+
+</details>

@@ -1,0 +1,108 @@
+# opls
+
+> Category: Statistical Models
+
+## Classes
+
+### OPLS 
+
+#### Methods
+
+<details>
+<summary><code>__init__()</code></summary>
+
+TODO:
+    1. add arg for specifying the method for performing PLS
+
+</details>
+
+<details>
+<summary><code>fit(x, y, n_comp, dot)</code></summary>
+
+Fit PLS model.
+
+##### Parameters
+
+- `x`: np.ndarray Variable matrix with size n samples by p variables.
+- `y`: np.ndarray Dependent matrix with size n samples by 1, or a vector
+- `n_comp`: int Number of components, default is None, which indicates that largest dimension which is smaller value between n and p will be used.
+
+</details>
+
+<details>
+<summary><code>predict(X, n_component, return_scores)</code></summary>
+
+Predict the new coming data matrx.
+
+</details>
+
+<details>
+<summary><code>correct(x, n_component, return_scores, dot)</code></summary>
+
+Correction of X
+
+##### Parameters
+
+- `x`: np.ndarray Data matrix with size n by c, where n is number of samples, and c is number of variables
+- `n_component`: int | None Number of components. If is None, the number of components used in fitting the model is used. Default is None.
+- `return_scores`: bool Return orthogonal scores. Default is False.
+
+##### Returns
+
+- `xc`: np.ndarray Corrected data, with same matrix size with input X.
+- `t`: np.ndarray Orthogonal score, n by n_component.
+
+</details>
+
+<details>
+<summary><code>predictive_score(n_component)</code></summary>
+
+##### Parameters
+
+- `n_component`: int The component number.
+
+</details>
+
+<details>
+<summary><code>ortho_score(n_component)</code></summary>
+
+##### Parameters
+
+- `n_component`: int The component number.
+
+</details>
+
+<details>
+<summary><code>predictive_scores()</code></summary>
+
+Orthogonal loadings.
+
+</details>
+
+<details>
+<summary><code>predictive_loadings()</code></summary>
+
+Predictive loadings.
+
+</details>
+
+<details>
+<summary><code>weights_y()</code></summary>
+
+y scores.
+
+</details>
+
+<details>
+<summary><code>orthogonal_loadings()</code></summary>
+
+Orthogonal loadings.
+
+</details>
+
+<details>
+<summary><code>orthogonal_scores()</code></summary>
+
+Orthogonal scores.
+
+</details>
