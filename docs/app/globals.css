@@ -181,7 +181,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 }
 .btn:hover { filter: brightness(1.05); box-shadow: 0 8px 22px rgba(37,99,235,.30); }
 .btn:active { transform: translateY(1px) scale(.98); }
-.btn.secondary { background: var(--card); color: var(--text); border-color: var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.btn.secondary { background: var(--card); color: var(--text) !important; border-color: var(--border); box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
 .btn.secondary:hover { filter: brightness(1.02); }
 .
 .btn:focus-visible, .ctaBtn:focus-visible { outline: 3px solid var(--primary-600); outline-offset: 2px; }
