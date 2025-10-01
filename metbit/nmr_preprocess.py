@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'aeiwz'
-author_email='theerayut_aeiw_123@hotmail.com'
+__author__ = 'aeiwz'
+__email__ = 'theerayut_aeiw_123@hotmail.com'
 __copyright__="Copyright 2024, Theerayut"
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
-__status__ = "Develop"
+__status__ = "Development"
 
 def read_fid(data_path: str):
     import nmrglue as ng
@@ -126,7 +127,11 @@ class nmr_preprocessing:
     def __init__(self, data_path: str, bin_size: float = 0.0003,
                 auto_phasing: bool = False, fn_ = 'acme',
                 baseline_correction: bool = True, baseline_type: str = 'linear',
-                calibration: bool = True, calib_type: str = 'tsp'):
+                calibration: bool = True, calib_type: str = 'tsp',
+                custom_range: tuple | None = None, custom_target: float | None = None,
+                align: bool = False, align_reference: str = 'median',
+                align_max_shift_ppm: float = 0.02, align_top_n: int = 30,
+                align_windows: list[tuple[float, float]] | None = None):
 
         print("[DEBUG] Initializing nmr_preprocessing class")
         self.data_path = data_path
@@ -137,6 +142,13 @@ class nmr_preprocessing:
         self.calib_type = calib_type
         self.baseline_type = baseline_type
         self.fn_ = fn_
+        self.custom_range = custom_range
+        self.custom_target = custom_target
+        self.align = align
+        self.align_reference = align_reference
+        self.align_max_shift_ppm = align_max_shift_ppm
+        self.align_top_n = align_top_n
+        self.align_windows = align_windows
 
         import os
         from glob import glob
@@ -247,7 +259,9 @@ class nmr_preprocessing:
         '''
 
         print("[DEBUG] Setting column names and index")
-        nmr_data.columns = ppm[::-1]
+        # Use ascending ppm as DataFrame columns by default
+        ppm_columns = ppm[::-1]
+        nmr_data.columns = ppm_columns
         try:
             nmr_data.index = dir_['folder name'].astype(int).to_list()
         except:
@@ -258,7 +272,15 @@ class nmr_preprocessing:
         from .calibrate import calibrate
         if self.calibration:
             print("[DEBUG] Starting calibration step")
-            self.nmr_data2 = calibrate(nmr_data, ppm, calib_type)
+            # Ensure ppm vector matches current data column order
+            ppm_for_cal = nmr_data.columns.to_numpy(dtype=float)
+            self.nmr_data2 = calibrate(
+                nmr_data,
+                ppm_for_cal,
+                calib_type,
+                custom_range=self.custom_range,
+                custom_target=self.custom_target,
+            )
 
         print("\n[INFO] Data processing completed\n")
         if self.calibration:
@@ -268,11 +290,34 @@ class nmr_preprocessing:
             print("[DEBUG] No calibration applied")
             self.nmr_data = nmr_data
 
-        self.ppm = ppm
+        # Update ppm to match DataFrame columns
+        self.ppm = self.nmr_data.columns.to_numpy(dtype=float)
         self.dic_array = dic_list
         self.phase_data = phase_data
         self.nmr_data = nmr_data
         print("[DEBUG] Type of nmr_data:", type(self.nmr_data))
+
+        # Optional alignment step
+        if self.align:
+            try:
+                from .alignment import PeakAligner
+                print("[DEBUG] Starting alignment step")
+                pa = PeakAligner(self.nmr_data, self.ppm, sf_mhz=float(spectrometer_freq))
+                if self.align_windows is None:
+                    windows, mptable = pa.auto_windows(top_n=self.align_top_n)
+                    self.alignment_windows_ = windows
+                    self.alignment_multiplets_ = mptable
+                else:
+                    windows = self.align_windows
+                    self.alignment_windows_ = windows
+                X_aligned, shift_map = pa.align(windows, reference=self.align_reference, max_shift_ppm=self.align_max_shift_ppm)
+                self.nmr_data = X_aligned
+                self.alignment_shifts_ = shift_map
+                # ppm unchanged (integer shifts within same grid)
+                self.ppm = self.nmr_data.columns.to_numpy(dtype=float)
+                print("[DEBUG] Alignment completed with windows:", len(windows))
+            except Exception as e:
+                print("[ERROR] Alignment failed:", e)
 
 
     def get_data(self, flip_data=True):

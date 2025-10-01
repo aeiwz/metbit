@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
-author_email='theerayut_aeiw_123@hotmail.com'
-__copyright__="Copyright 2024, Theerayut"
+__author__ = 'aeiwz'
+__copyright__ = "Copyright 2024, Theerayut"
 
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
-__status__ = "Develop"
+__status__ = "Development"
+
+# Standard library imports used across helpers
+import os
+import sys
+import re
+import shutil
+from glob import glob
+from typing import Optional, List, Dict, Any
+
+# Third-party used across helpers
+import pandas as pd
 
 class lazypair:
 
@@ -106,13 +116,6 @@ class lazypair:
         return list_of_df
 
 class gen_page:
-
-    import sys
-    import os
-    import re
-    import shutil
-    from glob import glob
-    import pandas as pd
 
     def __init__(self, data_path):
         '''
@@ -270,9 +273,6 @@ class oplsda_path:
 
     def __init__(self, data_path):
 
-        import os
-        from glob import glob
-
         '''
         This function takes in the path to the data folder and returns the path to the OPLS-DA plots.
         Parameters
@@ -312,32 +312,37 @@ class oplsda_path:
 
 
     def make_path(self):
+        """Create report folders under the provided data path and cache paths.
 
+        Call this before `get_path()` to ensure directories exist.
+        """
+        data_path = self.data_path
 
+        # Ensure directory structure exists
+        os.makedirs(f"{data_path}/OPLS_DA_report", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/main", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/element", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/element/hist_plot", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/element/Lingress", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/element/loading_plot", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/element/s_plot", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/element/score_plot", exist_ok=True)
+        os.makedirs(f"{data_path}/OPLS_DA_report/element/VIP_score", exist_ok=True)
 
-        os.makedirs(data_path+'/OPLS_DA_report', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/main', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/element', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/element/hist_plot', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/element/Lingress', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/element/loading_plot', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/element/s_plot', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/element/score_plot', exist_ok=True)
-        os.makedirs(data_path+'/OPLS_DA_report/element/VIP_score', exist_ok=True)
-
-
-        #create dictionary to store the path
-        path = {}
-        path['main'] = data_path+'/OPLS_DA_report/main'
-        path['element'] = data_path+'/OPLS_DA_report/element'
-        path['hist_plot'] = data_path+'/OPLS_DA_report/element/hist_plot'
-        path['Lingress'] = data_path+'/OPLS_DA_report/element/Lingress'
-        path['loading_plot'] = data_path+'/OPLS_DA_report/element/loading_plot'
-        path['s_plot'] = data_path+'/OPLS_DA_report/element/s_plot'
-        path['score_plot'] = data_path+'/OPLS_DA_report/element/score_plot'
-        path['VIP_score'] = data_path+'/OPLS_DA_report/element/VIP_score'
+        # Cache path mapping
+        path = {
+            'main': f"{data_path}/OPLS_DA_report/main",
+            'element': f"{data_path}/OPLS_DA_report/element",
+            'hist_plot': f"{data_path}/OPLS_DA_report/element/hist_plot",
+            'Lingress': f"{data_path}/OPLS_DA_report/element/Lingress",
+            'loading_plot': f"{data_path}/OPLS_DA_report/element/loading_plot",
+            's_plot': f"{data_path}/OPLS_DA_report/element/s_plot",
+            'score_plot': f"{data_path}/OPLS_DA_report/element/score_plot",
+            'VIP_score': f"{data_path}/OPLS_DA_report/element/VIP_score",
+        }
 
         self.path = path
+        return path
 
     def get_path(self):
         path = self.path
@@ -346,12 +351,6 @@ class oplsda_path:
 
 
 class Normality_distribution:
-
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    import numpy as np
-    import scipy.stats as stats
-    import pandas as pd
 
     def __init__(self, data: pd.DataFrame):
         self.data = data
@@ -390,7 +389,7 @@ class Normality_distribution:
 
         return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
-    def plot_distribution(self, feature):
+    def plot_distribution(self, feature: str) -> Any:
 
         import matplotlib.pyplot as plt
         import seaborn as sns
@@ -424,7 +423,7 @@ class Normality_distribution:
 
         return plt
 
-    def pca_distributions(self):
+    def pca_distributions(self) -> Any:
         
         import matplotlib.pyplot as plt
         import seaborn as sns
@@ -463,9 +462,6 @@ class Normality_distribution:
       
 
 class Normalise:
-
-    import pandas as pd
-    import numpy as np
 
     def __init__(self, data: pd.DataFrame, compute_missing: bool = True):
         import pandas as pd
@@ -507,7 +503,7 @@ class Normalise:
         return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
 
-    def pqn_normalise(self, ref_index: list = None, plot: bool = True):
+    def pqn_normalise(self, ref_index: list = None, plot: bool = True) -> pd.DataFrame:
         import numpy as np
         import pandas as pd
         import matplotlib.pyplot as plt
@@ -560,7 +556,7 @@ class Normalise:
         
         return norm_df
 
-    def decimal_place_normalisation(self, decimals: int = 2):
+    def decimal_place_normalisation(self, decimals: int = 2) -> pd.DataFrame:
         """
         This function returns the dataframe with values rounded to a specified number of decimal places.
         Parameters
@@ -572,7 +568,7 @@ class Normalise:
         return data
 
 
-    def z_score_normalisation(self):
+    def z_score_normalisation(self) -> pd.DataFrame:
         """
         This function returns the dataframe normalized using Z-Score.
         """
@@ -581,7 +577,7 @@ class Normalise:
 
         return data
 
-    def linear_normalisation(self):
+    def linear_normalisation(self) -> pd.DataFrame:
         """
         This function returns the dataframe normalized using Min-Max (linear normalization).
         """
@@ -590,7 +586,7 @@ class Normalise:
         
         return data
 
-    def normalize_to_100(self):
+    def normalize_to_100(self) -> pd.DataFrame:
         """
         This function returns the dataframe with values normalized to 100.
         """
@@ -599,7 +595,7 @@ class Normalise:
         
         return data
 
-    def clipping_normalisation(self, lower: float, upper: float):
+    def clipping_normalisation(self, lower: float, upper: float) -> pd.DataFrame:
         """
         This function returns the dataframe with values clipped to the specified range.
         Parameters
@@ -613,7 +609,7 @@ class Normalise:
         
         return data
 
-    def standard_deviation_normalisation(self):
+    def standard_deviation_normalisation(self) -> pd.DataFrame:
         """
         This function returns the dataframe normalized using Standard Deviation.
         """

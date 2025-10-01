@@ -1,16 +1,16 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
-author_email='theerayut_aeiw_123@hotmail.com'
+__author__ = 'aeiwz'
 __copyright__="Copyright 2024, Theerayut"
 
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
-__status__ = "Develop"
+__status__ = "Development"
 
 
 # Import necessary libraries
+from typing import Optional, List, Union, Any
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split, cross_val_score
@@ -43,40 +43,6 @@ import os
 
 
 class opls_da:
-    
-    
-        
-    # Import necessary libraries
-    import numpy as np
-    import pandas as pd
-    from sklearn.model_selection import train_test_split, cross_val_score
-    from sklearn.metrics import accuracy_score, roc_auc_score
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.pipeline import Pipeline
-    from sklearn.decomposition import PCA
-    from sklearn.cross_decomposition import PLSRegression
-    from sklearn.model_selection import permutation_test_score
-    import matplotlib.pyplot as plt
-    from sklearn.metrics import r2_score
-    from sklearn.utils import shuffle
-    import plotly.express as px
-    import plotly.graph_objects as go
-    from plotly.subplots import make_subplots
-    import plotly.offline as pyo
-    from .cross_validation import CrossValidation
-    #import plotting
-    from sklearn.linear_model import LinearRegression
-    from sklearn.metrics import mean_squared_error
-
-    import warnings
-    warnings.filterwarnings('ignore')
-
-
-    import os
-
-
-
-
     '''
     OPLS-DA model
     
@@ -161,7 +127,18 @@ class opls_da:
 
         
     
-    def __init__(self, X, y, features_name=None, n_components=2, scaling_method='pareto', kfold=3, estimator='opls', random_state=42, auto_ncomp=True):
+    def __init__(
+        self,
+        X: Union[pd.DataFrame, np.ndarray],
+        y: Union[pd.Series, np.ndarray, List[Any]],
+        features_name: Optional[Union[pd.Series, np.ndarray, List[Any]]] = None,
+        n_components: int = 2,
+        scaling_method: str = 'pareto',
+        kfold: int = 3,
+        estimator: str = 'opls',
+        random_state: int = 42,
+        auto_ncomp: bool = True,
+    ) -> None:
 
         '''
         Purpose:
@@ -258,7 +235,7 @@ class opls_da:
 
 
         
-    def fit(self):
+    def fit(self) -> None:
         
         '''        
         Purpose:
@@ -383,7 +360,7 @@ class opls_da:
         return print(summary_model)
 
 
-    def get_oplsda_scores(self):
+    def get_oplsda_scores(self) -> pd.DataFrame:
             
         '''
         Get OPLS-DA scores
@@ -391,7 +368,7 @@ class opls_da:
         df_opls_scores = self.df_opls_scores
         return df_opls_scores
     
-    def get_s_scores(self):
+    def get_s_scores(self) -> pd.DataFrame:
                 
         '''
         Get S scores
@@ -399,7 +376,7 @@ class opls_da:
         s_df_scores_ = self.s_df_scores_
         return s_df_scores_
 
-    def get_oplsda_model(self):
+    def get_oplsda_model(self) -> Any:
         
         '''
         Get OPLS-DA model
@@ -407,7 +384,7 @@ class opls_da:
         oplsda = self.oplsda
         return oplsda
 
-    def get_cv_model(self):
+    def get_cv_model(self) -> Any:
 
         '''
         Get cross-validation model
@@ -417,7 +394,7 @@ class opls_da:
     
 
 
-    def permutation_test(self, n_permutations=500, cv=3, n_jobs=-1, verbose=10):
+    def permutation_test(self, n_permutations: int = 500, cv: int = 3, n_jobs: int = -1, verbose: int = 10) -> None:
 
 
         from sklearn.pipeline import Pipeline
@@ -461,7 +438,7 @@ class opls_da:
         
         return print(f'Permutation test is performed in {duration} {unit}')
         
-    def get_permutation_scores(self):
+    def get_permutation_scores(self) -> np.ndarray:
         
         '''
         Get permutation scores
@@ -469,7 +446,7 @@ class opls_da:
         permutation_scores = self.permutation_scores
         return permutation_scores
     
-    def vip_scores(self, model=None, features_name = None):
+    def vip_scores(self, model: Optional[Any] = None, features_name: Optional[Union[pd.Series, np.ndarray, List[Any]]] = None) -> None:
         
         '''
         Get VIP score
@@ -515,7 +492,7 @@ class opls_da:
 
         return
 
-    def get_vip_scores(self, filter_=False, threshold=1):
+    def get_vip_scores(self, filter_: bool = False, threshold: float = 1) -> pd.DataFrame:
             
         '''
         Get VIP score
@@ -540,11 +517,11 @@ class opls_da:
 
 
 
-    def vip_plot(self, x_range = 9, threshold = 2, marker_size = 12, 
+    def vip_plot(self, x_range: int = 9, threshold: float = 2, marker_size: int = 12, 
                  fig_width = 1000, fig_height = 500, 
                  filter_ = False, vip_transform = True,
                  font_size = 20, title_font_size = 20,
-                 xaxis_direction = 'reversed'):
+                 xaxis_direction: str = 'reversed') -> go.Figure:
 
         '''
         Purpose:
@@ -866,7 +843,7 @@ class opls_da:
 
 
 
-    def plot_hist(self, nbins_=50, fig_height=500, fig_width=1000, font_size=14, title_font_size=20):
+    def plot_hist(self, nbins_: int = 50, fig_height: int = 500, fig_width: int = 1000, font_size: int = 14, title_font_size: int = 20) -> go.Figure:
 
         '''
         Plot histogram of permutation scores
@@ -1202,7 +1179,16 @@ class pca:
     from lingress import unipair
 
 
-    def __init__(self, X: pd.DataFrame, label: list = None, features_name: list = None, n_components=2, scaling_method='pareto', random_state=42, test_size=0.3):
+    def __init__(
+        self,
+        X: Union[pd.DataFrame, np.ndarray],
+        label: Optional[Union[pd.Series, np.ndarray, List[Any]]] = None,
+        features_name: Optional[Union[pd.Series, np.ndarray, List[Any]]] = None,
+        n_components: int = 2,
+        scaling_method: str = 'pareto',
+        random_state: int = 42,
+        test_size: float = 0.3,
+    ) -> None:
 
 
 
@@ -1399,23 +1385,23 @@ class pca:
 
         return pca_model
 
-    def get_explained_variance(self):
+    def get_explained_variance(self) -> pd.DataFrame:
         df_explained_variance_ = self.df_explained_variance_
         return df_explained_variance_
 
-    def get_scores(self):
+    def get_scores(self) -> pd.DataFrame:
         df_scores_ = self.df_scores_
         return df_scores_
 
-    def get_loadings(self):
+    def get_loadings(self) -> pd.DataFrame:
         df_loadings_ = self.df_loadings_
         return df_loadings_
 
-    def get_q2_test(self):
+    def get_q2_test(self) -> float:
         q2_test = self.q2_test
         return q2_test
 
-    def plot_observe_variance(self, fig_height=600, fig_width=800, font_size=15):
+    def plot_observe_variance(self, fig_height: int = 600, fig_width: int = 800, font_size: int = 15) -> go.Figure:
 
         '''
         Visualise explained variance plot
@@ -1447,7 +1433,7 @@ class pca:
         return fig
 
 
-    def plot_cumulative_observed(self, fig_height=600, fig_width=800, font_size=15, marker_size=10):
+    def plot_cumulative_observed(self, fig_height: int = 600, fig_width: int = 800, font_size: int = 15, marker_size: int = 10) -> go.Figure:
 
         '''
         Visualise cumulative variance plot
@@ -1493,15 +1479,15 @@ class pca:
 
 
 
-    def plot_pca_scores(self, pc=['PC1', 'PC2'], 
-                        color_=None, color_dict=None, 
-                        symbol_=None, symbol_dict=None, 
-                        marker_label=None,
-                        fig_height=900, fig_width=1300,
-                        marker_size=35, marker_opacity=0.7,
-                        font_size=20, title_font_size=21,
-                        individual_ellipse=True,
-                        legend_name=['Group', 'Time point']):
+    def plot_pca_scores(self, pc: List[str] = ['PC1', 'PC2'], 
+                        color_: Optional[pd.Series] = None, color_dict: Optional[dict] = None, 
+                        symbol_: Optional[pd.Series] = None, symbol_dict: Optional[dict] = None, 
+                        marker_label: Optional[pd.Series] = None,
+                        fig_height: int = 900, fig_width: int = 1300,
+                        marker_size: int = 35, marker_opacity: float = 0.7,
+                        font_size: int = 20, title_font_size: int = 21,
+                        individual_ellipse: bool = True,
+                        legend_name: List[str] = ['Group', 'Time point']) -> go.Figure:
 
         '''
         Visualise PCA scores plot
@@ -1688,9 +1674,9 @@ class pca:
 
 
 
-    def plot_loading_(self, pc=['PC1', 'PC2'], fig_height=600, fig_width=1800, 
-                      font_size=20, title_font_size=20, marker_size=1, 
-                      x_axis_title='𝛿<sub>H</sub> in ppm', xaxis_direction = "reversed"):
+    def plot_loading_(self, pc: List[str] = ['PC1', 'PC2'], fig_height: int = 600, fig_width: int = 1800, 
+                      font_size: int = 20, title_font_size: int = 20, marker_size: int = 1, 
+                      x_axis_title: str = '𝛿<sub>H</sub> in ppm', xaxis_direction: str = "reversed") -> go.Figure:
 
         '''
         Visualise PCA loadings
@@ -1743,12 +1729,12 @@ class pca:
 
 
 
-    def plot_pca_trajectory(self, time_, time_order, stat_=['mean', 'sem'], pc=['PC1', 'PC2'],
-                            color_dict=None, symbol_dict=None, 
-                            fig_height=900, fig_width=1300,
-                            marker_size=35, marker_opacity=0.7,
-                            title_font_size=20, font_size=20,
-                            legend_name=['Group', 'Time point']):
+    def plot_pca_trajectory(self, time_: pd.Series, time_order: dict, stat_: List[str] = ['mean', 'sem'], pc: List[str] = ['PC1', 'PC2'],
+                            color_dict: Optional[dict] = None, symbol_dict: Optional[dict] = None, 
+                            fig_height: int = 900, fig_width: int = 1300,
+                            marker_size: int = 35, marker_opacity: float = 0.7,
+                            title_font_size: int = 20, font_size: int = 20,
+                            legend_name: List[str] = ['Group', 'Time point']) -> go.Figure:
         from .pca_ellipse import confidence_ellipse
         import plotly.graph_objects as go
         import plotly.express as px
@@ -1854,10 +1840,10 @@ class pca:
         return fig
     
 
-    def plot_3d_pca(self, pc=['PC1', 'PC2', 'PC3'], color_=None, color_dict=None, 
-                    symbol_=None, symbol_dict=None, fig_height=900, fig_width=1300,
-                    marker_size=35, marker_opacity=0.7, marker_label=None, font_size=20, title_font_size=20,
-                    legend_name=['Group', 'Time point']):
+    def plot_3d_pca(self, pc: List[str] = ['PC1', 'PC2', 'PC3'], color_: Optional[pd.Series] = None, color_dict: Optional[dict] = None, 
+                    symbol_: Optional[pd.Series] = None, symbol_dict: Optional[dict] = None, fig_height: int = 900, fig_width: int = 1300,
+                    marker_size: int = 35, marker_opacity: float = 0.7, marker_label: Optional[pd.Series] = None, font_size: int = 20, title_font_size: int = 20,
+                    legend_name: List[str] = ['Group', 'Time point']) -> go.Figure:
         import plotly.express as px
         '''
         Visualise 3D PCA scores plot

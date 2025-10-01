@@ -1,26 +1,20 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
-author_email='theerayut_aeiw_123@hotmail.com'
+__author__ = 'aeiwz'
 __copyright__="Copyright 2024, Theerayut"
 
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
-__status__ = "Develop"
+__status__ = "Development"
 
 import pandas as pd
 import numpy as np
 
 class peak_chops:
 
-    import pandas as pd
-    import numpy as np
-
 
     def __init__(self, data: pd.DataFrame, ppm: list = None) -> None:
-
-        import pandas as pd
 
 
 
@@ -47,7 +41,7 @@ class peak_chops:
 
         if ppm is not None:
             if ppm is not pd.core.indexes.base.Index:
-                ppm = self.pd.core.indexes.base.Index(ppm)
+                ppm = pd.core.indexes.base.Index(ppm)
             else:
                 pass
 

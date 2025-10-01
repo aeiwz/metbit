@@ -1,24 +1,18 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
-author_email='theerayut_aeiw_123@hotmail.com'
+__author__ = 'aeiwz'
 __copyright__="Copyright 2024, Theerayut"
 
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
-__status__ = "Develop"
+__status__ = "Development"
 
 
 import numpy as np
 import numpy.linalg as la
 
 class PLS:
-
-    import numpy as np
-    import numpy.linalg as la
-
-    from .base import nipals
 
     """ Partial least squares. """
     def __init__(self):
