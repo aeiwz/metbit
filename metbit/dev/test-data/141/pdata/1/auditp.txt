@@ -1,0 +1,32 @@
+##TITLE= Audit trail, TOPSPIN		Version 3.2
+##JCAMPDX= 5.01
+##ORIGIN= Bruker BioSpin GmbH
+##OWNER= nmrsu
+$$ C:/Bruker/TopSpin3.2.3/data/nmrsu/nmr/JP_JL_Plasma_Bariatric_20140304/141/pdata/1/auditp.txt
+##AUDIT TRAIL=  $$ (NUMBER, WHEN, WHO, WHERE, PROCESS, VERSION, WHAT)
+(   1,<2014-03-04 22:01:28.945 +0000>,<nmrsu>,<npc-nmr-02>,<go>,<TOPSPIN 3.2>,
+      <created by zg
+	started at 2014-03-04 21:57:06.568 +0000,
+	POWCHK enabled, PULCHK disabled,
+       configuration hash MD5:
+       49 D6 85 62 22 25 BC FB F9 57 E3 22 75 4D C6 A3
+       data hash MD5: 72K
+       B3 64 2B B9 AC 33 22 1D 8C 22 5E 70 3B D4 09 46>)
+(   2,<2014-03-04 22:01:29.507 +0000>,<nmrsu>,<npc-nmr-02>,<audit>,<TOPSPIN 3.2>,
+      <user comment:
+       ICON-NMR User ID: nmrsu
+       data hash MD5: 72K
+       B3 64 2B B9 AC 33 22 1D 8C 22 5E 70 3B D4 09 46>)
+(   3,<2014-03-04 22:01:30.661 +0000>,<nmrsu>,<npc-nmr-02>,<proc1d>,<TOPSPIN 3.2>,
+      <Start of raw data processing
+       efp LB = 0.3 FT_mod = 6 PKNL = 1 PHC0 = 0 PHC1 = 0 SI = 128K 
+       data hash MD5: 128K
+       6C 05 6B E8 E4 2A 7E 86 8A 2E 66 DC 17 5D EB A1>)
+(   4,<2014-03-04 22:01:32.330 +0000>,<nmrsu>,<npc-nmr-02>,<proc1d>,<TOPSPIN 3.2>,
+      <pk PHC0 = -11.42029 PHC1 = 0 
+       data hash MD5: 128K
+       73 3B E9 C8 6D 61 BF 43 83 84 DB 19 28 2D 14 68>)
+##END=
+
+$$ hash MD5
+$$ A9 94 51 56 61 C7 0D 19 61 02 5A E8 A2 8F AF F1

@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
-author_email='theerayut_aeiw_123@hotmail.com'
+__author__ = 'aeiwz'
 __copyright__="Copyright 2024, Theerayut"
 
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
-__status__ = "Develop"
+__status__ = "Development"
 
 # Import necessary libraries
 import numpy as np
@@ -38,7 +37,7 @@ from pyChemometrics import ChemometricsScaler
 
 import os
 
-__auther__ = "aeiwz"
+__author__ = "aeiwz"
 
 
 class opls_da:

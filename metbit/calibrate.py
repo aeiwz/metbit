@@ -1,15 +1,24 @@
-def calibrate(X, ppm, calib_type='tsp', custom_range=None):
+def calibrate(X, ppm, calib_type='tsp', custom_range=None, custom_target=None):
     """
     Calibrate chemical shifts in NMR spectra using known reference peaks.
 
     Parameters:
         X (np.ndarray or pd.DataFrame): NMR data matrix (rows: spectra, columns: PPM positions).
-        ppm (np.ndarray): 1D array of chemical shift values.
-        calib_type (str): 'tsp', 'glucose', 'alanine', or 'custom'.
-        custom_range (tuple): Optional (start, end) PPM range for custom calibration.
+        ppm (np.ndarray): 1D array of chemical shift values (same order as X columns).
+        calib_type (str): One of 'tsp', 'acetate', 'glucose', 'alanine', 'formate', or 'custom'.
+        custom_range (tuple[float, float] | None):
+            For 'custom', the (start_ppm, end_ppm) region to search for the peak.
+        custom_target (float | None):
+            For 'custom', the target ppm to calibrate the detected peak to (e.g., 0.91).
 
     Returns:
-        pd.DataFrame: Calibrated NMR data matrix.
+        pd.DataFrame: Calibrated NMR data matrix with same shape and columns as input.
+
+    Notes:
+        - For 'glucose' and 'alanine', the function attempts to use the top-2 peaks' mean ppm in the range,
+          otherwise falls back to the highest peak.
+        - For 'custom', both `custom_range` and `custom_target` should be provided, e.g.:
+              calibrate(X, ppm, calib_type='custom', custom_range=(0.89, 1.20), custom_target=0.91)
     """
     import numpy as np
     import pandas as pd
@@ -32,14 +41,24 @@ def calibrate(X, ppm, calib_type='tsp', custom_range=None):
     }
 
     # Determine calibration range and target ppm
-    if calib_type in calib_ranges:
+    if calib_type == 'custom':
+        if custom_range is None or custom_target is None:
+            raise ValueError("For calib_type='custom', provide both custom_range=(start,end) and custom_target=float.")
+        ppm_range = custom_range
+        target_ppm = float(custom_target)
+    elif calib_type in calib_ranges:
         ppm_range = calib_ranges[calib_type]
         target_ppm = target_ppm_dict[calib_type]
-    elif custom_range:
+    elif custom_range is not None and custom_target is not None:
+        # Backward-compatible path even if calib_type not 'custom'
         ppm_range = custom_range
-        target_ppm = np.mean(custom_range)
+        target_ppm = float(custom_target)
+    elif custom_range is not None:
+        # Fallback: use mean of range as target if only a range is provided
+        ppm_range = custom_range
+        target_ppm = float(np.mean(custom_range))
     else:
-        raise ValueError("Invalid calibration type or custom range.")
+        raise ValueError("Invalid calibration configuration. Provide a known calib_type or custom_range/custom_target.")
 
     # Ensure X is 2D NumPy array
     is_dataframe = isinstance(X, pd.DataFrame)

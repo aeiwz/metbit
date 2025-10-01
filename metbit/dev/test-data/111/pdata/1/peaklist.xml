@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PeakList>
+  <PeakList1D>
+    <PeakList1DHeader creator="nmrsu" date="2014-03-05T11:25:38.067+00:00" expNo="111" name="JP_JL_Plasma_Bariatric_20140304" owner="" procNo="1" source="C:/Bruker/TopSpin3.2.3/data/nmrsu/nmr">
+      <PeakPickDetails>F1=1.187ppm, F2=1.163ppm, MI=50.00cm, MAXI=10000.00cm, PC=4.000
+      </PeakPickDetails>
+    </PeakList1DHeader>
+    <Peak1D F1="1.1719" intensity="9.999999e+001" type="0"/>
+  </PeakList1D>
+</PeakList>

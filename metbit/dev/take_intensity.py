@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
-__auther__ ='aeiwz'
-author_email='theerayut_aeiw_123@hotmail.com'
+__author__ = 'aeiwz'
 
 import dash
 from dash.dependencies import Input, Output, State
