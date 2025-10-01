@@ -85,6 +85,23 @@ def mdx_escape(text: str) -> str:
     s = text.replace('\r\n', '\n').rstrip()
     return s
 
+def mdx_sanitize(text: str) -> str:
+    """Make arbitrary text safer for MDX/JSX parsing.
+
+    - Escapes angle brackets to avoid unintended JSX/HTML parsing
+    - Converts heavy bullet '•' to Markdown list items on new lines
+    - Normalizes whitespace
+    """
+    if not text:
+        return ''
+    s = text.replace('\r\n', '\n')
+    # Protect angle brackets that may appear in docstrings (e.g., <b>, <sup>)
+    s = s.replace('<', '&lt;').replace('>', '&gt;')
+    # Turn inline bullets into list lines
+    s = re.sub(r"\s*•\s*", "\n- ", s)
+    # Collapse excessive spaces
+    return s.strip()
+
 def parse_numpy_doc(text: str):
     """Parse a lightweight subset of NumPy-style docstrings.
 
@@ -254,17 +271,19 @@ def write_module_page(mod):
     lines.append(f"> Category: {cat}\n")
     if 'error' in mod:
         lines.append(f"> Error parsing module: {mod['error']}\n")
-    doc = mdx_escape(mod.get('doc', ''))
+    doc = mdx_sanitize(mod.get('doc', ''))
     if doc:
         parsed = parse_numpy_doc(doc)
         if parsed['summary']:
-            lines.append(parsed['summary'] + "\n")
+            lines.append(mdx_sanitize(parsed['summary']) + "\n")
         if parsed['params']:
             lines.append("### Parameters\n")
             for p in parsed['params']:
+                if (p.get('name') or '').lower() in {'example', 'examples'}:
+                    continue
                 name = f"`{p['name']}`" if p['name'] else ''
                 typ = f" ({p['type']})" if p['type'] else ''
-                lines.append(f"- {name}{typ}: {p['desc']}")
+                lines.append(f"- {name}{typ}: {mdx_sanitize(p['desc'])}")
             lines.append("")
         if parsed['returns']:
             lines.append("### Returns\n")
@@ -272,7 +291,7 @@ def write_module_page(mod):
                 name = f"`{r['name']}`" if r['name'] else ''
                 typ = f" ({r['type']})" if r['type'] else ''
                 colon = ': ' if name or typ else ''
-                lines.append(f"- {name}{typ}{colon}{r['desc']}")
+                lines.append(f"- {name}{typ}{colon}{mdx_sanitize(r['desc'])}")
             lines.append("")
 
     # Classes
@@ -287,13 +306,15 @@ def write_module_page(mod):
             if cdoc:
                 cparsed = parse_numpy_doc(cdoc)
                 if cparsed['summary']:
-                    lines.append(cparsed['summary'] + "\n")
+                    lines.append(mdx_sanitize(cparsed['summary']) + "\n")
                 if cparsed['params']:
                     lines.append("#### Constructor Parameters\n")
                     for p in cparsed['params']:
+                        if (p.get('name') or '').lower() in {'example', 'examples'}:
+                            continue
                         name = f"`{p['name']}`" if p['name'] else ''
                         typ = f" ({p['type']})" if p['type'] else ''
-                        lines.append(f"- {name}{typ}: {p['desc']}")
+                        lines.append(f"- {name}{typ}: {mdx_sanitize(p['desc'])}")
                     lines.append("")
             methods = cls.get('methods', [])
             if methods:
@@ -301,17 +322,19 @@ def write_module_page(mod):
                 for m in methods:
                     sig = fmt_signature(m['name'], m.get('args', []))
                     lines.append(f"<details>\n<summary><code>{sig}</code></summary>\n")
-                    mdoc = mdx_escape(m.get('doc', ''))
+                    mdoc = mdx_sanitize(m.get('doc', ''))
                     if mdoc:
                         p = parse_numpy_doc(mdoc)
                         if p['summary']:
-                            lines.append(p['summary'] + "\n")
+                            lines.append(mdx_sanitize(p['summary']) + "\n")
                         if p['params']:
                             lines.append("##### Parameters\n")
                             for pp in p['params']:
+                                if (pp.get('name') or '').lower() in {'example', 'examples'}:
+                                    continue
                                 name = f"`{pp['name']}`" if pp['name'] else ''
                                 typ = f" ({pp['type']})" if pp['type'] else ''
-                                lines.append(f"- {name}{typ}: {pp['desc']}")
+                                lines.append(f"- {name}{typ}: {mdx_sanitize(pp['desc'])}")
                             lines.append("")
                         if p['returns']:
                             lines.append("##### Returns\n")
@@ -319,7 +342,7 @@ def write_module_page(mod):
                                 name = f"`{rr['name']}`" if rr['name'] else ''
                                 typ = f" ({rr['type']})" if rr['type'] else ''
                                 colon = ': ' if name or typ else ''
-                                lines.append(f"- {name}{typ}{colon}{rr['desc']}")
+                                lines.append(f"- {name}{typ}{colon}{mdx_sanitize(rr['desc'])}")
                             lines.append("")
                     lines.append("</details>\n")
 
@@ -330,17 +353,19 @@ def write_module_page(mod):
         for f in funcs:
             sig = fmt_signature(f['name'], f.get('args', []))
             lines.append(f"### `{sig}`\n")
-            fdoc = mdx_escape(f.get('doc', ''))
+            fdoc = mdx_sanitize(f.get('doc', ''))
             if fdoc:
                 p = parse_numpy_doc(fdoc)
                 if p['summary']:
-                    lines.append(p['summary'] + "\n")
+                    lines.append(mdx_sanitize(p['summary']) + "\n")
                 if p['params']:
                     lines.append("#### Parameters\n")
                     for pp in p['params']:
+                        if (pp.get('name') or '').lower() in {'example', 'examples'}:
+                            continue
                         name = f"`{pp['name']}`" if pp['name'] else ''
                         typ = f" ({pp['type']})" if pp['type'] else ''
-                        lines.append(f"- {name}{typ}: {pp['desc']}")
+                        lines.append(f"- {name}{typ}: {mdx_sanitize(pp['desc'])}")
                     lines.append("")
                 if p['returns']:
                     lines.append("#### Returns\n")
@@ -348,7 +373,7 @@ def write_module_page(mod):
                         name = f"`{rr['name']}`" if rr['name'] else ''
                         typ = f" ({rr['type']})" if rr['type'] else ''
                         colon = ': ' if name or typ else ''
-                        lines.append(f"- {name}{typ}{colon}{rr['desc']}")
+                        lines.append(f"- {name}{typ}{colon}{mdx_sanitize(rr['desc'])}")
                     lines.append("")
 
     out.write_text("\n".join(lines), encoding='utf-8')

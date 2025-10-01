@@ -1,5 +1,21 @@
 # metbit
 
+[![Open Documentation](https://img.shields.io/badge/Docs-metbit--docs.vercel.app-2563EB?style=for-the-badge&logo=readthedocs&logoColor=white)](https://metbit-docs.vercel.app)
+
+Documentation
+-------------
+
+A full, searchable documentation site is available at the link above. It includes:
+
+- Getting Started guide with pip install and a minimal workflow
+- API Reference for all public classes, functions, and utilities
+- Examples for preprocessing (NMR), modeling (PCA/OPLS‑DA), and visualization
+
+Quick links:
+
+- Getting Started: https://metbit-docs.vercel.app/docs/getting-started
+- API Reference: https://metbit-docs.vercel.app/docs/api
+
 Metbit is a Python package designed for the analysis of metabolomics data. It provides a range of tools and functions to process, visualize, and interpret metabolomics datasets. With Metbit, you can perform various statistical analyses, identify biomarkers, and generate informative visualizations to gain insights into your metabolomics experiments. Whether you are a researcher, scientist, or data analyst working in the field of metabolomics, Metbit can help streamline your data analysis workflow and facilitate the interpretation of complex metabolomics data.
 
 
@@ -229,4 +245,3 @@ opls_da_mod.vip_plot(threshold=2)
 ```
 Output:
 ![opls da VIP score](./src/img/oplsda_vip_plot.svg)
-
