@@ -26,7 +26,7 @@ __status__ = "Development"
 __copyright__ = "Copyright 2024, Theerayut"
 
 # Optional version string to keep in sync with setup.py
-__version__ = "8.7.5"
+__version__ = "8.7.6"
 
 # Explicit export list for primary API (star imports remain for compatibility)
 __all__ = [
