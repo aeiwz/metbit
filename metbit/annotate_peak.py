@@ -574,10 +574,9 @@ class annotate_peak:
                 meta_df = meta_df.to_frame(name=str(meta_df.name or "Meta"))
             meta_df = meta_df.loc[self.spectra.index]
 
-            # Concatenate meta and intensity without adding a 'Sample' column
             out = pd.concat([
-                meta_df.reset_index(drop=True),
-                intensity_df.reset_index(drop=True)
+                meta_df,
+                intensity_df
             ], axis=1)
             buf = io.StringIO()
             out.to_csv(buf, index=False)
