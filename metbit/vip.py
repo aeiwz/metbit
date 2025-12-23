@@ -8,13 +8,15 @@ __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
 __status__ = "Development"
 
- 
+import numpy as np
+import pandas as pd
+
 class vip_scores:
-    
+
+
     def __init__(self, model, features_name = None):
-        self.model = model
         self.features_name = features_name
-        
+
         features_name = self.features_name
         model = self.model
 
@@ -29,7 +31,7 @@ class vip_scores:
         for i in range(p):
             weight = np.array([ (w[i,j] / np.linalg.norm(w[:,j]))**2 for j in range(h) ])
             vips[i] = np.sqrt(p*(s.T @ weight)/total_s)
-       
+
         if features_name is not None:
             vips = pd.DataFrame(vips, columns = ['VIP'])
             vips['Features'] = features_name
@@ -37,7 +39,7 @@ class vip_scores:
             vips = pd.DataFrame(vips, columns = ['VIP'])
             vips['Features'] = vips.index
 
-            
+
         self.vips = vips
 
         return
@@ -46,7 +48,7 @@ class vip_scores:
         vips = self.vips
         return vips
 
-	
+
     def vip_plot(self, threshold = 2):
         # add scatter plot of VIP score
         import plotly.express as px
@@ -71,14 +73,14 @@ class vip_scores:
 
         # reverse the x-axis
         fig.update_xaxes(autorange="reversed")
-        
+
         # add dashed line for threshold
         fig.add_shape(type="line",
                     x0=0, y0=threshold, x1=10, y1=threshold,
                     line=dict(color="red",width=2, dash="dash"))
-                    
+
         fig.update_layout(showlegend=False)
-        
+
         return fig
 
 
@@ -93,7 +95,7 @@ if __name__ == '__main__':
     model.fit(X, y)
     vip = vip_scores(model, diabetes.feature_names)
     print(vip.vip())
-    
+
     model = PLSRegression(n_components=3)
     model.fit(X, y)
     vip = vip_scores(model)

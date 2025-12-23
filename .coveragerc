@@ -1,0 +1,7 @@
+[run]
+omit =
+    metbit/boxplot.py
+
+[report]
+omit =
+    metbit/boxplot.py
