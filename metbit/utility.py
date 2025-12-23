@@ -20,72 +20,29 @@ from typing import Optional, List, Dict, Any
 import pandas as pd
 
 class lazypair:
+    """Utility for generating all pairwise groupings and related dataset splits."""
 
-    def __init__(self, dataset, column_name):
-        
-        meta = dataset
-        self.meta = meta
-        self.column_name = column_name
-        
-
-        """
-        This function takes in a dataframe and a column name and returns the index of the dataframe and the names of the pairs
-        of the unique values in the column.
-        Parameters
-        ----------
-        meta: pandas dataframe
-            The dataframe to be used.
-        column_name: str
-        Unipair(meta, column_name).indexing()
-        
-        """
-        import pandas as pd
-        import numpy as np
-        
-        #check unique values in the column
-        if meta[column_name].nunique() < 2:
-            raise ValueError("Group should contain at least 2 groups")
-        else:
-            pass
-        #check meta is a dataframe
-        if not isinstance(meta, pd.DataFrame):
+    def __init__(self, dataset: pd.DataFrame, column_name: str):
+        if not isinstance(dataset, pd.DataFrame):
             raise ValueError("meta should be a pandas dataframe")
-        #check column_name is a string
         if not isinstance(column_name, str):
             raise ValueError("column_name should be a string")
-        
+        if column_name not in dataset.columns:
+            raise KeyError(f"{column_name} not found in dataset")
+        if dataset[column_name].nunique() < 2:
+            raise ValueError("Group should contain at least 2 groups")
 
-        df = meta
-        y = df[column_name].unique()
-        pairs = []
-        for i in range(len(y)):
-            for j in range(i+1, len(y)):
-                pairs.append([y[i], y[j]])
-        
-        index_ = []
-        for i in range(len(pairs)):
-            inside_index = []
-            for j in range(2):
-                inside_index.append(list((df.loc[df[column_name] == pairs[i][j]]).index))
-            index_list = [inside_index[0] + inside_index[1]]
-            index_.append(index_list[0])
-        pairs
-        index_
-        names = []
-        for i in range(len(pairs)):
-            
-            names.append(str(pairs[i][0]) + "_vs_" + str(pairs[i][1]))
-            #check names if contain / replace with _ 
-            names[i] = names[i].replace('/', '_')
-            
-        del df
-        del y
-        
-        self.index_ = index_
-        self.names = names
-        
-        
-        
+        self.meta = dataset
+        self.column_name = column_name
+
+        groups = dataset[column_name].unique()
+        self.pairs = [(g1, g2) for i, g1 in enumerate(groups) for g2 in groups[i + 1:]]
+        self.index_ = [
+            dataset.index[dataset[column_name] == g1].tolist()
+            + dataset.index[dataset[column_name] == g2].tolist()
+            for g1, g2 in self.pairs
+        ]
+        self.names = [f"{g1}_vs_{g2}".replace("/", "_") for g1, g2 in self.pairs]
 
     def get_index(self):
         index_ = self.index_
@@ -521,23 +478,22 @@ class Normalise:
         features = data.columns
         index = data.index
 
-        if ref_index is None:
-            median_spectra = data.median(axis=0)
-        else:
-            median_spectra = data.loc[ref_index, :].median(axis=0)
+        median_spectra = (data if ref_index is None else data.loc[ref_index, :]).median(axis=0)
 
-        foldChangeMatrix = data.div(median_spectra, axis=1)
-        # PQN normalisation with median
-        pqn_coef = foldChangeMatrix.median(axis=1)
+        safe_median = median_spectra.replace(0, np.nan)
+        foldChangeMatrix = data.div(safe_median, axis=1)
+        pqn_coef = foldChangeMatrix.median(axis=1).replace(0, np.nan)
 
-        norm_df = data.div(pqn_coef, axis=0)
+        with np.errstate(invalid="ignore", divide="ignore"):
+            norm_df = data.div(pqn_coef, axis=0).fillna(0)
 
         norm_df.columns = features
         norm_df.index = index  
 
         if plot:
             plt.figure()
-            plt.hist(1/pqn_coef, bins=25)
+            safe_coef = pqn_coef.replace(0, np.nan)
+            plt.hist(np.divide(1, safe_coef, where=~safe_coef.isna()).dropna(), bins=25)
             plt.xlabel("1/PQN Coefficient")
             plt.ylabel('Frequency')
             plt.title("Distribution of Normalisation factors")

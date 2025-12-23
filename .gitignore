@@ -12,3 +12,9 @@ metbit/__pycache__/pretreatment.cpython-311.pyc
 .DS_Store
 /docs/node_modules
 /docs/.next
+# Test and coverage outputs
+reports/
+.coverage
+.pytest_cache/
+htmlcov/
+.mypy_cache/

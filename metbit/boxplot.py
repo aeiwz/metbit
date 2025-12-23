@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 # -*- coding: utf-8 -*-
 
 __author__ = 'aeiwz'
@@ -7,9 +9,6 @@ __license__ = "MIT"
 __maintainer__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
 __status__ = "Development"
-
-
-from __future__ import annotations
 
 from typing import (
     TYPE_CHECKING,
