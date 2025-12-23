@@ -40,6 +40,13 @@ from .scaler import Scaler
 import os
 
 
+def _resolve_scale_power(method: str) -> float:
+    mapping = {'pareto': 0.5, 'mean': 0, 'uv': 1, 'minmax': 0}
+    if method not in mapping:
+        raise ValueError(f"Unsupported scaling_method '{method}'")
+    return mapping[method]
+
+
 
 
 class opls_da:
@@ -174,20 +181,16 @@ class opls_da:
 	        •	ValueError: If any input is invalid, such as mismatched dimensions or incorrect data types.
 
         '''
-        self.auto_ncomp = auto_ncomp
-        #check X and y must be dataframe or array
         if X is None or y is None:
             raise ValueError("Input data X and target y must be provided.")
-        if n_components < 1:
+        if not isinstance(n_components, int) or n_components < 1:
             raise ValueError("Number of components must be a positive integer.")
         if not isinstance(X, (pd.DataFrame, np.ndarray)):
             raise ValueError('X must be a dataframe or array')
         if not isinstance(y, (pd.Series, np.ndarray, list)):
             raise ValueError('y must be a series or array or list')
-        if X.shape[0] != y.shape[0]:
+        if X.shape[0] != len(y):
             raise ValueError('X and y must have the same number of samples')
-        if not isinstance(n_components, int):
-            raise ValueError('n_components must be an integer')
         if not isinstance(scaling_method, str):
             raise ValueError('scaling method must be a string')
         if not isinstance(kfold, int):
@@ -201,30 +204,17 @@ class opls_da:
                 raise ValueError('features_name must be a series, list or 1D array')
             if len(features_name) != X.shape[1]:
                 raise ValueError('features_name must have the same number of features as X')
-            
 
+        resolved_features = features_name
+        if resolved_features is None:
+            resolved_features = X.columns if isinstance(X, pd.DataFrame) else np.arange(X.shape[1])
 
+        X_df = X if isinstance(X, pd.DataFrame) else pd.DataFrame(X, columns=resolved_features)
+        X_df = pd.DataFrame(np.nan_to_num(X_df.to_numpy()), columns=X_df.columns)
 
-        self.features_name = features_name
-        if features_name is None:
-            if isinstance(X, pd.DataFrame):
-                self.features_name = X.columns
-            else:
-                self.features_name = np.arange(X.shape[1])
-        else:
-            self.features_name = features_name
-            
-        if isinstance(X, pd.DataFrame):
-            self.X = X.values
-        else:
-            self.X = X 
-
-        #fill nan with 0
-        self.X = np.nan_to_num(self.X)
-                     
-        self.X = X
-        self.y = y
-        self.features_name = features_name
+        self.X = X_df
+        self.y = pd.Series(y)
+        self.features_name = resolved_features
         self.n_components = n_components
         self.scaling_method = scaling_method
         self.kfold = kfold
@@ -268,15 +258,7 @@ class opls_da:
         estimator = self.estimator
         auto_ncomp = self.auto_ncomp
         
-        if scaling_method == 'pareto':
-            Scale_power = 0.5
-        elif scaling_method == 'mean':
-            Scale_power = 0
-        elif scaling_method == 'uv':
-            Scale_power = 1
-        elif scaling_method == 'minmax':
-            Scale_power = 0
-            
+        Scale_power = _resolve_scale_power(scaling_method)
         self.scaling_method = scaling_method
             
             
@@ -1250,33 +1232,6 @@ class pca:
 
     
     def fit(self):
-
-        import numpy as np
-
-        from sklearn import preprocessing
-        import pandas as pd
-        import matplotlib.pyplot as plt
-
-
-        from .scaler import Scaler
-
-        # Use to obtain same values as in the text
-
-
-        import os
-        import plotly.express as px
-        import plotly.graph_objects as go
-
-        from sklearn import decomposition
-        from sklearn.preprocessing import scale
-        from .pca_ellipse import confidence_ellipse
-
-        from sklearn.model_selection import train_test_split
-        from sklearn.preprocessing import StandardScaler
-        from sklearn.decomposition import PCA
-        from sklearn.metrics import r2_score
-        from lingress import unipair
-
         test_size=self.test_size
 
         X = self.X
@@ -1297,23 +1252,15 @@ class pca:
         if not isinstance(label, pd.Series):
             label = pd.Series(label)
 
-        if scaling_method == 'pareto':
-            Scale_power = 0.5
-        elif scaling_method == 'mean':
-            Scale_power = 0
-        elif scaling_method == 'uv':
-            Scale_power = 1
-        elif scaling_method == 'minmax':
-            Scale_power = 0
-            
-            
+        Scale_power = _resolve_scale_power(scaling_method)
+
         model_scaler = Scaler(scale_power=Scale_power)
         model_scaler.fit(X)
         model_X = model_scaler.transform(X)
 
 
 
-        pca_model = decomposition.PCA(n_components=n_components)
+        pca_model = PCA(n_components=n_components)
         pca_model.fit(model_X)
 
         self.scores_ = pca_model.transform(model_X)
