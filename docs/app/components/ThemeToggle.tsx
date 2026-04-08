@@ -4,6 +4,15 @@ import { FiSun, FiMonitor, FiMoon } from 'react-icons/fi'
 
 type Mode = 'light' | 'dark' | 'system'
 
+function getStoredMode(): Mode {
+  if (typeof window === 'undefined') return 'system'
+  const stored = localStorage.getItem('theme')
+  if (stored === 'light' || stored === 'dark' || stored === 'system') {
+    return stored
+  }
+  return 'system'
+}
+
 function applyTheme(mode: Mode) {
   const root = document.documentElement
   if (mode === 'system') {
@@ -16,17 +25,15 @@ function applyTheme(mode: Mode) {
 }
 
 export default function ThemeToggle() {
-  const [mode, setMode] = useState<Mode>('system')
+  const [mode, setMode] = useState<Mode>(getStoredMode)
 
   useEffect(() => {
-    const saved = (localStorage.getItem('theme') as Mode) || 'system'
-    setMode(saved)
-    applyTheme(saved)
+    const current = getStoredMode()
+    applyTheme(current)
 
     const mq = window.matchMedia('(prefers-color-scheme: dark)')
     const onChange = () => {
-      const current = (localStorage.getItem('theme') as Mode) || 'system'
-      if (current === 'system') applyTheme('system')
+      if (getStoredMode() === 'system') applyTheme('system')
     }
     mq.addEventListener?.('change', onChange)
     return () => mq.removeEventListener?.('change', onChange)

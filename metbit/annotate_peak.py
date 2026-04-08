@@ -7,6 +7,25 @@ import numpy as np
 import io
 import json
 import base64
+import html as html_stdlib
+
+
+def _sanitize_annotation_text(value: str, max_len: int = 256) -> str:
+    """Return a safe annotation label for HTML contexts."""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    # Keep labels reasonably small to avoid oversized HTML payloads.
+    text = text[:max_len].strip()
+    return html_stdlib.escape(text, quote=True)
+
+
+def _sanitize_csv_cell(value: str) -> str:
+    """Neutralize spreadsheet formula injection for CSV exports."""
+    text = str(value or "")
+    if text and text[0] in ("=", "+", "-", "@", "\t"):
+        return "'" + text
+    return text
 
 
 class annotate_peak:
@@ -474,11 +493,15 @@ class annotate_peak:
             style_data = style_data or {}
 
             if trig == 'add-btn' and clickData and label_text:
+                safe_label = _sanitize_annotation_text(label_text)
+                if not safe_label:
+                    fig = self._figure(mode or 'single', annotations, style_data, font_size or 14)
+                    return fig, annotations, style_data
                 pt = clickData['points'][0]
                 annotations.append({
                     'x': float(pt['x']), 'y': float(pt['y']),
                     'xref': 'x', 'yref': 'y',
-                    'text': str(label_text),
+                    'text': safe_label,
                     'showarrow': True, 'ax': 0, 'ay': -40,
                     'textangle': (label_angle if label_angle is not None else 0),
                     'font': {'size': font_size}
@@ -498,8 +521,12 @@ class annotate_peak:
                         anns = []
                         for a in loaded:
                             if isinstance(a, dict) and 'x' in a and 'y' in a and 'text' in a:
+                                safe_text = _sanitize_annotation_text(a.get('text', ''))
+                                if not safe_text:
+                                    continue
                                 a.setdefault('xref', 'x'); a.setdefault('yref', 'y')
                                 a.setdefault('showarrow', True); a.setdefault('ax', 0); a.setdefault('ay', -40)
+                                a['text'] = safe_text
                                 a.setdefault('textangle', 0); a.setdefault('font', {'size': font_size})
                                 anns.append(a)
                         if anns: annotations = anns
@@ -566,7 +593,8 @@ class annotate_peak:
                     continue
                 j = int(np.argmin(np.abs(ppm_axis - x_ppm)))
                 col_ppm = float(cols[j])
-                out_cols[f"{lbl}_{col_ppm:.3f}"] = self.spectra.iloc[:, j].to_numpy()
+                safe_label = _sanitize_csv_cell(lbl)
+                out_cols[f"{safe_label}_{col_ppm:.3f}"] = self.spectra.iloc[:, j].to_numpy()
             intensity_df = pd.DataFrame(out_cols, index=self.spectra.index)
 
             meta_df = self.meta.copy()
