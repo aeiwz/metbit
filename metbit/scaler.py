@@ -37,6 +37,14 @@ class Scaler(BaseEstimator, TransformerMixin):
         self.with_std = with_std
         self.copy = copy
 
+    @staticmethod
+    def _raise_if_centering_sparse(with_mean, action):
+        if with_mean:
+            raise ValueError(
+                f"Cannot {action} sparse matrices: pass `with_mean=False` instead. "
+                "See docstring for motivation and alternatives."
+            )
+
     def _reset(self):
         """
         Reset internal data-dependent state of the scaler, if necessary.
@@ -44,13 +52,9 @@ class Scaler(BaseEstimator, TransformerMixin):
 
         """
 
-        # Checking one attribute is enough, because they are all set together
-        # in partial_fit
-        if hasattr(self, 'scale_'):
-            del self.scale_
-            del self.n_samples_seen_
-            del self.mean_
-            del self.var_
+        for attr_name in ("scale_", "n_samples_seen_", "mean_", "var_"):
+            if hasattr(self, attr_name):
+                delattr(self, attr_name)
 
     def fit(self, X, y=None):
         """
@@ -90,46 +94,50 @@ class Scaler(BaseEstimator, TransformerMixin):
 
         """
 
-        X = check_array(X, accept_sparse=('csr', 'csc'), copy=self.copy,
-                        estimator=self, dtype=FLOAT_DTYPES)
+        X = check_array(
+            X,
+            accept_sparse=("csr", "csc"),
+            copy=self.copy,
+            estimator=self,
+            dtype=FLOAT_DTYPES,
+        )
 
         # Even in the case of `with_mean=False`, we update the mean anyway
         # This is needed for the incremental computation of the var
         # See incr_mean_variance_axis and _incremental_mean_variance_axis
 
         if sparse.issparse(X):
-            if self.with_mean:
-                raise ValueError(
-                    "Cannot center sparse matrices: pass `with_mean=False` "
-                    "instead. See docstring for motivation and alternatives.")
+            self._raise_if_centering_sparse(self.with_mean, action="center")
             if self.with_std:
                 # First pass
-                if not hasattr(self, 'n_samples_seen_'):
+                if not hasattr(self, "n_samples_seen_"):
                     self.mean_, self.var_ = mean_variance_axis(X, axis=0)
                     self.n_samples_seen_ = X.shape[0]
                 # Next passes
                 else:
-                    self.mean_, self.var_, self.n_samples_seen_ = \
-                        incr_mean_variance_axis(X, axis=0,
-                                                last_mean=self.mean_,
-                                                last_var=self.var_,
-                                                last_n=self.n_samples_seen_)
+                    self.mean_, self.var_, self.n_samples_seen_ = incr_mean_variance_axis(
+                        X,
+                        axis=0,
+                        last_mean=self.mean_,
+                        last_var=self.var_,
+                        last_n=self.n_samples_seen_,
+                    )
             else:
                 self.mean_ = None
                 self.var_ = None
         else:
             # First pass
-            if not hasattr(self, 'n_samples_seen_'):
-                self.mean_ = .0
+            if not hasattr(self, "n_samples_seen_"):
+                self.mean_ = 0.0
                 self.n_samples_seen_ = 0
                 if self.with_std:
-                    self.var_ = .0
+                    self.var_ = 0.0
                 else:
                     self.var_ = None
 
-            self.mean_, self.var_, self.n_samples_seen_ = \
-                _incremental_mean_and_var(X, self.mean_, self.var_,
-                                          self.n_samples_seen_)
+            self.mean_, self.var_, self.n_samples_seen_ = _incremental_mean_and_var(
+                X, self.mean_, self.var_, self.n_samples_seen_
+            )
 
         if self.with_std:
             self.scale_ = _handle_zeros_in_scale(numpy.sqrt(self.var_)) ** self.scale_power
@@ -150,18 +158,16 @@ class Scaler(BaseEstimator, TransformerMixin):
         :return: Scaled version of the X data matrix.
         :rtype: numpy.ndarray, shape [n_samples, n_features]
         """
-        check_is_fitted(self, 'scale_')
+        check_is_fitted(self, "scale_")
 
         copy = copy if copy is not None else self.copy
 
-        X = check_array(X, accept_sparse='csr', copy=copy,
-                        estimator=self, dtype=FLOAT_DTYPES)
+        X = check_array(
+            X, accept_sparse="csr", copy=copy, estimator=self, dtype=FLOAT_DTYPES
+        )
 
         if sparse.issparse(X):
-            if self.with_mean:
-                raise ValueError(
-                    "Cannot center sparse matrices: pass `with_mean=False` "
-                    "instead. See docstring for motivation and alternatives.")
+            self._raise_if_centering_sparse(self.with_mean, action="center")
             if self.scale_ is not None:
                 inplace_column_scale(X, 1 / self.scale_)
         else:
@@ -181,14 +187,11 @@ class Scaler(BaseEstimator, TransformerMixin):
         :return: X data matrix with the scaling operation reverted.
         :rtype: numpy.ndarray, shape [n_samples, n_features]
         """
-        check_is_fitted(self, 'scale_')
+        check_is_fitted(self, "scale_")
 
         copy = copy if copy is not None else self.copy
         if sparse.issparse(X):
-            if self.with_mean:
-                raise ValueError(
-                    "Cannot uncenter sparse matrices: pass `with_mean=False` "
-                    "instead See docstring for motivation and alternatives.")
+            self._raise_if_centering_sparse(self.with_mean, action="uncenter")
             if not sparse.isspmatrix_csr(X):
                 X = X.tocsr()
                 copy = False
@@ -224,10 +227,10 @@ def _handle_zeros_in_scale(scale, copy=True):
 
     # if we are fitting on 1D arrays, scale might be a scalar
     if numpy.isscalar(scale):
-        if scale == .0:
-            scale = 1.
+        if scale == 0.0:
+            scale = 1.0
         return scale
-    elif isinstance(scale, numpy.ndarray):
+    if isinstance(scale, numpy.ndarray):
         if copy:
             # New array to avoid side-effects
             scale = scale.copy()
