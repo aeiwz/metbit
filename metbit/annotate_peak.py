@@ -23,7 +23,8 @@ def _sanitize_annotation_text(value: str, max_len: int = 256) -> str:
 def _sanitize_csv_cell(value: str) -> str:
     """Neutralize spreadsheet formula injection for CSV exports."""
     text = str(value or "")
-    if text and text[0] in ("=", "+", "-", "@", "\t"):
+    stripped = text.lstrip()
+    if stripped and stripped[0] in ("=", "+", "-", "@"):
         return "'" + text
     return text
 
