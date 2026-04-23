@@ -9,7 +9,7 @@ tags:
   - PCA
 authors:
   - name: Theerayut Bubpamala
-    orcid: 0000-0000-0000-0000
+    orcid: 0000-0001-5176-5853
     corresponding: true
     affiliation: 1
 affiliations:
