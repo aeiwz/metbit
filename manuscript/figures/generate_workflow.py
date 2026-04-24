@@ -24,7 +24,7 @@ C_ARROW = "#626567"
 C_SHADE = "#D5D8DC"
 
 # ── canvas ────────────────────────────────────────────────────────────────────
-W, H = 12, 26          # figure dimensions in data-units
+W, H = 12, 30          # Increased height to 30
 fig, ax = plt.subplots(figsize=(W * 0.72, H * 0.72), dpi=150)
 fig.patch.set_facecolor(BG)
 ax.set_facecolor(BG)
@@ -66,10 +66,10 @@ def arrow_h(x0, x1, y, lw=2.0):
     )
 
 
-TITLE_H   = 0.52   # height of the coloured title strip
-ITEM_STEP = 0.48   # vertical spacing between bullet lines
-PAD_TOP   = 0.20   # gap between title strip and first bullet
-PAD_BOT   = 0.22   # extra space below last bullet
+TITLE_H   = 0.90   # height of the coloured title strip (increased for centered badge)
+ITEM_STEP = 0.52   # vertical spacing between bullet lines
+PAD_TOP   = 0.25   # gap between title strip and first bullet
+PAD_BOT   = 0.25   # extra space below last bullet
 
 
 def node(x, y, w, color, title, items,
@@ -92,16 +92,16 @@ def node(x, y, w, color, title, items,
     rbox(x, y_bot + box_h - TITLE_H, w, TITLE_H, color, ec=WHITE,
          lw=0, r=0.26, zorder=4)
 
-    # title text
-    ax.text(x + w / 2, y_bot + box_h - TITLE_H / 2,
+    # title text - positioned at the top of the header area
+    ax.text(x + w / 2, y_bot + box_h - 0.32,
             title, ha="center", va="center",
             fontsize=title_fs, fontweight="bold", color=WHITE, zorder=6)
 
-    # badge (dependency tag) inside title strip – right-aligned
+    # badge (dependency tag) - centered horizontally and placed below title
     if badge:
-        bw, bh = 1.30, 0.32
-        bx = x + w - bw - 0.12
-        by = y_bot + box_h - TITLE_H + (TITLE_H - bh) / 2
+        bw, bh = 2.00, 0.32
+        bx = x + (w - bw) / 2
+        by = y_bot + box_h - 0.75
         rbox(bx, by, bw, bh, WHITE, ec=color, lw=1.0, r=0.12, zorder=7)
         ax.text(bx + bw / 2, by + bh / 2, badge,
                 ha="center", va="center",
@@ -128,13 +128,13 @@ ax.text(CX, TITLE_BOX_TOP - 0.85 / 2,
         fontsize=14, fontweight="bold", color=WHITE, zorder=5)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ① DATA INPUT
+# 1 DATA INPUT
 # ─────────────────────────────────────────────────────────────────────────────
 y_cursor = TITLE_BOX_TOP - 0.85 - 0.30   # top of next box
 
 y_bot1 = node(
     X0, y_cursor, WW, C_INPUT,
-    "① Data Input",
+    "1 Data Input",
     [
         "Bruker FID directory tree   ·   nmr_preprocessing class",
         "ng.bruker.read()  →  dic (acquisition params)  +  raw FID array",
@@ -146,11 +146,11 @@ arrow_down(CX, y_bot1, y_bot1 - 0.30)
 y_cursor = y_bot1 - 0.30
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ② SIGNAL PREPROCESSING
+# 2 SIGNAL PREPROCESSING
 # ─────────────────────────────────────────────────────────────────────────────
 y_bot2 = node(
     X0, y_cursor, WW, C_PRE,
-    "② Signal Preprocessing",
+    "2 Signal Preprocessing",
     [
         "Digital filter removal  ·  ng.bruker.remove_digital_filter()",
         "Zero-filling  →  Fourier Transform  (FFT)",
@@ -165,11 +165,11 @@ arrow_down(CX, y_bot2, y_bot2 - 0.30)
 y_cursor = y_bot2 - 0.30
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ③ SPECTRAL NORMALISATION
+# 3 SPECTRAL NORMALISATION
 # ─────────────────────────────────────────────────────────────────────────────
 y_bot3 = node(
     X0, y_cursor, WW, C_NORM,
-    "③ Spectral Normalization",
+    "3 Spectral Normalization",
     [
         "Probabilistic Quotient Normalization (PQN)  ·  Normalization.pqn_normalization()",
         "Standard Normal Variate (SNV)  ·  Normalization.snv_normalization()",
@@ -182,11 +182,11 @@ arrow_down(CX, y_bot3, y_bot3 - 0.30)
 y_cursor = y_bot3 - 0.30
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ④ PEAK ALIGNMENT & DETECTION
+# 4 PEAK ALIGNMENT & DETECTION
 # ─────────────────────────────────────────────────────────────────────────────
 y_bot4 = node(
     X0, y_cursor, WW, C_ALIGN,
-    "④ Peak Alignment & Detection",
+    "4 Peak Alignment & Detection",
     [
         "icoshift_align()  ·  interval-correlation-optimized shifting (icoshift)",
         "detect_multiplets()  ·  singlet / doublet / triplet / quartet / multiplet",
@@ -220,10 +220,10 @@ ax.annotate("", xy=(FCX_R, FORK_TOP - 0.28), xytext=(FCX_R, FORK_TOP),
 
 y_fork_cursor = FORK_TOP - 0.28
 
-# ── ⑤a STOCSY ────────────────────────────────────────────────────────────────
+# ── 5a STOCSY ────────────────────────────────────────────────────────────────
 y_botL1 = node(
     FX_L, y_fork_cursor, FW, C_STAT,
-    "⑤0a  STOCSY",
+    "5a  STOCSY",
     [
         "STOCSY()  ·  Pearson corr. vs anchor ppm",
         "p-value threshold  (default p < 0.0001)",
@@ -233,10 +233,10 @@ y_botL1 = node(
     title_fs=9.5, item_fs=8.0,
 )
 
-# ── ⑤b MULTIVARIATE MODELING ─────────────────────────────────────────────────
+# ── 5b MULTIVARIATE MODELING ─────────────────────────────────────────────────
 y_botR1 = node(
     FX_R, y_fork_cursor, FW, C_STAT,
-    "⑤0b  Multivariate Modeling",
+    "5b  Multivariate Modeling",
     [
         "pca  ·  pareto / UV / mean-center / min-max",
         "opls_da  ·  OPLS-DA  +  permutation test",
@@ -305,11 +305,11 @@ ax.annotate("", xy=(CX, MERGE_Y - 0.25), xytext=(CX, MERGE_Y + 0.05),
                             lw=2.2, mutation_scale=14), zorder=5)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# ⑥ INTERACTIVE VISUALIZATION & OUTPUT
+# 6 INTERACTIVE VISUALIZATION & OUTPUT
 # ─────────────────────────────────────────────────────────────────────────────
 y_botViz = node(
     X0, MERGE_Y - 0.25, WW, C_VIZ,
-    "⑥ Interactive Visualization & Output",
+    "6 Interactive Visualization & Output",
     [
         "Plotly  ·  scores plots / loadings / VIP / S-plot / trajectory / 3D PCA",
         "Dash apps  ·  STOCSY_app  ·  pickie_peak  (browser-based)",

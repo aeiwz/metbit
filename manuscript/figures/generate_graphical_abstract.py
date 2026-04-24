@@ -125,18 +125,18 @@ ax.text(8, 7.4, "metbit  ·  End-to-End NMR Metabolomics Analysis in Python",
 
 # ── stage definitions  (x_left, width, colour, title, items) ─────────────────
 stages = [
-    (0.30,  2.60, BLUE1,   "① Raw NMR Data",
+    (0.30,  2.60, BLUE1,   "1 Raw NMR Data",
      ["Bruker FID files", "1H NMR spectra", "nmrglue I/O"]),
-    (3.35,  2.60, BLUE2,   "② Preprocessing",
+    (3.35,  2.60, BLUE2,   "2 Preprocessing",
      ["Digital filter removal", "Zero-fill + FFT", "Auto phase correction",
       "Baseline correction", "Calibration (TSP/DSS)"]),
-    (6.40,  2.60, TEAL,    "③ Normalization & Alignment",
+    (6.40,  2.60, TEAL,    "3 Normalization & Alignment",
      ["PQN normalization", "SNV / MSC", "icoshift alignment",
       "Peak detection"]),
-    (9.45,  2.60, PURPLE,  "④ Statistical Modeling",
+    (9.45,  2.60, PURPLE,  "4 Statistical Modeling",
      ["PCA  (pareto / UV / MC)", "OPLS-DA + permutation test",
       "VIP scoring", "STOCSY analysis"]),
-    (12.50, 3.00, ORANGE,  "⑤ Outputs",
+    (12.50, 3.00, ORANGE,  "5 Outputs",
      ["Interactive Plotly figures", "Dash web applications",
       "Biomarker candidates"]),
 ]
