@@ -91,7 +91,8 @@ class TestResetOptimalComponent:
         cv = CrossValidation(estimator="pls", kfold=4)
         cv.fit(X, y)
         cv.reset_optimal_num_component(1)
-        assert cv._opt_component == 1
+        assert cv._opt_component == 0
+        assert cv.optimal_component_num == 1
 
     def test_reset_to_zero_raises(self):
         X, y = _make_xy()

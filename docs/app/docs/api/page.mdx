@@ -1,27 +1,47 @@
 # API Reference
 
-Browse the public API exposed by `metbit` (sorted by category).
+Browse the main public APIs exposed by `metbit`. The preferred import style is:
 
-## Data Processing
+```python
+from metbit import pca, opls_da, nmr_preprocessing, Normalization
+```
 
-- [calibrate](/docs/api/calibrate)
-- [nmr_preprocessing](/docs/api/nmr_preprocess)
-- [Normalise](/docs/api/utility)
-- [Normalization](/docs/api/spec_norm)
-- [peak_chops](/docs/api/peak_processe)
+Advanced users can also import from subpackages such as `metbit.analysis`, `metbit.nmr`, `metbit.preprocessing`, `metbit.stats`, and `metbit.apps`.
+
+## NMR Data Processing
+
+- [nmr_preprocessing](/docs/api/nmr_preprocess) - read Bruker FID folders and generate processed spectra.
+- [calibrate](/docs/api/calibrate) - calibrate chemical-shift axes.
+- [baseline_correct and bline](/docs/api/baseline) - baseline correction helpers.
+- [detect_multiplets, icoshift_align, and PeakAligner](/docs/api/peak_processe) - peak detection and interval alignment utilities.
+- [peak_chops](/docs/api/peak_processe) - peak-region extraction.
+- [denoise_spec](/docs/api/denoise_spec) - spectral denoising helpers.
+
+## Normalization and Pretreatment
+
+- [Normalization](/docs/api/spec_norm) - static PQN, SNV, MSC, and combined normalization methods.
+- [Normalise](/docs/api/utility) - class-based normalization utilities.
+- [scaler](/docs/api/scaler) - scaling utilities used by statistical models.
+- [pretreatment](/docs/api/pretreatment) - preprocessing and transformation helpers.
 
 ## Statistical Models
 
-- [lazy_opls_da](/docs/api/lazy_opls_da)
-- [opls_da](/docs/api/metbit)
-- [pca](/docs/api/metbit)
-- [UnivarStats](/docs/api/utility)
+- [pca](/docs/api/metbit) - PCA model with interactive scores, loading, variance, and trajectory plots.
+- [opls_da](/docs/api/metbit) - OPLS-DA model with cross-validation, permutation testing, VIP, loading, S-plot, and scores plotting.
+- [lazy_opls_da](/docs/api/lazy_opls_da) - convenience workflow for OPLS-DA analysis.
+- [OPLS](/docs/api/opls) - lower-level OPLS model implementation.
+- [PLS](/docs/api/pls) - lower-level PLS model implementation.
+- [CrossValidation](/docs/api/cross_validation) - cross-validation helpers.
+- [VIP helpers](/docs/api/vip) - Variable Importance in Projection utilities.
+- [UnivarStats](/docs/api/utility) - univariate statistical analysis helpers.
 
-## Data Visualization
+## Visualization and Interactive Apps
 
-- [annotate_peak](/docs/api/annotate_peak)
-- [get_intensity](/docs/api/take_intensity)
-- [pickie_peak](/docs/api/ui_picky_peak)
-- [STOCSY](/docs/api/STOCSY)
-- [STOCSY_app](/docs/api/ui_stocsy)
-
+- [STOCSY](/docs/api/STOCSY) - Statistical Total Correlation Spectroscopy.
+- [STOCSY_app](/docs/api/ui_stocsy) - interactive Dash STOCSY app.
+- [pickie_peak](/docs/api/ui_picky_peak) - interactive peak-picking app.
+- [annotate_peak](/docs/api/annotate_peak) - peak annotation helper.
+- [get_intensity](/docs/api/take_intensity) - peak intensity extraction.
+- [plotting](/docs/api/plotting) - reusable plotting helpers.
+- [boxplot](/docs/api/boxplot) - boxplot visualization utilities.
+- [pca_ellipse](/docs/api/pca_ellipse) - confidence ellipse plotting.

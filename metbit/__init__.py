@@ -49,7 +49,7 @@ try:
 except Exception:
     pass
 
-__all__ = [
+_always_exported = [
     "opls_da",
     "pca",
     "STOCSY",
@@ -64,8 +64,6 @@ __all__ = [
     "baseline_correct",
     "bline",
     "Normalization",
-    "annotate_peak",
-    "STOCSY_app",
-    "pickie_peak",
-    "lazy_opls_da",
 ]
+_optional = ["annotate_peak", "STOCSY_app", "pickie_peak", "lazy_opls_da"]
+__all__ = _always_exported + [n for n in _optional if n in globals()]

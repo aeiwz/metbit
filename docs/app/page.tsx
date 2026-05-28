@@ -6,12 +6,12 @@ export default function HomePage() {
   return (
     <>
       <header>
-        <h1><FiBookOpen className="icon" aria-hidden /> Metbit Python API</h1>
-        <p>Preprocess spectra, build PCA/OPLS-DA models, and visualize results.</p>
+        <h1><FiBookOpen className="icon" aria-hidden /> metbit documentation</h1>
+        <p>End-to-end NMR metabolomics preprocessing, modeling, and visualization in Python.</p>
       </header>
       <div className="container">
-        <h2>Welcome</h2>
-        <p>Install from PyPI and jump into processing, modeling, and visualization.</p>
+        <h2>Build reproducible NMR metabolomics workflows</h2>
+        <p>Install from PyPI, process Bruker FID folders, normalize and align spectra, fit PCA or OPLS-DA models, then inspect interactive Plotly outputs.</p>
         <p style={{marginTop:12}}>
           <Link className="btn" href="/docs/getting-started"><FiPackage aria-hidden /> Install &amp; Quick Start</Link>
           <span style={{ marginLeft: 8 }} />
@@ -20,12 +20,13 @@ export default function HomePage() {
         <div className="grid">
           <div className="card">
             <h3><FiSettings aria-hidden /> Data Processing</h3>
-            <p>Preprocess, normalize and prepare spectra.</p>
+            <p>Read Bruker data, preprocess spectra, normalize intensities, calibrate shifts, and align peaks.</p>
             <div className="links">
               <Link className="pill" href="/docs/api/nmr_preprocess">nmr_preprocessing</Link>
-              <Link className="pill" href="/docs/api/utility">Normalise</Link>
+              <Link className="pill" href="/docs/api/baseline">baseline_correct</Link>
               <Link className="pill" href="/docs/api/spec_norm">Normalization</Link>
               <Link className="pill" href="/docs/api/calibrate">calibrate</Link>
+              <Link className="pill" href="/docs/api/peak_processe">peak_chops</Link>
             </div>
           </div>
           <div className="card">
@@ -35,12 +36,13 @@ export default function HomePage() {
               <Link className="pill" href="/docs/api/metbit">opls_da</Link>
               <Link className="pill" href="/docs/api/metbit">pca</Link>
               <Link className="pill" href="/docs/api/lazy_opls_da">lazy_opls_da</Link>
-              <Link className="pill" href="/docs/api/utility">UnivarStats</Link>
+              <Link className="pill" href="/docs/api/cross_validation">CrossValidation</Link>
+              <Link className="pill" href="/docs/api/vip">VIP helpers</Link>
             </div>
           </div>
           <div className="card">
             <h3><FiBarChart aria-hidden /> Visualization</h3>
-            <p>Generate plots, STOCSY and interactive UIs.</p>
+            <p>Generate model plots, STOCSY exploration tools, peak-picking interfaces, and annotation helpers.</p>
             <div className="links">
               <Link className="pill" href="/docs/api/STOCSY">STOCSY</Link>
               <Link className="pill" href="/docs/api/ui_stocsy">STOCSY_app</Link>
@@ -55,12 +57,12 @@ export default function HomePage() {
           <h3><FiCode className="icon" aria-hidden /> Quick Start</h3>
           <pre><code>{`pip install metbit
 
-from metbit.nmr_preprocess import nmr_preprocessing
+from metbit import nmr_preprocessing, Normalization, pca
 
-# Path to a Bruker project folder containing sample subfolders with 'fid'
+# Path to a Bruker project folder containing sample subfolders with "fid"
 fid_dir = 'path/to/bruker_project'
 
-# 1) Preprocess NMR data (bin, FFT, phasing, optional baseline + calibration)
+# Preprocess NMR data: FFT, phasing, baseline correction, calibration
 nmr = nmr_preprocessing(
     fid_dir,
     bin_size=0.0005,
@@ -71,11 +73,15 @@ nmr = nmr_preprocessing(
     calib_type='tsp',
 )
 
-# 2) Get processed matrix and ppm axis
+# Get processed matrix and ppm axis
 X = nmr.get_data()   # pandas.DataFrame (samples x ppm)
 ppm = nmr.get_ppm()  # numpy.ndarray
 
-print(X.shape, ppm[:5])
+# Normalize and fit PCA
+X_norm = Normalization.pqn_normalization(X)
+model = pca(X=X_norm, features_name=ppm, n_components=2)
+model.fit()
+model.plot_pca_scores().show()
 `}</code></pre>
         </div>
 
