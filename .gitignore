@@ -18,3 +18,7 @@ reports/
 .pytest_cache/
 htmlcov/
 .mypy_cache/
+/metbit/__pycache__
+/metbit/__pycache__
+*.pyc
+*.pyc

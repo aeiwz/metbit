@@ -83,20 +83,12 @@ class gen_page:
             The path to the data folder.
         gen_page(data_path).get_files()
         '''
-        self.data_path = data_path
-
-        if data_path[-1] == '/':
-            #remove the last /
-            data_path = data_path[:-1]
-            
-        else:
-            data_path = data_path
-
-
-        #check data_path is a string
         if not isinstance(data_path, str):
             raise ValueError("data_path should be a string")
-        
+
+        data_path = data_path.rstrip('/')
+        self.data_path = data_path
+
         #check data_path is a directory
         if not os.path.isdir(data_path):
             raise ValueError("data_path should be a directory")
@@ -223,9 +215,9 @@ class gen_page:
             with open(file_path, "w") as html_file:
                 html_file.write(html_content_list[i])
 
-        return print('HTML files created')
+        print('HTML files created')
 
-            
+
 class oplsda_path:
 
     def __init__(self, data_path):
@@ -254,15 +246,7 @@ class oplsda_path:
 
 
         #Implement \ to / for windows
-        data_path = data_path.replace('\\', '/')
-        
-        if data_path[-1] == '/':
-            #remove the last /
-            data_path = data_path[:-1]
-            
-        else:
-            data_path = data_path
-        
+        data_path = data_path.replace('\\', '/').rstrip('/')
 
         self.data_path = data_path
 
@@ -344,7 +328,7 @@ class Normality_distribution:
             return X
         sizes = memory_size(data)
 
-        return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
+        print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
     def plot_distribution(self, feature: str) -> Any:
 
@@ -457,8 +441,7 @@ class Normalise:
             return X
         sizes = memory_size(data)
 
-        return print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
-
+        print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
     def pqn_normalise(self, ref_index: list = None, plot: bool = True) -> pd.DataFrame:
         import numpy as np

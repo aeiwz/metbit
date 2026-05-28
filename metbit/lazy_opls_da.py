@@ -267,7 +267,7 @@ class lazy_opls_da:
         """
 
 
-        return print(Summary)
+        print(Summary)
 
 
 
@@ -468,4 +468,4 @@ class lazy_opls_da:
             else:
                 pass
 
-        return print('Model has been fitted successfully')
+        print('Model has been fitted successfully')

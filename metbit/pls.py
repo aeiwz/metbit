@@ -21,6 +21,7 @@ class PLS:
     def fit(self, x: np.ndarray, y: np.ndarray,
             n_comp: int = None, dot=np.dot) -> None:
 
+
         
         """
         Fit PLS model
@@ -44,6 +45,8 @@ class PLS:
         from .base import nipals
         import numpy as np
         n, r = x.shape
+        if n_comp is None:
+            n_comp = min(n, r)
         # preallocation
         T = np.empty((n, n_comp))
         P = np.empty((r, n_comp))
@@ -80,9 +83,9 @@ class PLS:
 
     def predict(self, X, n_component=None):
         """ Do prediction. """
-        npc = self.coef.shape[1] - 1
-        if n_component is not None and n_component < npc:
-            npc = n_component - 1
+        npc = self.coef.shape[0] - 1
+        if n_component is not None:
+            npc = min(n_component - 1, npc)
         coef = self.coef[npc]
         return np.dot(X, coef)
 
