@@ -4,7 +4,7 @@ import pytest
 from sklearn.cross_decomposition import PLSRegression
 from sklearn.datasets import load_diabetes
 
-from metbit.vip import vip_scores
+from metbit.models.vip import vip_scores
 
 
 def _fitted_pls(n_components=3):

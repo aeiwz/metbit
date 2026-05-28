@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.peak_processe import peak_chops
+from metbit.nmr.peaks import peak_chops
 
 
 def _make_df(n_samples=5, ppm_start=0.5, ppm_end=9.5, n_points=100):

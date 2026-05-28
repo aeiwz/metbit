@@ -1,4 +1,4 @@
-from metbit.annotate_peak import _sanitize_annotation_text, _sanitize_csv_cell
+from metbit.apps.annotate import _sanitize_annotation_text, _sanitize_csv_cell
 
 
 def test_sanitize_annotation_text_escapes_html_payload():

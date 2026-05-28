@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from metbit.pca_ellipse import confidence_ellipse
+from metbit.viz.ellipse import confidence_ellipse
 
 
 class TestConfidenceEllipse:

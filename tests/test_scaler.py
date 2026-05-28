@@ -4,7 +4,7 @@ import numpy as np
 import pytest
 from sklearn.exceptions import NotFittedError
 
-from metbit.scaler import Scaler, _handle_zeros_in_scale
+from metbit.preprocessing.scaler_ext import Scaler, _handle_zeros_in_scale
 
 
 def test_scaler_pareto_mean_centering():

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.denoise_spec import Denoise
+from metbit.nmr.denoise import Denoise
 
 
 def _spectra_array(n=3, p=50, seed=0):

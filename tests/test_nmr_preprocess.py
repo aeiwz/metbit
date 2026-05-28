@@ -25,7 +25,7 @@ def _stub_nmrglue():
 
 class TestGeneratePPMScale:
     def test_length_matches_data(self):
-        from metbit.nmr_preprocess import generate_ppm_scale
+        from metbit.nmr.preprocess import generate_ppm_scale
 
         dic = {
             "acqus": {"SW": 20.0, "SFO1": 600.0},
@@ -37,7 +37,7 @@ class TestGeneratePPMScale:
         assert len(ppm) == 1024
 
     def test_ppm_is_descending_from_offset(self):
-        from metbit.nmr_preprocess import generate_ppm_scale
+        from metbit.nmr.preprocess import generate_ppm_scale
 
         dic = {
             "acqus": {"SW": 12.0, "SFO1": 600.0},
@@ -51,7 +51,7 @@ class TestGeneratePPMScale:
         assert ppm[0] > ppm[-1]
 
     def test_sweep_width_span(self):
-        from metbit.nmr_preprocess import generate_ppm_scale
+        from metbit.nmr.preprocess import generate_ppm_scale
 
         sw = 15.0
         offset = 8.0
@@ -64,19 +64,19 @@ class TestGeneratePPMScale:
 
 class TestNMRPreprocessingErrors:
     def test_raises_file_not_found_for_missing_path(self):
-        from metbit.nmr_preprocess import nmr_preprocessing
+        from metbit.nmr.preprocess import nmr_preprocessing
 
         with pytest.raises(FileNotFoundError):
             nmr_preprocessing("/nonexistent/path/that/does/not/exist")
 
     def test_raises_value_error_when_no_fid_found(self, tmp_path):
-        from metbit.nmr_preprocess import nmr_preprocessing
+        from metbit.nmr.preprocess import nmr_preprocessing
 
         with pytest.raises(ValueError, match="No 'fid' files"):
             nmr_preprocessing(str(tmp_path))
 
     def test_raises_value_error_for_nested_empty_dir(self, tmp_path):
-        from metbit.nmr_preprocess import nmr_preprocessing
+        from metbit.nmr.preprocess import nmr_preprocessing
 
         (tmp_path / "sample1").mkdir()
         (tmp_path / "sample2").mkdir()

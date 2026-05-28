@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.calibrate import calibrate
+from metbit.nmr.calibrate import calibrate
 
 
 def _spectrum(ppm, peak_at, amplitude=10.0, width=0.05, n_samples=4):

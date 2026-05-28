@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.alignment import (
+from metbit.nmr.alignment import (
     _binomial_ratios,
     _classify_pattern,
     detect_multiplets,

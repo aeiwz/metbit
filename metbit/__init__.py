@@ -1,50 +1,71 @@
 # -*- coding: utf-8 -*-
 
-# Public classes/functions re-exported for convenience
-from .metbit import opls_da, pca
-from .utility import UnivarStats, Normalise
-from .lazy_opls_da import lazy_opls_da
-
-# Backwards-compat star imports (intended public surface)
-from .spec_norm import *  # noqa: F401,F403
-from .peak_processe import peak_chops
-from .STOCSY import STOCSY
-from .ui_stocsy import STOCSY_app
-from .ui_picky_peak import pickie_peak
-from .take_intensity import *  # noqa: F401,F403
-from .nmr_preprocess import nmr_preprocessing
-from .calibrate import calibrate
-from .annotate_peak import annotate_peak
-from .baseline import baseline_correct, bline
-from .alignment import detect_multiplets, icoshift_align, PeakAligner
-
 # Package metadata
 __author__ = "aeiwz"
 __email__ = "theerayut_aeiw_123@hotmail.com"
 __maintainer__ = "aeiwz"
 __status__ = "Development"
 __copyright__ = "Copyright 2024, Theerayut"
+__version__ = "9.0.0-dev"
 
-# Optional version string to keep in sync with setup.py
-__version__ = "8.7.7"
+# Core analysis
+from metbit.analysis.opls_da import opls_da
+from metbit.analysis.pca import pca
+from metbit.analysis.stocsy import STOCSY
 
-# Explicit export list for primary API (star imports remain for compatibility)
+# NMR processing
+from metbit.nmr.preprocess import nmr_preprocessing
+from metbit.nmr.calibrate import calibrate
+from metbit.nmr.alignment import detect_multiplets, icoshift_align, PeakAligner
+from metbit.nmr.peaks import peak_chops
+
+# Statistics
+from metbit.stats.normalise import Normalise
+from metbit.stats.univariate import UnivarStats
+
+# Preprocessing
+from metbit.preprocessing.baseline import baseline_correct, bline
+from metbit.preprocessing.normalize import Normalization
+
+# Dash apps (optional heavy deps)
+try:
+    from metbit.apps.annotate import annotate_peak
+except Exception:
+    pass
+
+try:
+    from metbit.apps.stocsy_app import STOCSY_app
+except Exception:
+    pass
+
+try:
+    from metbit.apps.peak_picker import pickie_peak
+except Exception:
+    pass
+
+# Legacy flat-layout class not yet moved to a sub-package
+try:
+    from metbit.lazy_opls_da import lazy_opls_da
+except Exception:
+    pass
+
 __all__ = [
     "opls_da",
     "pca",
-    "UnivarStats",
-    "Normalise",
-    "lazy_opls_da",
-    "peak_chops",
     "STOCSY",
-    "STOCSY_app",
-    "pickie_peak",
     "nmr_preprocessing",
     "calibrate",
-    "annotate_peak",
-    "baseline_correct",
-    "bline",
     "detect_multiplets",
     "icoshift_align",
     "PeakAligner",
+    "peak_chops",
+    "Normalise",
+    "UnivarStats",
+    "baseline_correct",
+    "bline",
+    "Normalization",
+    "annotate_peak",
+    "STOCSY_app",
+    "pickie_peak",
+    "lazy_opls_da",
 ]

@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 
-from metbit.utility import Normalise
+from metbit.stats.normalise import Normalise
 
 
 def test_normalise_pqn_imputes_and_scales():

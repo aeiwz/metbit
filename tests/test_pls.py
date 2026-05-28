@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from metbit.pls import PLS
+from metbit.models.pls import PLS
 
 
 def _make_data(n=20, p=5, seed=0):

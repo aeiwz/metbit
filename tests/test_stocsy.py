@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.STOCSY import STOCSY
+from metbit.analysis.stocsy import STOCSY
 
 
 def _make_spectra(n=20, p=50, seed=0):

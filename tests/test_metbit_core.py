@@ -7,7 +7,8 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from metbit.metbit import _resolve_scale_power, pca
+from metbit.analysis.opls_da import _resolve_scale_power
+from metbit.analysis.pca import pca
 
 
 def test_resolve_scale_power_mapping_and_errors():
