@@ -11,47 +11,84 @@ authors:
   - name: Theerayut Bubpamala
     orcid: 0000-0001-5176-5853
     corresponding: true
-    affiliation: 1
+    affiliation: "1, 2"
 affiliations:
-  - name: kawa-technology, Independent Research & Development, Thailand
+  - name: Medical Biochemistry and Molecular Biology Graduate Study Program, Faculty of Medicine, Khon Kaen University, Khon Kaen, Thailand
     index: 1
-date: 23 April 2026
+  - name: kawa-technology, Independent Research & Development, Thailand
+    index: 2
+date: 28 May 2026
 bibliography: paper.bib
 ---
 
 # Summary
 
-`metbit` is an open-source Python package designed to consolidate the fragmented NMR-based metabolomics workflow into a single, reproducible pipeline. It provides a complete end-to-end ecosystem, starting from raw vendor data (Bruker FID files) and proceeding through digital-filter removal, Fourier transformation, automated phase and baseline correction, spectral normalization, and peak alignment. For downstream analysis, `metbit` implements production-quality multivariate statistical models, including Principal Component Analysis (PCA) and Orthogonal Partial Least Squares Discriminant Analysis (OPLS-DA), with interactive visualizations and bundled web applications for data exploration.
+`metbit` is an open-source Python package for end-to-end nuclear magnetic resonance (NMR)-based metabolomics data analysis. It consolidates raw Bruker data processing, spectral preprocessing, normalization, peak alignment, multivariate statistical modeling, and interactive visualization into a single reproducible workflow. The package is designed for researchers who need to move from raw one-dimensional <sup>1</sup>H NMR spectra to interpretable statistical outputs without combining multiple incompatible commercial and open-source tools.
+
+The current release of `metbit` provides automated digital-filter removal, Fourier transformation, phase correction, baseline correction, spectral normalization, interval-correlation-optimized shifting, Principal Component Analysis (PCA), Orthogonal Partial Least Squares Discriminant Analysis (OPLS-DA), permutation testing, Variable Importance in Projection (VIP) scoring, Statistical Total Correlation Spectroscopy (STOCSY), and browser-based graphical applications for peak picking and STOCSY exploration. Results are rendered as interactive `Plotly` figures, making routine inspection, reporting, and notebook-based analysis easier to reproduce and share [@Plotly2015].
 
 # Statement of need
 
-Proton nuclear magnetic resonance ($^1$H NMR) spectroscopy is an essential tool for systems biology, offering quantitative and non-destructive profiling of metabolites [@Emwas2019]. However, the journey from raw spectral acquisitions to interpretable biological models encompasses dozens of sequential computational steps. This complexity has historically restricted high-quality analysis to laboratories with expensive commercial licenses (e.g., Bruker TopSpin, Mnova) or researchers proficient in MATLAB and R [@Nicholson1999].
+<sup>1</sup>H NMR spectroscopy is a cornerstone of untargeted metabolomics because it offers quantitative, non-destructive, and highly reproducible measurement of complex biological mixtures [@Emwas2019]. In practice, however, the route from raw free-induction decay files to a biological interpretation remains computationally fragmented. A typical study may require vendor software for acquisition export, separate scripts for phase and baseline correction, additional tools for normalization and alignment, and a different statistical environment for chemometric modeling and visualization.
 
-`metbit` fills a significant gap in the scientific Python ecosystem. While libraries like `nmrglue` [@Helmus2013] provide low-level bindings for vendor formats, they lack the integrated multivariate modeling and high-level visualization required for end-to-end metabolomics studies. By providing a coherent, class-based API built on foundational libraries like `NumPy` [@Harris2020] and `scikit-learn` [@Pedregosa2011], `metbit` empowers researchers to conduct reproducible, scriptable analyses that are natively interoperable with modern machine-learning and deep-learning frameworks.
+This fragmentation creates several barriers. First, it makes routine analysis difficult to reproduce because important preprocessing decisions are often distributed across graphical software, spreadsheets, and ad hoc scripts. Second, it increases the training burden for laboratories that need to combine NMR spectroscopy with modern machine-learning workflows. Third, it limits interoperability with Python-based scientific computing tools that are now widely used for data science, statistics, and reproducible research [@Harris2020; @Pedregosa2011].
+
+`metbit` addresses these barriers by providing a scriptable Python interface for the major steps in an NMR metabolomics workflow. The package is intended for metabolomics researchers, analytical chemists, bioinformaticians, and data scientists who need a coherent pipeline for preprocessing, modeling, and visualization. By exposing the workflow through Python classes and functions, `metbit` allows analyses to be version controlled, executed in notebooks or scripts, and integrated with established libraries such as `NumPy`, `SciPy`, `pandas`, and `scikit-learn` [@Virtanen2020; @pandas2020; @Pedregosa2011].
 
 # State of the field
 
-Existing open-source tools typically address isolated segments of the metabolomics pipeline. The R package `nmr` and the web-based `MetaboAnalyst` [@Pang2022] are widely used but suffer from either steep learning curves or limited scripting extensibility. In the Python domain, `nmrglue` remains the standard for file reading, while `pybaselines` [@Erb2022] offers specialized baseline correction. `metbit` differentiates itself by unifying these capabilities into a linear workflow. It uses `pandas` DataFrames [@pandas2020] as its canonical data interchange format, ensuring that spectral data can be easily linked with clinical metadata or passed into scikit-learn Pipelines.
+Several mature tools support parts of the metabolomics and NMR analysis workflow. `nmrglue` provides low-level Python support for reading and manipulating NMR data formats [@Helmus2013]. `pybaselines` offers a broad collection of baseline correction algorithms [@Erb2022]. Web platforms such as MetaboAnalyst provide accessible statistical analysis for metabolomics datasets [@Pang2022]. These tools are valuable, but they typically focus on either data access, an isolated preprocessing task, or downstream statistical analysis.
 
-# Implementation and Features
+`metbit` differs by emphasizing workflow integration. It connects NMR-specific preprocessing steps with chemometric normalization, alignment, multivariate modeling, validation, and interactive visualization. This integrated design reduces format conversion overhead and helps users keep preprocessing choices, model settings, figures, and derived outputs in one reproducible Python environment.
 
-`metbit` is organized into functionally cohesive modules reflecting the natural sequence of NMR processing (see Figure 1).
+# Functionality
 
-![Detailed data-analysis workflow of the metbit package. The pipeline covers six processing stages color-coded by category: navy (input), blue (preprocessing), dark teal (normalization), teal (peak alignment), purple (statistical modeling), and amber (visualization). \label{fig:workflow}](figures/workflow_diagram.png)
+`metbit` is organized around the natural sequence of NMR metabolomics analysis (Figure \ref{fig:workflow}). Each processing stage is intended to produce outputs that can be consumed directly by later stages, supporting both exploratory analysis and scripted production workflows.
 
-### Key Capabilities:
-- **Signal Preprocessing**: Integrated pipeline for Fourier transformation, automated phase correction [@Chen2002], and multiple baseline estimation algorithms (AsLS, AirPLS, ArPLS).
-- **Chemometric Normalization**: Robust implementations of Probabilistic Quotient Normalization (PQN) [@Dieterle2006] and Multiplicative Scatter Correction (MSC) [@Martens1991].
-- **Advanced Modeling**: Validated PCA and OPLS-DA [@Trygg2002] implementations with cross-validation and sign-encoded Variable Importance in Projection (VIP) scoring.
-- **Statistical Spectroscopy**: Interactive Statistical Total Correlation Spectroscopy (STOCSY) [@Nicholson2005] for metabolic pathway connectivity.
-- **Interactivity**: All plots are rendered using `Plotly` [@Plotly2015], providing native hover, zoom, and pan capabilities. Two `Dash` [@Dash2017] applications are included for graphical peak picking and STOCSY navigation.
+![Detailed data-analysis workflow of the `metbit` package. The pipeline covers input, preprocessing, normalization, peak alignment, statistical modeling, and visualization. \label{fig:workflow}](figures/workflow_diagram.png)
+
+The main package capabilities include:
+
+- **NMR preprocessing:** conversion of raw Bruker FID directories into frequency-domain spectra, digital-filter removal, zero filling, Fourier transformation, automated phase correction, baseline correction, and chemical-shift calibration [@Chen2002; @Baek2015; @Zhang2010].
+- **Spectral normalization and alignment:** Probabilistic Quotient Normalization (PQN), Multiplicative Scatter Correction (MSC), and interval-correlation-optimized shifting for managing concentration effects and peak displacement across samples [@Dieterle2006; @Martens1991; @Savorani2010].
+- **Multivariate modeling:** PCA and OPLS-DA implementations for exploratory analysis and supervised classification, including cross-validation, permutation testing, and VIP scoring [@Trygg2002; @Wold1993].
+- **Statistical spectroscopy:** STOCSY analysis for identifying co-varying resonances and supporting metabolite interpretation [@Nicholson2005; @Wishart2022].
+- **Interactive visualization:** high-level plotting functions built on `Plotly`, with local `Dash` applications for STOCSY navigation and peak picking [@Plotly2015; @Dash2017].
+
+# Implementation
+
+`metbit` is implemented in Python and builds on the scientific Python ecosystem, including `NumPy`, `SciPy`, `pandas`, `scikit-learn`, `matplotlib`, `seaborn`, `statsmodels`, `Plotly`, `Dash`, `nmrglue`, and `pybaselines` [@Harris2020; @Virtanen2020; @pandas2020; @Pedregosa2011; @Hunter2007; @Waskom2021; @Seabold2010; @Plotly2015; @Dash2017; @Helmus2013; @Erb2022].
+
+The package uses tabular data structures for the main exchange format, allowing spectra and metadata to be joined, filtered, and passed into modeling functions. This design makes `metbit` compatible with common notebook workflows and enables interoperability with broader machine-learning pipelines. The OPLS-DA functionality includes model validation utilities and diagnostic visualizations, while plotting functions return interactive figures that can be inspected in notebooks or exported for reporting.
+
+# Results and validation
+
+In a typical analysis, a user can process raw Bruker data, normalize spectra, align peaks, fit PCA or OPLS-DA models, inspect VIP scores, and explore STOCSY correlations within a single Python session. This reduces the need to transfer intermediate files among vendor software, spreadsheets, and separate statistical environments.
+
+The package has been exercised on datasets ranging from small pilot studies to medium-scale cohorts. In the manuscript benchmark, OPLS-DA fitting for a representative 500-sample by 50,000-variable dataset completed in under three seconds on a standard multi-core workstation. The project also includes automated tests and documentation to support ongoing maintenance and reproducible use.
+
+# Availability
+
+`metbit` is released under the MIT license. Source code is available at <https://github.com/aeiwz/metbit>, documentation is available at <https://metbit-docs.vercel.app>, and the package can be installed from PyPI with:
+
+```bash
+pip install metbit
+```
+
+# Author contributions
+
+Theerayut Bubpamala: conceptualization, software design, implementation, testing, formal analysis, visualization, project administration, original manuscript drafting, and manuscript review and editing.
 
 # AI usage disclosure
 
-Generative AI tools (Claude 4.6 and GPT-5.2) were used for auxiliary support in drafting and reviewing the manuscript and code review. The corresponding author (T.B.) accepts full responsibility for the final content and has reviewed and validated all outputs.
+Generative AI tools were used for auxiliary manuscript drafting, manuscript review, and code review. The author reviewed and validated the generated material, accepts full responsibility for the final manuscript, and does not list these systems as authors because they cannot accept accountability for the work.
 
 # Acknowledgements
 
 The author thanks the open-source scientific Python community for the libraries on which `metbit` depends.
+
+# Funding and conflicts of interest
+
+`metbit` is independently developed and maintained by kawa-technology. This work received no external funding. The author declares no conflicts of interest.
 
 # References

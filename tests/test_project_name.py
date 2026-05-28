@@ -1,4 +1,4 @@
-from metbit.utility import project_name_generator
+from metbit.stats.normalise import project_name_generator
 
 
 def test_project_name_generator_format():

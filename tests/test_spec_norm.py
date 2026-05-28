@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.spec_norm import Normalization
+from metbit.preprocessing.normalize import Normalization
 
 
 def test_pqn_normalization_rescales_against_reference_median():

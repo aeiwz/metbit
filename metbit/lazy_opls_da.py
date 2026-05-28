@@ -18,8 +18,9 @@ from glob import glob
 import plotly.colors as plotly_colour
 
 
-from .metbit import opls_da
-from .utility import project_name_generator, lazypair
+from .analysis.opls_da import opls_da
+from .stats.normalise import project_name_generator
+from ._internal.pairs import lazypair
 from lingress import lin_regression
 
 class lazy_opls_da:
@@ -90,18 +91,19 @@ class lazy_opls_da:
     from glob import glob
     import plotly.colors as plotly_colour
 
-    from .metbit import opls_da
-    from .utility import project_name_generator, lazypair
+    from .analysis.opls_da import opls_da
+    from .stats.normalise import project_name_generator
+    from ._internal.pairs import lazypair
     from lingress import lin_regression
 
     if __name__ == '__main__':
         from metbit import opls_da
-        from metbit.utility import project_name_generator
-        from metbit.utility import lazypair
+        from metbit.stats.normalise import project_name_generator
+        from metbit._internal.pairs import lazypair
     else:
-        from .metbit import opls_da
-        from .utility import project_name_generator
-        from .utility import lazypair
+        from .analysis.opls_da import opls_da
+        from .stats.normalise import project_name_generator
+        from ._internal.pairs import lazypair
 
 
     def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_: list = None, n_components: int = 2, scaling: str = 'pareto',
@@ -115,10 +117,10 @@ class lazy_opls_da:
         import pandas as pd
         import numpy as np
         import random
-        from .metbit import opls_da
+        from .analysis.opls_da import opls_da
 
-        from .utility import project_name_generator
-        from .utility import lazypair
+        from .stats.normalise import project_name_generator
+        from ._internal.pairs import lazypair
 
         """
         This function takes in a dataframe and a list of y values and returns the project_name model.
@@ -278,9 +280,9 @@ class lazy_opls_da:
             individual_ellipse=False) -> None:
 
 
-        from .metbit import opls_da
+        from .analysis.opls_da import opls_da
         from lingress import lin_regression
-        from .utility import lazypair
+        from ._internal.pairs import lazypair
 
         from glob import glob
         import pandas as pd

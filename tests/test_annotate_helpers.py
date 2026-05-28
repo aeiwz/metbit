@@ -1,6 +1,6 @@
 import pytest
 
-from metbit.annotate_peak import _sanitize_annotation_text, _sanitize_csv_cell
+from metbit.apps.annotate import _sanitize_annotation_text, _sanitize_csv_cell
 
 
 class TestSanitizeAnnotationText:

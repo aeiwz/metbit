@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.baseline import (
+from metbit.preprocessing.baseline import (
     _rubberband_baseline,
     _apply_baseline_1d,
     baseline_correct,

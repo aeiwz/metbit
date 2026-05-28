@@ -5,7 +5,7 @@ import numpy as np
 import pytest
 from unittest.mock import MagicMock, patch
 
-from metbit.plotting import Plots
+from metbit.viz.plots import Plots
 
 
 def _pls_model():

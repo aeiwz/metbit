@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from metbit.opls import OPLS
+from metbit.models.opls import OPLS
 
 
 def _make_data(n=30, p=8, seed=42):

@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from metbit.utility import lazypair
+from metbit._internal.pairs import lazypair
 
 
 def test_lazypair_builds_pair_indices_and_datasets():

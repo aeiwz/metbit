@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from metbit.base import nipals
+from metbit.models.base import nipals
 
 
 def _simple_xy(n=20, p=5, seed=1):

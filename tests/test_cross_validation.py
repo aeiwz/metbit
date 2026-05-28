@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from metbit.cross_validation import CrossValidation
+from metbit.models.cross_validation import CrossValidation
 
 
 def _make_xy(n=40, p=8, seed=0):
