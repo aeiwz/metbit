@@ -1,0 +1,15 @@
+dash
+lingress
+matplotlib
+nmrglue
+numpy
+pandas
+pingouin
+plotly
+pyChemometrics
+pybaselines
+scikit-learn
+scipy==1.14.1
+seaborn
+statsmodels
+tqdm
