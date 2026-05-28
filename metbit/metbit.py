@@ -339,7 +339,7 @@ class opls_da:
             '''
             summary_model = summary_model_plsda
 
-        return print(summary_model)
+        print(summary_model)
 
 
     def get_oplsda_scores(self) -> pd.DataFrame:
@@ -418,7 +418,7 @@ class opls_da:
         self.permutation_scores = permutation_scores
         self.p_value = p_value
         
-        return print(f'Permutation test is performed in {duration} {unit}')
+        print(f'Permutation test is performed in {duration} {unit}')
         
     def get_permutation_scores(self) -> np.ndarray:
         

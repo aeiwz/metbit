@@ -16,9 +16,7 @@ class vip_scores:
 
     def __init__(self, model, features_name = None):
         self.features_name = features_name
-
-        features_name = self.features_name
-        model = self.model
+        self.model = model
 
 
         t = model.x_scores_
@@ -30,7 +28,7 @@ class vip_scores:
         total_s = np.sum(s)
         for i in range(p):
             weight = np.array([ (w[i,j] / np.linalg.norm(w[:,j]))**2 for j in range(h) ])
-            vips[i] = np.sqrt(p*(s.T @ weight)/total_s)
+            vips[i] = np.sqrt(p * (s.T @ weight).item() / total_s)
 
         if features_name is not None:
             vips = pd.DataFrame(vips, columns = ['VIP'])

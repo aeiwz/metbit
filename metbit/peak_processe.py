@@ -33,8 +33,8 @@ class peak_chops:
             '''
             try:
                 ppm = data.columns.astype(float)
-            except:
-                raise print(text)
+            except Exception:
+                raise ValueError(text)
 
         else:
             pass

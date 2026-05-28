@@ -171,6 +171,6 @@ class gen_page:
             with open(file_path, "w") as html_file:
                 html_file.write(html_content_list[i])
 
-        return print('HTML files created')
+        print('HTML files created')
 
-            
+

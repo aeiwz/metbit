@@ -82,6 +82,8 @@ class Plots:
 
         # save plot
         if save_plot:
+            if file_name is None:
+                raise ValueError("file_name must be provided when save_plot=True")
             if "." not in file_name:
                 file_name += ".png"
             plt.savefig(file_name, dpi=1200, bbox_inches="tight")
@@ -89,7 +91,7 @@ class Plots:
         plt.show()
 
     def splot(self, save_plot: bool = False,
-              file_name: bool = None) -> None:
+              file_name: str = None) -> None:
         """
         S-plot
 
@@ -139,6 +141,8 @@ class Plots:
 
         # save plot
         if save_plot:
+            if file_name is None:
+                raise ValueError("file_name must be provided when save_plot=True")
             if "." not in file_name:
                 file_name += ".png"
             plt.savefig(file_name, dpi=1200, bbox_inches="tight")
@@ -206,6 +210,8 @@ class Plots:
 
         # save the plot
         if save_plot:
+            if file_name is None:
+                raise ValueError("file_name must be provided when save_plot=True")
             if "." not in file_name:
                 file_name += ".png"
             plt.savefig(file_name, dpi=1200, bbox_inches="tight")
@@ -232,6 +238,8 @@ class Plots:
         plt.tight_layout()
 
         if save_plot:
+            if file_name is None:
+                raise ValueError("file_name must be provided when save_plot=True")
             if "." not in file_name:
                 file_name += ".png"
             plt.savefig(file_name, dpi=1200, bbox_inches="tight")

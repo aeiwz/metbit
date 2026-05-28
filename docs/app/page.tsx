@@ -13,9 +13,9 @@ export default function HomePage() {
         <h2>Welcome</h2>
         <p>Install from PyPI and jump into processing, modeling, and visualization.</p>
         <p style={{marginTop:12}}>
-          <a className="btn" href="/docs/getting-started"><FiPackage aria-hidden /> Install & Quick Start</a>
+          <Link className="btn" href="/docs/getting-started"><FiPackage aria-hidden /> Install &amp; Quick Start</Link>
           <span style={{ marginLeft: 8 }} />
-          <a className="btn secondary" href="/docs/api">Browse API</a>
+          <Link className="btn secondary" href="/docs/api">Browse API</Link>
         </p>
         <div className="grid">
           <div className="card">

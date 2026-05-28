@@ -1,40 +1,41 @@
 # -*- coding: utf-8 -*-
 
 __author__ = 'aeiwz'
-__author__ = 'aeiwz'
 __email__ = 'theerayut_aeiw_123@hotmail.com'
 __copyright__="Copyright 2024, Theerayut"
 __license__ = "MIT"
 __maintainer__ = "aeiwz"
-__email__ = "theerayut_aeiw_123@hotmail.com"
 __status__ = "Development"
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 def read_fid(data_path: str):
     import nmrglue as ng
-    print(f"[DEBUG] Reading FID from: {data_path}")
+    logger.debug("Reading FID from: %s", data_path)
     dic, data = ng.bruker.read(data_path)
     return dic, data
 
 def remove_digital_filter(dic, data):
     import nmrglue as ng
-    print("[DEBUG] Removing digital filter")
+    logger.debug("Removing digital filter")
     data = ng.bruker.remove_digital_filter(dic, data)
     return data
 
 def generate_ppm_scale(dic, data):
     import numpy as np
     size = len(data)
-    print(f"[DEBUG] Data size: {size}")
     sweep_width = dic['acqus']['SW']
     spectrometer_freq = dic['acqus']['SFO1']
     offset = dic['procs']['OFFSET']
-    print(f"[DEBUG] SW={sweep_width}, SFO1={spectrometer_freq}, OFFSET={offset}")
+    logger.debug("SW=%s, SFO1=%s, OFFSET=%s, size=%s", sweep_width, spectrometer_freq, offset, size)
     ppm = np.linspace(offset, offset - sweep_width, size)
     return ppm
 
 def phasing(data, index, auto=True, fn='peak_minima', p0=0.0, p1=0.0):
     import nmrglue as ng
-    print(f"[DEBUG] Phasing spectrum at index {index}, auto={auto}, fn={fn}")
+    logger.debug("Phasing spectrum at index %s, auto=%s, fn=%s", index, auto, fn)
     if auto:
         data[index] = ng.process.proc_autophase.autops(data[index], fn=fn, p0=p0, p1=p1, return_phases=False)
     return data
@@ -133,7 +134,6 @@ class nmr_preprocessing:
                 align_max_shift_ppm: float = 0.02, align_top_n: int = 30,
                 align_windows: list[tuple[float, float]] | None = None):
 
-        print("[DEBUG] Initializing nmr_preprocessing class")
         self.data_path = data_path
         self.bin_size = bin_size
         self.auto_phasing = auto_phasing
@@ -157,7 +157,6 @@ class nmr_preprocessing:
         import pandas as pd
         import numpy as np
 
-        print(f"[DEBUG] Checking path: {data_path}")
         if not os.path.exists(data_path):
             raise FileNotFoundError(f"Data path '{data_path}' not found.")
         if data_path.endswith('/'):
@@ -170,13 +169,10 @@ class nmr_preprocessing:
         if not sub_dirs:
             sub_dirs = glob(f'{data_path}/*/*/fid')
 
-        # Fail if still nothing found
         if not sub_dirs:
             raise ValueError(f"No 'fid' files found in '{data_path}'. Please check your folder structure.")
 
-        print(f"[DEBUG] Found {len(sub_dirs)} fid directories:")
-        for p in sub_dirs:
-            print("  └", p)
+        logger.debug("Found %d fid directories", len(sub_dirs))
 
         dir_ = pd.DataFrame(sub_dirs, columns=['dir'])
         dir_['dir'] = dir_['dir'].apply(lambda x: x.replace('\\', '/'))
@@ -188,47 +184,37 @@ class nmr_preprocessing:
         dic_list = {}
         ppm = None
 
-        #sort index of dir_ by folder name
         dir_.sort_values('folder name', inplace=True)
         for i in tqdm.tqdm(dir_.index):
             path_to_process = dir_['dir'][i]
-            print(f"[DEBUG] Processing sample {i}: {path_to_process}")
+            logger.debug("Processing sample %s: %s", i, path_to_process)
 
             try:
                 dic, data = ng.bruker.read(path_to_process)
             except Exception as e:
-                print(f"[ERROR] Reading Bruker data failed: {e}")
+                logger.error("Reading Bruker data failed: %s", e)
                 raise
 
-            print("[DEBUG] Removing digital filter")
             data = ng.bruker.remove_digital_filter(dic, data)
-            size = len(data)
             sweep_width = dic['acqus']['SW']
             spectrometer_freq = dic['acqus']['SFO1']
             offset = dic['procs']['OFFSET']
 
-            print(f"[DEBUG] ZF size calc: sweep_width={sweep_width}, bin_size={bin_size}")
             zf_size = int(sweep_width / bin_size)
             data = ng.proc_base.zf_size(data, zf_size)
-            print(f"[DEBUG] FFT")
             data = ng.proc_base.fft(data)
 
             if auto_phasing:
-                print("[DEBUG] Auto phasing")
                 data, (p0, p1) = ng.process.proc_autophase.autops(data, fn=fn_, return_phases=True)
                 phase = [p0, p1]
-                print(f"[DEBUG] Phase angles: p0={p0}, p1={p1}")
+                logger.debug("Auto phase angles: p0=%s, p1=%s", p0, p1)
             else:
-                print(f"[DEBUG] Manual phasing with p0={dic['procs']['PHC0']} and p1={dic['procs']['PHC1']}")
+                logger.debug("Manual phasing with p0=%s and p1=%s", dic['procs']['PHC0'], dic['procs']['PHC1'])
                 data = ng.process.proc_base.ps(data, p0=dic['procs']['PHC0'], p1=dic['procs']['PHC1'], inv=True)
                 phase = [dic['procs']['PHC0'], dic['procs']['PHC1']]
 
             data = ng.proc_base.di(data)
-            #data = ng.proc_base.rev(data)
 
-
-
-            # Perform baseline correction
             if baseline_correction:
                 if baseline_type == 'corrector':
                     data = ng.process.proc_bl.baseline_corrector(data)
@@ -240,39 +226,23 @@ class nmr_preprocessing:
                     data = ng.process.proc_bl.med(data)
                 elif baseline_type == 'solvent filter':
                     data = ng.process.proc_bl.sol_gaussian(data)
-                else:
-                    pass
-            else:
-                pass
 
             ppm = np.linspace(offset, offset - sweep_width, zf_size)
-            print(f"[DEBUG] Generated PPM scale (length={len(ppm)})")
 
             nmr_data = pd.concat([nmr_data, pd.DataFrame([data.real])], axis=0)
             dic_list.update({dir_['folder name'][i]: dic})
             phase_data = pd.concat([phase_data, pd.DataFrame(phase).T], axis=0)
 
-        '''
-        if self.baseline_correction:
-            print("[DEBUG] Starting baseline correction")
-            nmr_data = bline(nmr_data, lam=1e7, max_iter=30)
-        '''
-
-        print("[DEBUG] Setting column names and index")
-        # Use ascending ppm as DataFrame columns by default
         ppm_columns = ppm[::-1]
         nmr_data.columns = ppm_columns
         try:
             nmr_data.index = dir_['folder name'].astype(int).to_list()
-        except:
+        except Exception:
             nmr_data.index = dir_['folder name'].to_list()
         phase_data.index = nmr_data.index
 
-
         from .calibrate import calibrate
         if self.calibration:
-            print("[DEBUG] Starting calibration step")
-            # Ensure ppm vector matches current data column order
             ppm_for_cal = nmr_data.columns.to_numpy(dtype=float)
             self.nmr_data2 = calibrate(
                 nmr_data,
@@ -282,26 +252,20 @@ class nmr_preprocessing:
                 custom_target=self.custom_target,
             )
 
-        print("\n[INFO] Data processing completed\n")
+        logger.info("Data processing completed")
         if self.calibration:
-            print("[DEBUG] Calibration completed")
             self.nmr_data = self.nmr_data2
         else:
-            print("[DEBUG] No calibration applied")
             self.nmr_data = nmr_data
 
-        # Update ppm to match DataFrame columns
         self.ppm = self.nmr_data.columns.to_numpy(dtype=float)
         self.dic_array = dic_list
         self.phase_data = phase_data
         self.nmr_data = nmr_data
-        print("[DEBUG] Type of nmr_data:", type(self.nmr_data))
 
-        # Optional alignment step
         if self.align:
             try:
                 from .alignment import PeakAligner
-                print("[DEBUG] Starting alignment step")
                 pa = PeakAligner(self.nmr_data, self.ppm, sf_mhz=float(spectrometer_freq))
                 if self.align_windows is None:
                     windows, mptable = pa.auto_windows(top_n=self.align_top_n)
@@ -313,47 +277,36 @@ class nmr_preprocessing:
                 X_aligned, shift_map = pa.align(windows, reference=self.align_reference, max_shift_ppm=self.align_max_shift_ppm)
                 self.nmr_data = X_aligned
                 self.alignment_shifts_ = shift_map
-                # ppm unchanged (integer shifts within same grid)
                 self.ppm = self.nmr_data.columns.to_numpy(dtype=float)
-                print("[DEBUG] Alignment completed with windows:", len(windows))
+                logger.debug("Alignment completed with %d windows", len(windows))
             except Exception as e:
-                print("[ERROR] Alignment failed:", e)
+                logger.error("Alignment failed: %s", e)
 
 
     def get_data(self, flip_data=True):
-        print("[DEBUG] get_data() called")
         nmr_data = self.nmr_data
         nmr_data.sort_index(inplace=True)
         if flip_data:
             nmr_data = nmr_data.iloc[:, ::-1]
-        else:
-            nmr_data = nmr_data
         return nmr_data
 
     def get_ppm(self):
-        print("[DEBUG] get_ppm() called")
         return self.ppm
 
     def get_metadata(self):
-        print("[DEBUG] get_metadata() called")
         return self.dic_array
 
     def get_phase(self):
-        print("[DEBUG] get_phase() called")
         return self.phase_data
 
 if __name__ == '__main__':
-    print("[DEBUG] Starting NMR processing script")
     fid = 'dev/launch/data/test_nmr_data'
     nmr = nmr_preprocessing(fid, bin_size=0.0005, auto_phasing=False, fn_='acme',
                             baseline_correction=True, baseline_type='corrector',
                             calibration=True, calib_type='glucose')
-    #print(nmr.get_data().shape())
-    #print(nmr.get_data().head())
 
     nmr_data = nmr.get_data()
     print(nmr_data.columns)
-    #plot data
     from lingress import plot_NMR_spec
     fig = plot_NMR_spec(spectra=nmr_data, ppm=nmr.get_ppm(), label=None).single_spectra()
     fig.show()

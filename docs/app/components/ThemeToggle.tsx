@@ -49,6 +49,7 @@ export default function ThemeToggle() {
     <div className="themeToggle" aria-label="Theme">
       <div className="seg" role="group" aria-label="Theme toggle">
         <button
+          type="button"
           className={mode==='light' ? 'active' : ''}
           onClick={() => choose('light')}
           aria-pressed={mode==='light'}
@@ -57,6 +58,7 @@ export default function ThemeToggle() {
           <FiSun aria-hidden /> Light
         </button>
         <button
+          type="button"
           className={mode==='system' ? 'active' : ''}
           onClick={() => choose('system')}
           aria-pressed={mode==='system'}
@@ -65,6 +67,7 @@ export default function ThemeToggle() {
           <FiMonitor aria-hidden /> System
         </button>
         <button
+          type="button"
           className={mode==='dark' ? 'active' : ''}
           onClick={() => choose('dark')}
           aria-pressed={mode==='dark'}

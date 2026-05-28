@@ -26,6 +26,8 @@ class Scaler:
             self.scaler = self._meancentering
         elif scaler == "minmax":
             self.scaler = self._minmaxscaling
+        else:
+            raise ValueError(f"Unknown scaler {scaler!r}. Choose from: 'uv', 'pareto', 'mean', 'minmax'.")
 
         self._center: np.ndarray = None
         self._normalizer: np.ndarray = None
@@ -87,4 +89,5 @@ class Scaler:
         """
         center = x.min(axis=0)
         normalizer = x.max(axis=0) - x.min(axis=0)
+        normalizer = np.where(normalizer == 0, np.nan, normalizer)
         return center, normalizer, (x - center) / normalizer
