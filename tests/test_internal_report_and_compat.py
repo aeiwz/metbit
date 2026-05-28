@@ -46,7 +46,7 @@ def test_oplsda_path_make_path_creates_expected_dirs(tmp_path):
     data_dir.mkdir()
     (data_dir / "seed.txt").write_text("seed", encoding="utf-8")
 
-    op = oplsda_path(str(data_dir).replace("/", "\\"))
+    op = oplsda_path(str(data_dir))
     path_map = op.make_path()
 
     assert op.get_path() == path_map
