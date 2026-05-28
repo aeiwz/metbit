@@ -1,11 +1,11 @@
 <div className="prose">
   <div className="hero">
     <h1 className="heroTitle">Getting Started</h1>
-    <p className="heroSubtitle">Install Metbit from PyPI and run your first analysis.</p>
+    <p className="heroSubtitle">Install metbit, prepare your data, and run the first PCA or OPLS-DA model.</p>
   </div>
 
   <div className="callout info">
-    <strong>Requirements:</strong> Python 3.9+ (3.10/3.11 recommended), pip or conda/mamba with pip.
+    <strong>Requirements:</strong> Python 3.10+ is recommended. The package depends on the scientific Python stack, Plotly, Dash, nmrglue, and pybaselines.
   </div>
 
   <h2>Install</h2>
@@ -15,58 +15,110 @@
     <summary><b>Use a virtual environment</b></summary>
     <pre><code>{`python -m venv .venv
 source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
+python -m pip install --upgrade pip
 pip install metbit`}</code></pre>
   </details>
 
-  <h2>Minimal Example</h2>
+  <h2>Import public APIs</h2>
+  <p>Most commonly used classes and functions are exported from the package root.</p>
+  <pre><code>{`from metbit import (
+    nmr_preprocessing,
+    Normalization,
+    Normalise,
+    pca,
+    opls_da,
+    STOCSY,
+)`}</code></pre>
+
+  <h2>Option 1: Start from a feature table</h2>
+  <p>Use this route when your spectra are already represented as a table where rows are samples and columns are spectral variables.</p>
   <div className="twoCol">
     <div>
       <ol className="steps">
-        <li>Load your data (X = features, y = classes)</li>
-        <li>Fit OPLS‑DA and compute VIP scores</li>
-        <li>Visualize important features</li>
+        <li>Load a CSV file with a class or group column.</li>
+        <li>Separate <code>X</code> features from <code>y</code> labels.</li>
+        <li>Normalize the feature table.</li>
+        <li>Fit PCA for exploration or OPLS-DA for binary class modeling.</li>
       </ol>
     </div>
     <div>
       <pre><code>{`import pandas as pd
-from metbit.metbit import opls_da
+from metbit import Normalization, pca, opls_da
 
-df = pd.read_csv('your_data.csv')
-y = df['Group']
-X = df.drop(columns=['Group'])
+df = pd.read_csv("spectra.csv")
+y = df["Group"]
+X = df.drop(columns=["Group"])
+features = X.columns.astype(float)
 
-model = opls_da(
-    X, y,
-    features_name=list(X.columns), n_components=2,
-    scaling_method='pareto', kfold=3,
-    estimator='opls', random_state=94, auto_ncomp=True
+X_norm = Normalization.pqn_normalization(X)
+
+pca_model = pca(
+    X=X_norm,
+    label=y,
+    features_name=features,
+    n_components=2,
+    scaling_method="pareto",
 )
-model.fit()
-fig = model.vip_plot(threshold=1.0)
-fig.show()`}</code></pre>
+pca_model.fit()
+pca_model.plot_pca_scores().show()
+
+opls_model = opls_da(
+    X=X_norm,
+    y=y,
+    features_name=features,
+    n_components=2,
+    scaling_method="pareto",
+    kfold=3,
+    estimator="opls",
+    auto_ncomp=True,
+)
+opls_model.fit()
+opls_model.plot_oplsda_scores().show()
+opls_model.vip_plot(threshold=1.0).show()`}</code></pre>
     </div>
   </div>
 
-  <h2>Preprocessing (optional)</h2>
-  <div className="callout">
-    Use Metbit utilities to prepare spectra before modeling.
-  </div>
-  <pre><code>{`from metbit.nmr_preprocess import nmr_preprocessing
-from metbit.utility import Normalise
+  <h2>Option 2: Start from Bruker FID folders</h2>
+  <p>Use <code>nmr_preprocessing</code> when your input is a Bruker project folder containing one or more sample directories with <code>fid</code> files.</p>
+  <pre><code>{`from metbit import nmr_preprocessing, Normalization
 
-prep = nmr_preprocessing(...)
-X = prep.X  # DataFrame`}</code></pre>
+nmr = nmr_preprocessing(
+    data_path="path/to/bruker_project",
+    bin_size=0.0005,
+    auto_phasing=True,
+    fn_="acme",
+    baseline_correction=True,
+    baseline_type="corrector",
+    calibration=True,
+    calib_type="tsp",
+    align=False,
+)
 
-  <h2>Next Steps</h2>
-  <p>
-    <a className="btn" href="/docs/api">Browse Full API →</a>
-    <span style={{ marginLeft: 8 }} />
-    <a className="btn secondary" href="/docs/overview">Explore Overview</a>
-  </p>
+X = nmr.get_data()
+ppm = nmr.get_ppm()
+metadata = nmr.get_metadata()
 
+X_norm = Normalization.pqn_normalization(X)`}</code></pre>
+
+  <h2>Recommended project structure</h2>
+  <pre><code>{`project/
+  data/
+    raw_bruker/
+    processed/
+  notebooks/
+  results/
+    figures/
+    tables/
+  scripts/
+    run_preprocessing.py
+    run_models.py`}</code></pre>
+
+  <h2>Common next steps</h2>
   <ul>
-    <li>nmr_preprocess: <a href="/docs/api/nmr_preprocess">/docs/api/nmr_preprocess</a></li>
-    <li>Modeling (opls_da, pca): <a href="/docs/api/metbit">/docs/api/metbit</a></li>
-    <li>Utilities (Normalise, UnivarStats): <a href="/docs/api/utility">/docs/api/utility</a></li>
+    <li>Preprocessing and Bruker import: <a href="/docs/api/nmr_preprocess">/docs/api/nmr_preprocess</a></li>
+    <li>Normalization: <a href="/docs/api/spec_norm">/docs/api/spec_norm</a></li>
+    <li>PCA and OPLS-DA: <a href="/docs/api/metbit">/docs/api/metbit</a></li>
+    <li>STOCSY exploration: <a href="/docs/api/STOCSY">/docs/api/STOCSY</a></li>
+    <li>Dash apps: <a href="/docs/api/ui_stocsy">/docs/api/ui_stocsy</a> and <a href="/docs/api/ui_picky_peak">/docs/api/ui_picky_peak</a></li>
   </ul>
 </div>

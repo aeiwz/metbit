@@ -96,15 +96,6 @@ class lazy_opls_da:
     from ._internal.pairs import lazypair
     from lingress import lin_regression
 
-    if __name__ == '__main__':
-        from metbit import opls_da
-        from metbit.stats.normalise import project_name_generator
-        from metbit._internal.pairs import lazypair
-    else:
-        from .analysis.opls_da import opls_da
-        from .stats.normalise import project_name_generator
-        from ._internal.pairs import lazypair
-
 
     def __init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_: list = None, n_components: int = 2, scaling: str = 'pareto',
                     estimator: str = 'opls', kfold: int = 3, random_state: int = 94, auto_ncomp: bool = True,

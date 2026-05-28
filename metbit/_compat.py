@@ -29,8 +29,8 @@ from .models.vip import vip_scores  # noqa: F401
 from .models.cross_validation import CrossValidation  # noqa: F401
 
 # --- preprocessing/ ---
-from .preprocessing.scaler import Scaler as SimpleScaler  # noqa: F401
 from .preprocessing.scaler_ext import Scaler  # noqa: F401
+from .preprocessing.pretreatment import Scaler as SimpleScaler  # noqa: F401
 from .preprocessing.normalize import Normalization  # noqa: F401
 from .preprocessing.baseline import baseline_correct, bline  # noqa: F401
 

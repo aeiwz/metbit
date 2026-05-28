@@ -1,17 +1,10 @@
 import type { Metadata } from 'next'
-import { Roboto } from 'next/font/google'
 import './globals.css'
 import ThemeToggle from './components/ThemeToggle'
 
-const roboto = Roboto({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  display: 'swap',
-})
-
 export const metadata: Metadata = {
-  title: 'Metbit Docs',
-  description: 'Documentation for Metbit built with Next.js',
+  title: 'metbit documentation',
+  description: 'Documentation for the metbit NMR metabolomics Python package',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -24,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={roboto.className}>
+      <body>
         {children}
         <ThemeToggle />
       </body>

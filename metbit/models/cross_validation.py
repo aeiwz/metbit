@@ -22,17 +22,6 @@ import numpy.linalg as la
 
 
 class CrossValidation:
-
-
-    from .pls import PLS
-    from .opls import OPLS
-    from ..preprocessing.pretreatment import Scaler
-    import collections
-    import typing
-    import numpy as np
-    import numpy.linalg as la
-
-
     """
     Stratified cross validation
 
@@ -255,7 +244,7 @@ class CrossValidation:
             raise ValueError("The number must not exceed the maximum "
                              f" number of components {self._npc0}.")
 
-        self._opt_component = k
+        self._opt_component = k - 1
         # re-fit the model using the updated optimal number of components
         self._create_optimal_model(self._x, self.y)
 
