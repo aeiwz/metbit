@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { FiHome, FiBookOpen, FiFileText } from 'react-icons/fi'
+import { FiHome, FiBookOpen, FiFileText, FiLayers } from 'react-icons/fi'
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -27,6 +27,11 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
                 <FiFileText className="icon" aria-hidden /> API Reference
               </Link>
             </li>
+            <li>
+              <Link href="/docs/wiki">
+                <FiLayers className="icon" aria-hidden /> Wiki
+              </Link>
+            </li>
           </ul>
         </nav>
       </aside>
@@ -36,4 +41,3 @@ export default function DocsLayout({ children }: { children: React.ReactNode }) 
     </div>
   )
 }
-

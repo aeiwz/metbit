@@ -1,0 +1,52 @@
+<div className="prose">
+  <div className="hero">
+    <h1 className="heroTitle">Package Wiki</h1>
+    <p className="heroSubtitle">A practical guide to Metbit concepts, modules, and workflows.</p>
+  </div>
+
+  <h2>What is Metbit?</h2>
+  <p>
+    Metbit is a Python package for metabolomics and NMR data analysis. It includes preprocessing tools,
+    statistical modeling (PCA, PLS, OPLS/OPLS-DA), and visualization helpers for interpretation.
+  </p>
+
+  <h2>Install</h2>
+  <pre><code>pip install metbit</code></pre>
+
+  <h2>Core Package Areas</h2>
+  <ul>
+    <li><strong>metbit.preprocessing</strong>: normalization, baseline correction, scaling, and pretreatment.</li>
+    <li><strong>metbit.nmr</strong>: NMR-specific preprocessing, calibration, denoising, peak and alignment utilities.</li>
+    <li><strong>metbit.analysis</strong> and <strong>metbit.models</strong>: PCA/PLS/OPLS logic and model evaluation components.</li>
+    <li><strong>metbit.viz</strong>: plotting utilities including scores, ellipses, and boxplots.</li>
+    <li><strong>metbit.stats</strong>: statistical helper functions for downstream analysis.</li>
+  </ul>
+
+  <h2>Typical Analysis Flow</h2>
+  <ol className="steps">
+    <li>Prepare input matrix and metadata.</li>
+    <li>Apply preprocessing (baseline correction, normalization, scaling) as needed.</li>
+    <li>Fit PCA or OPLS/OPLS-DA models.</li>
+    <li>Evaluate model quality and variable importance.</li>
+    <li>Generate publication-ready plots and summaries.</li>
+  </ol>
+
+  <h2>Useful Documentation Pages</h2>
+  <ul>
+    <li><a href="/docs/getting-started">Getting Started</a></li>
+    <li><a href="/docs/overview">Overview</a></li>
+    <li><a href="/docs/api">API Reference</a></li>
+  </ul>
+
+  <h2>Contributing and Support</h2>
+  <ul>
+    <li>Review repository issues and tests before submitting changes.</li>
+    <li>Keep examples reproducible and focused on metabolomics workflows.</li>
+    <li>Report bugs with a minimal dataset and clear reproduction steps.</li>
+  </ul>
+
+  <h2>Citation</h2>
+  <p>
+    If Metbit supports your research, please cite the package and associated manuscript materials in this repository.
+  </p>
+</div>
