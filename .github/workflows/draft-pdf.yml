@@ -1,5 +1,18 @@
 name: Draft PDF
-on: [push]
+
+on:
+  push:
+    paths:
+      - paper.md
+      - paper.bib
+      - figures/**
+      - .github/workflows/draft-pdf.yml
+  pull_request:
+    paths:
+      - paper.md
+      - paper.bib
+      - figures/**
+      - .github/workflows/draft-pdf.yml
 
 permissions:
   contents: read

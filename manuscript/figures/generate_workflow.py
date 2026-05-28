@@ -346,11 +346,6 @@ for i, (col, label) in enumerate(legend_items):
 # ─────────────────────────────────────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────────────────────────────────────
-ax.text(CX, LEG_Y - 0.32,
-        "Bubpamala T.  ·  kawa-technology  ·  github.com/aeiwz/metbit  "
-        "(AI writing assistance: Claude Sonnet 4.6, GPT-5.2)",
-        ha="center", va="center", fontsize=7.5,
-        color=DARK, alpha=0.55, zorder=5)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SAVE  – clip canvas to content

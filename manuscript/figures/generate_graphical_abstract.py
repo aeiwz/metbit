@@ -201,13 +201,7 @@ ax.text(bx, by, "Plotly  ·  Dash",
         color=WHITE, fontweight="bold", zorder=8)
 
 # ── footer ────────────────────────────────────────────────────────────────────
-ax.text(8, 0.62,
-        "pip install metbit   ·   github.com/aeiwz/metbit   ·   MIT License",
-        ha="center", va="center", fontsize=9, color=DARK, alpha=0.7, zorder=5)
 
-ax.text(0.35, 0.62,
-        "Bubpamala T. · kawa-technology · 2024  (AI-assisted writing: Claude Sonnet 4.6, GPT-5.2)",
-        ha="left", va="center", fontsize=8, color=DARK, alpha=0.55, zorder=5)
 
 # ── save ──────────────────────────────────────────────────────────────────────
 out = "graphical_abstract.png"

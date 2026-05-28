@@ -4,12 +4,12 @@
 
 **Authors**
 
-Theerayut Bubpamala¹\*
+Theerayut Bubpamala<sup>1,2,*</sup>\*
+<sup>1</sup> Medical Biochemistry and Molecular Biology Graduate Study Program, Faculty of Medicine, Khon Kaen University, Khon Kaen, Thailand
+<sup>2</sup> kawa-technology, Independent Research & Development
 
-¹ kawa-technology, Independent Research & Development
-
-\* Corresponding author: theerayut_aeiw_123@hotmail.com  
-  GitHub: https://github.com/aeiwz/metbit  
+\* <sup>*</sup> Corresponding author: theerayut_aeiw_123@hotmail.com<br>
+  GitHub: https://github.com/aeiwz/metbit<br>
   PyPI: https://pypi.org/project/metbit/
 
 ---
@@ -34,7 +34,7 @@ Theerayut Bubpamala¹\*
 
 ## 1. Introduction
 
-Proton nuclear magnetic resonance (¹H NMR) spectroscopy is an essential platform for untargeted metabolomics due to its quantitative accuracy and non-destructive sample handling (Emwas et al., 2019). However, the journey from raw free-induction decay (FID) files to interpretable multivariate models involves complex sequential steps, including preprocessing, normalization, and alignment. While open-source tools such as NMRglue (Helmus and Jaroniec, 2013) and MetaboAnalyst (Pang et al., 2022) address parts of this pipeline, the Python ecosystem lacks a single, scriptable library that integrates the entire NMR metabolomics workflow natively.
+Proton nuclear magnetic resonance (<sup>1</sup>H NMR) spectroscopy is an essential platform for untargeted metabolomics due to its quantitative accuracy and non-destructive sample handling (Emwas et al., 2019). However, the journey from raw free-induction decay (FID) files to interpretable multivariate models involves complex sequential steps, including preprocessing, normalization, and alignment. While open-source tools such as NMRglue (Helmus and Jaroniec, 2013) and MetaboAnalyst (Pang et al., 2022) address parts of this pipeline, the Python ecosystem lacks a single, scriptable library that integrates the entire NMR metabolomics workflow natively.
 
 We present **metbit**, an end-to-end Python package that consolidates NMR data processing and multivariate modeling into a coherent API. metbit bridges the gap between raw spectral acquisitions and biological conclusions, delivering publication-quality interactive visualizations and reproducible workflows.
 
