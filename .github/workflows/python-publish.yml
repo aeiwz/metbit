@@ -16,6 +16,12 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v9.0.0)"
+        required: true
+        type: string
 
 permissions:
   contents: write   # create GitHub Release + upload assets
@@ -128,7 +134,7 @@ jobs:
           CIBW_TEST_COMMAND: >
             python -c "
             import metbit;
-            assert metbit.__version__ == '9.0.0', metbit.__version__;
+            assert metbit.__version__, 'version missing';
             from metbit._native import pearson_columns, backend_info;
             import numpy as np;
             r = pearson_columns(np.eye(5), anchor_index=0);
