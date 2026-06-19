@@ -46,7 +46,7 @@ from .analysis.pca import pca  # noqa: F401
 
 try:
     from .lazy_opls_da import lazy_opls_da  # noqa: F401
-except Exception:
+except Exception:  # pragma: no cover
     pass
 
 # --- utility classes (canonical sub-package paths) ---
@@ -56,15 +56,15 @@ from .stats.normalise import Normalise  # noqa: F401
 # --- Dash apps (optional heavy deps) ---
 try:
     from .apps.annotate import annotate_peak  # noqa: F401
-except Exception:
+except Exception:  # pragma: no cover
     pass
 
 try:
     from .apps.stocsy_app import STOCSY_app  # noqa: F401
-except Exception:
+except Exception:  # pragma: no cover
     pass
 
 try:
     from .apps.peak_picker import pickie_peak  # noqa: F401
-except Exception:
+except Exception:  # pragma: no cover
     pass

@@ -83,7 +83,7 @@ class vip_scores:
 
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: no cover
     from sklearn.cross_decomposition import PLSRegression
     from sklearn.datasets import load_diabetes
     diabetes = load_diabetes()

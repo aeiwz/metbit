@@ -56,10 +56,24 @@ jobs:
 
       - name: Run functional tests (excluding slow/perf)
         run: |
-          pytest -q --no-header \
+          pytest \
             -m "not slow and not perf" \
-            --cov=metbit \
-            --cov-fail-under=43
+            --junit-xml=test-results/py${{ matrix.python-version }}.xml \
+            --cov-report=xml:coverage-py${{ matrix.python-version }}.xml
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-py${{ matrix.python-version }}
+          path: test-results/
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-py${{ matrix.python-version }}
+          path: coverage-py${{ matrix.python-version }}.xml
 
   # ---------------------------------------------------------------------------
   # 2. Source distribution

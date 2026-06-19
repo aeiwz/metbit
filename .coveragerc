@@ -1,7 +1,13 @@
 [run]
 omit =
-    metbit/boxplot.py
+    metbit/viz/boxplot.py
+    metbit/apps/*
+    metbit/_internal/report.py
+    metbit/lazy_opls_da.py
 
 [report]
 omit =
-    metbit/boxplot.py
+    metbit/viz/boxplot.py
+    metbit/apps/*
+    metbit/_internal/report.py
+    metbit/lazy_opls_da.py

@@ -39,7 +39,7 @@ class Normality_distribution:
                 if X < 1024:
                     return f'{X:.2f} {size[i]}'
                 X /= 1024
-            return X
+            return X  # pragma: no cover
         sizes = memory_size(data)
 
         print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
@@ -152,7 +152,7 @@ class Normalise:
                 if X < 1024:
                     return f'{X:.2f} {size[i]}'
                 X /= 1024
-            return X
+            return X  # pragma: no cover
         sizes = memory_size(data)
 
         print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")

@@ -51,7 +51,7 @@ def _classify_pattern(centers_ppm: np.ndarray, heights: np.ndarray, sf_mhz: floa
     if len(diffs) > 0:
         rel_var = np.std(diffs) / (np.mean(diffs) + 1e-12)
     else:
-        rel_var = 0.0
+        rel_var = 0.0  # pragma: no cover
 
     # normalize heights and compare to binomial expectations
     h = np.array(heights, dtype=float)

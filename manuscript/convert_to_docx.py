@@ -14,6 +14,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.enum.style import WD_STYLE_TYPE
 from docx.oxml.ns import qn
 from docx.oxml import OxmlElement
+from PIL import Image
 
 HERE = Path(__file__).parent
 
@@ -43,7 +44,8 @@ def add_horizontal_rule(doc):
     bottom.set(qn('w:space'), '1')
     bottom.set(qn('w:color'), '999999')
     pBdr.append(bottom)
-    pPr.append(pBdr)
+    # pBdr must precede spacing/indent/alignment elements in w:pPr.
+    pPr.insert(0, pBdr)
 
 
 def add_inline_runs(para, text, base_size=11, base_font="Times New Roman"):
@@ -181,7 +183,15 @@ def insert_image(doc, img_path_rel):
     img_path = HERE / img_path_rel
     if img_path.exists():
         try:
-            doc.add_picture(str(img_path), width=Inches(5.8))
+            with Image.open(img_path) as image:
+                width_px, height_px = image.size
+            aspect_ratio = height_px / width_px
+            width_in = 5.8
+            height_in = width_in * aspect_ratio
+            if height_in > 7.5:
+                doc.add_picture(str(img_path), height=Inches(7.5))
+            else:
+                doc.add_picture(str(img_path), width=Inches(width_in))
             last_para = doc.paragraphs[-1]
             last_para.alignment = WD_ALIGN_PARAGRAPH.CENTER
         except Exception as e:
@@ -194,6 +204,11 @@ def insert_image(doc, img_path_rel):
 
 def build_document(md_path: Path, out_path: Path):
     doc = Document()
+
+    # Ensure the generated settings XML satisfies the DOCX schema.
+    zoom = doc.settings._element.find(qn('w:zoom'))
+    if zoom is not None and zoom.get(qn('w:percent')) is None:
+        zoom.set(qn('w:percent'), '100')
 
     # Page margins
     for section in doc.sections:
@@ -363,6 +378,12 @@ def build_document(md_path: Path, out_path: Path):
 
 # ── entry point ───────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    md   = HERE / 'metbit_manuscript.md'
-    docx = HERE / 'metbit_manuscript.docx'
+    import sys
+    if len(sys.argv) > 1:
+        stem = sys.argv[1]
+        md   = HERE / f'{stem}.md'
+        docx = HERE / f'{stem}.docx'
+    else:
+        md   = HERE / 'metbit_manuscript.md'
+        docx = HERE / 'metbit_manuscript.docx'
     build_document(md, docx)

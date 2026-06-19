@@ -1,31 +1,60 @@
 """
-Detailed data-analysis workflow diagram for the metbit manuscript.
+generate_workflow.py  v2
+Publication-quality analytical workflow figure for the metbit manuscript.
 Output: workflow_diagram.png
-Fixes: no overlapping side-labels, all text fits within boxes.
+Target: Bioinformatics Advances (OUP) – methods/overview figure
+
+Design principles
+-----------------
+- Single neutral palette: navy accent, white cards, teal/purple/amber for stages
+- No Python function calls – scientific method names only
+- Each node shows data type in → data type out
+- Proper fork/merge with explicit validation requirements
+- Print-ready: 200 DPI, 7 × 14 inch canvas
 """
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from matplotlib.patches import FancyBboxPatch
+from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 import numpy as np
+import os
 
 # ── palette ───────────────────────────────────────────────────────────────────
-BG      = "#F7F9FC"
-DARK    = "#1A1A2E"
-WHITE   = "#FFFFFF"
-C_INPUT = "#154360"
-C_PRE   = "#1A5276"
-C_NORM  = "#0E6655"
-C_ALIGN = "#117A65"
-C_STAT  = "#6C3483"
-C_VIZ   = "#935116"
-C_ARROW = "#626567"
-C_SHADE = "#D5D8DC"
+WHITE  = "#FFFFFF"
+BG     = "#FAFAFA"
+DARK   = "#2C3E50"
+MID    = "#5D6D7E"
+BORDER = "#DEE2E6"
+LGRAY  = "#F2F3F4"
+
+NAVY   = "#1F4E79"    # Data input
+STEEL  = "#2E75B6"    # Preprocessing
+TEAL   = "#00847E"    # Normalization
+DTEAL  = "#006B65"    # Alignment
+PURPLE = "#5C2D91"    # Modeling / validation
+AMBER  = "#B8860B"    # Output / visualization
+RED    = "#C0392B"    # significance / threshold
+ARROW  = "#7F8C8D"
+
+# Stage → accent-color mapping
+C = {
+    "input":   NAVY,
+    "pre":     STEEL,
+    "norm":    TEAL,
+    "align":   DTEAL,
+    "pca":     STEEL,
+    "opls":    PURPLE,
+    "valid":   PURPLE,
+    "vip":     PURPLE,
+    "stocsy":  TEAL,
+    "output":  AMBER,
+    "decision":RED,
+}
 
 # ── canvas ────────────────────────────────────────────────────────────────────
-W, H = 12, 30          # Increased height to 30
-fig, ax = plt.subplots(figsize=(W * 0.72, H * 0.72), dpi=150)
+W, H = 7.2, 14.4
+fig, ax = plt.subplots(figsize=(W, H), dpi=200)
 fig.patch.set_facecolor(BG)
 ax.set_facecolor(BG)
 ax.set_xlim(0, W)
@@ -33,324 +62,344 @@ ax.set_ylim(0, H)
 ax.axis("off")
 
 # ── layout constants ──────────────────────────────────────────────────────────
-X0   = 0.55            # left edge of main boxes
-WW   = W - 1.1         # width  of main boxes  (10.9)
-CX   = W / 2           # horizontal centre
+MX    = W / 2          # main column center x
+MW    = 5.80           # main column width
+MX0   = (W - MW) / 2  # main column left edge
+
+FW    = (MW - 0.30) / 2    # fork column width
+FX_L  = MX0                 # left fork left edge
+FX_R  = MX0 + FW + 0.30    # right fork left edge
+FCX_L = FX_L + FW / 2      # left fork center x
+FCX_R = FX_R + FW / 2      # right fork center x
+
+TITLE_FS  = 9.5
+ITEM_FS   = 7.8
+BADGE_FS  = 6.8
+DT_FS     = 6.5
+LINE_SP   = 1.45
+PAD_V     = 0.22
 
 # ── helpers ───────────────────────────────────────────────────────────────────
-def rbox(x, y, w, h, fc, ec=WHITE, lw=1.0, r=0.28, alpha=1.0, zorder=3):
-    p = FancyBboxPatch(
-        (x, y), w, h,
-        boxstyle=f"round,pad=0,rounding_size={r}",
-        facecolor=fc, edgecolor=ec, linewidth=lw,
-        alpha=alpha, zorder=zorder,
-    )
-    ax.add_patch(p)
+def node_height(items):
+    return 0.52 + PAD_V + len(items) * 0.46 + PAD_V
 
 
-def arrow_down(x, y_top, y_bot, lw=2.2):
-    ax.annotate(
-        "", xy=(x, y_bot), xytext=(x, y_top),
-        arrowprops=dict(
-            arrowstyle="-|>", color=C_ARROW, lw=lw, mutation_scale=14,
-        ), zorder=5,
-    )
-
-
-def arrow_h(x0, x1, y, lw=2.0):
-    ax.annotate(
-        "", xy=(x1, y), xytext=(x0, y),
-        arrowprops=dict(
-            arrowstyle="-|>", color=C_ARROW, lw=lw, mutation_scale=12,
-        ), zorder=5,
-    )
-
-
-TITLE_H   = 0.90   # height of the coloured title strip (increased for centered badge)
-ITEM_STEP = 0.52   # vertical spacing between bullet lines
-PAD_TOP   = 0.25   # gap between title strip and first bullet
-PAD_BOT   = 0.25   # extra space below last bullet
-
-
-def node(x, y, w, color, title, items,
-         badge=None,
-         title_fs=10.5, item_fs=8.5):
+def draw_node(x0, y_top, width, color, title, items,
+              dtype_in=None, dtype_out=None, title_fs=TITLE_FS,
+              item_fs=ITEM_FS, zorder=3):
     """
-    Draw a rounded box whose height is computed automatically.
-    Returns the bottom y-coordinate of the box.
+    Draw a workflow node.
+    Returns the bottom y-coordinate.
     """
-    n      = len(items)
-    box_h  = TITLE_H + PAD_TOP + n * ITEM_STEP + PAD_BOT
-    y_bot  = y - box_h          # boxes are placed top-down
+    h = node_height(items)
+    y0 = y_top - h
 
     # shadow
-    rbox(x + 0.07, y_bot - 0.07, w, box_h, C_SHADE, ec=C_SHADE, lw=0,
-         alpha=0.35, zorder=2)
+    shd = FancyBboxPatch((x0 + 0.04, y0 - 0.04), width, h,
+                         boxstyle="round,pad=0,rounding_size=0.14",
+                         linewidth=0, facecolor="#CCCCCC",
+                         alpha=0.30, zorder=zorder - 1)
+    ax.add_patch(shd)
+
     # body
-    rbox(x, y_bot, w, box_h, color, r=0.26, zorder=3)
-    # title strip
-    rbox(x, y_bot + box_h - TITLE_H, w, TITLE_H, color, ec=WHITE,
-         lw=0, r=0.26, zorder=4)
+    body = FancyBboxPatch((x0, y0), width, h,
+                          boxstyle="round,pad=0,rounding_size=0.14",
+                          linewidth=0.7, edgecolor=BORDER,
+                          facecolor=WHITE, zorder=zorder)
+    ax.add_patch(body)
 
-    # title text - positioned at the top of the header area
-    ax.text(x + w / 2, y_bot + box_h - 0.32,
-            title, ha="center", va="center",
-            fontsize=title_fs, fontweight="bold", color=WHITE, zorder=6)
+    # left accent bar
+    bar = FancyBboxPatch((x0, y0), 0.22, h,
+                         boxstyle="round,pad=0,rounding_size=0.10",
+                         linewidth=0, facecolor=color,
+                         zorder=zorder + 1)
+    ax.add_patch(bar)
 
-    # badge (dependency tag) - centered horizontally and placed below title
-    if badge:
-        bw, bh = 2.00, 0.32
-        bx = x + (w - bw) / 2
-        by = y_bot + box_h - 0.75
-        rbox(bx, by, bw, bh, WHITE, ec=color, lw=1.0, r=0.12, zorder=7)
-        ax.text(bx + bw / 2, by + bh / 2, badge,
+    # title
+    ax.text(x0 + 0.32, y0 + h - 0.40, title,
+            ha="left", va="center",
+            fontsize=title_fs, fontweight="bold", color=DARK,
+            zorder=zorder + 2)
+
+    # items
+    for k, it in enumerate(items):
+        ty = y0 + h - 0.52 - PAD_V - (k + 0.5) * 0.46
+        bullet_col = color if k == 0 else MID
+        ax.text(x0 + 0.42, ty, "• " + it,
+                ha="left", va="center",
+                fontsize=item_fs, color=DARK,
+                zorder=zorder + 2)
+
+    # data-type annotations (right-aligned, small gray)
+    if dtype_in:
+        ax.text(x0 + width - 0.08, y0 + h - 0.22,
+                "▲ " + dtype_in,
+                ha="right", va="center",
+                fontsize=DT_FS, color=MID, style="italic",
+                zorder=zorder + 2)
+    if dtype_out:
+        ax.text(x0 + width - 0.08, y0 + 0.14,
+                "▼ " + dtype_out,
+                ha="right", va="center",
+                fontsize=DT_FS, color=color, style="italic",
+                zorder=zorder + 2)
+
+    return y0
+
+
+def draw_arrow(x, y_top, y_bot, lw=1.6):
+    ax.annotate("", xy=(x, y_bot), xytext=(x, y_top),
+                arrowprops=dict(arrowstyle="-|>", color=ARROW,
+                                lw=lw, mutation_scale=13), zorder=5)
+
+
+def draw_diamond(x0, y_top, width, height, color, label, sublabel=None):
+    """Decision diamond for validation step."""
+    cx = x0 + width / 2
+    cy = y_top - height / 2
+    dx, dy = width / 2, height / 2
+    xs = [cx,      cx + dx, cx,      cx - dx, cx]
+    ys = [cy + dy, cy,      cy - dy, cy,      cy + dy]
+    ax.fill(xs, ys, color=color, alpha=0.12, zorder=3)
+    ax.plot(xs, ys, color=color, lw=1.2, zorder=4)
+    ax.text(cx, cy, label,
+            ha="center", va="center",
+            fontsize=8.5, fontweight="bold", color=color, zorder=5)
+    if sublabel:
+        ax.text(cx, cy - 0.22, sublabel,
                 ha="center", va="center",
-                fontsize=7.2, color=color, fontweight="bold", zorder=8)
+                fontsize=7.0, color=MID, zorder=5)
+    return cy - dy   # return bottom y
 
-    # bullet items
-    for i, it in enumerate(items):
-        ty = y_bot + box_h - TITLE_H - PAD_TOP - (i + 0.5) * ITEM_STEP
-        ax.text(x + w / 2, ty, it,
-                ha="center", va="center",
-                fontsize=item_fs, color=WHITE, zorder=6)
 
-    return y_bot          # return bottom for arrow placement
+def h_line(x0, x1, y, col=ARROW, lw=1.6):
+    ax.plot([x0, x1], [y, y], color=col, lw=lw, zorder=5)
+
+
+def v_line(x, y0, y1, col=ARROW, lw=1.6):
+    ax.plot([x, x], [y0, y1], color=col, lw=lw, zorder=5)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 # TITLE BANNER
 # ─────────────────────────────────────────────────────────────────────────────
-TITLE_BOX_TOP = H - 0.35
-rbox(X0, TITLE_BOX_TOP - 0.85, WW, 0.85, C_INPUT, r=0.30, zorder=3)
-ax.text(CX, TITLE_BOX_TOP - 0.85 / 2,
-        "metbit  ─  Data Analysis Workflow",
+tb = FancyBboxPatch((MX0, H - 1.10), MW, 0.80,
+                    boxstyle="round,pad=0,rounding_size=0.18",
+                    linewidth=0, facecolor=NAVY, zorder=3)
+ax.add_patch(tb)
+ax.text(MX, H - 0.70, "metbit  ·  Analytical Workflow",
         ha="center", va="center",
-        fontsize=14, fontweight="bold", color=WHITE, zorder=5)
+        fontsize=12.5, fontweight="bold", color=WHITE, zorder=5,
+        fontfamily="DejaVu Serif")
+ax.text(MX, H - 0.98, "¹H NMR Metabolomics  ·  Local Scriptable Workflow",
+        ha="center", va="center",
+        fontsize=8.0, color="#A9CCE3", zorder=5)
+
+y = H - 1.12   # running y cursor (top of current box)
+GAP = 0.28     # gap between boxes
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 1 DATA INPUT
+# 1  DATA INPUT
 # ─────────────────────────────────────────────────────────────────────────────
-y_cursor = TITLE_BOX_TOP - 0.85 - 0.30   # top of next box
-
-y_bot1 = node(
-    X0, y_cursor, WW, C_INPUT,
-    "1 Data Input",
-    [
-        "Bruker FID directory tree   ·   nmr_preprocessing class",
-        "ng.bruker.read()  →  dic (acquisition params)  +  raw FID array",
-    ],
-    badge="nmrglue",
+y -= GAP
+y = draw_node(
+    MX0, y, MW, C["input"],
+    "1  NMR FID Input",
+    ["Raw Free Induction Decay (FID) files from Bruker acquisition",
+     "Sample metadata table (group labels, covariates)",
+     "Vendor-neutral: pre-processed sample × variable matrix also accepted"],
+    dtype_in="Raw NMR FID (time domain)",
+    dtype_out="pandas DataFrame (samples × ppm)",
 )
-
-arrow_down(CX, y_bot1, y_bot1 - 0.30)
-y_cursor = y_bot1 - 0.30
+draw_arrow(MX, y, y - GAP)
+y -= GAP
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 2 SIGNAL PREPROCESSING
+# 2  NMR PREPROCESSING
 # ─────────────────────────────────────────────────────────────────────────────
-y_bot2 = node(
-    X0, y_cursor, WW, C_PRE,
-    "2 Signal Preprocessing",
-    [
-        "Digital filter removal  ·  ng.bruker.remove_digital_filter()",
-        "Zero-filling  →  Fourier Transform  (FFT)",
-        "Auto phase correction  ·  peak_minima algorithm  (p0, p1)",
-        "Baseline correction  ·  AsLS / AirPLS / ArPLS / ModPoly / rubberband",
-        "Chemical-shift calibration  ·  TSP / DSS reference  (δ = 0.00 ppm)",
-    ],
-    badge="baseline.py",
+y = draw_node(
+    MX0, y, MW, C["pre"],
+    "2  NMR Preprocessing",
+    ["Digital filter removal + zero-filling",
+     "Fast Fourier Transform (FFT): time domain → frequency domain",
+     "Automated phase correction (entropy minimization)",
+     "Baseline correction (arPLS / AirPLS)",
+     "Chemical-shift calibration to internal reference (TSP/DSS = 0.00 ppm)"],
+    dtype_in="Complex FID array",
+    dtype_out="Real-valued spectral matrix",
 )
-
-arrow_down(CX, y_bot2, y_bot2 - 0.30)
-y_cursor = y_bot2 - 0.30
-
-# ─────────────────────────────────────────────────────────────────────────────
-# 3 SPECTRAL NORMALISATION
-# ─────────────────────────────────────────────────────────────────────────────
-y_bot3 = node(
-    X0, y_cursor, WW, C_NORM,
-    "3 Spectral Normalization",
-    [
-        "Probabilistic Quotient Normalization (PQN)  ·  Normalization.pqn_normalization()",
-        "Standard Normal Variate (SNV)  ·  Normalization.snv_normalization()",
-        "Multiplicative Scatter Correction (MSC)  ·  Normalization.msc_normalization()",
-    ],
-    badge="spec_norm.py",
-)
-
-arrow_down(CX, y_bot3, y_bot3 - 0.30)
-y_cursor = y_bot3 - 0.30
+draw_arrow(MX, y, y - GAP)
+y -= GAP
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 4 PEAK ALIGNMENT & DETECTION
+# 3  NORMALIZATION
 # ─────────────────────────────────────────────────────────────────────────────
-y_bot4 = node(
-    X0, y_cursor, WW, C_ALIGN,
-    "4 Peak Alignment & Detection",
-    [
-        "icoshift_align()  ·  interval-correlation-optimized shifting (icoshift)",
-        "detect_multiplets()  ·  singlet / doublet / triplet / quartet / multiplet",
-        "PeakAligner  ·  scikit-learn-compatible  fit_transform() interface",
-    ],
-    badge="alignment.py",
+y = draw_node(
+    MX0, y, MW, C["norm"],
+    "3  Spectral Normalization",
+    ["Probabilistic Quotient Normalization (PQN) — dilution correction",
+     "Multiplicative Scatter Correction (MSC) — scatter suppression",
+     "Total Spectral Area (TSA) — integral-based scaling"],
+    dtype_in="Raw spectral matrix",
+    dtype_out="Normalized spectral matrix",
 )
+draw_arrow(MX, y, y - GAP)
+y -= GAP
 
 # ─────────────────────────────────────────────────────────────────────────────
-# FORK  ── STOCSY (left)  and  MULTIVARIATE (right)
+# 4  PEAK ALIGNMENT
 # ─────────────────────────────────────────────────────────────────────────────
-FORK_GAP  = 0.40    # gap between the two fork boxes
-FW        = (WW - FORK_GAP) / 2    # each fork box width  (~5.25)
-FX_L      = X0                      # left fork x
-FX_R      = X0 + FW + FORK_GAP     # right fork x
-FCX_L     = FX_L + FW / 2          # left centre x
-FCX_R     = FX_R + FW / 2          # right centre x
-
-# connector from ④ → fork
-FORK_TOP = y_bot4 - 0.30
-ax.plot([CX, CX], [y_bot4, FORK_TOP], color=C_ARROW, lw=2.2, zorder=5)
-ax.plot([FCX_L, FCX_R], [FORK_TOP, FORK_TOP], color=C_ARROW, lw=2.2, zorder=5)
-# drop-arrow to left box
-ax.annotate("", xy=(FCX_L, FORK_TOP - 0.28), xytext=(FCX_L, FORK_TOP),
-            arrowprops=dict(arrowstyle="-|>", color=C_ARROW,
-                            lw=2.0, mutation_scale=12), zorder=5)
-# drop-arrow to right box
-ax.annotate("", xy=(FCX_R, FORK_TOP - 0.28), xytext=(FCX_R, FORK_TOP),
-            arrowprops=dict(arrowstyle="-|>", color=C_ARROW,
-                            lw=2.0, mutation_scale=12), zorder=5)
-
-y_fork_cursor = FORK_TOP - 0.28
-
-# ── 5a STOCSY ────────────────────────────────────────────────────────────────
-y_botL1 = node(
-    FX_L, y_fork_cursor, FW, C_STAT,
-    "5a  STOCSY",
-    [
-        "STOCSY()  ·  Pearson corr. vs anchor ppm",
-        "p-value threshold  (default p < 0.0001)",
-        "STOCSY_app  ·  interactive Dash application",
-    ],
-    badge="STOCSY.py",
-    title_fs=9.5, item_fs=8.0,
-)
-
-# ── 5b MULTIVARIATE MODELING ─────────────────────────────────────────────────
-y_botR1 = node(
-    FX_R, y_fork_cursor, FW, C_STAT,
-    "5b  Multivariate Modeling",
-    [
-        "pca  ·  pareto / UV / mean-center / min-max",
-        "opls_da  ·  OPLS-DA  +  permutation test",
-        "lazy_opls_da  ·  automated pairwise OPLS-DA",
-    ],
-    badge="metbit.py",
-    title_fs=9.5, item_fs=8.0,
-)
-
-# arrows within each branch
-y_between = min(y_botL1, y_botR1) - 0.30
-
-# ── STOCSY output ─────────────────────────────────────────────────────────────
-arrow_down(FCX_L, y_botL1, y_botL1 - 0.30)
-y_botL2 = node(
-    FX_L, y_botL1 - 0.30, FW, C_VIZ,
-    "STOCSY Output",
-    [
-        "Correlation spectrum  (colour-coded by r)",
-        "Significant co-varying resonances",
-        "pickie_peak  ·  interactive peak picker",
-    ],
-    title_fs=9.5, item_fs=8.0,
-)
-
-# ── MODEL DIAGNOSTICS ─────────────────────────────────────────────────────────
-arrow_down(FCX_R, y_botR1, y_botR1 - 0.30)
-y_botR2 = node(
-    FX_R, y_botR1 - 0.30, FW, C_STAT,
-    "Model Diagnostics",
-    [
-        "Cross-validation  (k-fold Q²)",
-        "Permutation test  ·  n_permutations = 500",
-        "R²X / R²Y / Q²  metrics",
-    ],
-    title_fs=9.5, item_fs=8.0,
-)
-
-arrow_down(FCX_R, y_botR2, y_botR2 - 0.30)
-y_botR3 = node(
-    FX_R, y_botR2 - 0.30, FW, C_STAT,
-    "Feature Importance",
-    [
-        "vip_scores()  ·  VIP = f(w, t, q)",
-        "S-plot  ·  covariance vs correlation",
-        "UnivarStats  ·  t-test / Mann-Whitney / FDR",
-    ],
-    title_fs=9.5, item_fs=8.0,
+y = draw_node(
+    MX0, y, MW, C["align"],
+    "4  Chemical-Shift Alignment",
+    ["Interval correlation-optimized shifting (icoshift)",
+     "Maximizes inter-sample spectral correlations within defined intervals",
+     "scikit-learn–compatible transformer interface"],
+    dtype_in="Normalized spectral matrix",
+    dtype_out="Aligned spectral matrix",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
-# MERGE both branches → Interactive Visualization
+# FORK  ──  PCA (left)  and  OPLS-DA (right)
 # ─────────────────────────────────────────────────────────────────────────────
-MERGE_Y = min(y_botL2, y_botR3) - 0.35
+FORK_Y = y - GAP * 0.6
+v_line(MX, y, FORK_Y)
+h_line(FCX_L, FCX_R, FORK_Y)
+draw_arrow(FCX_L, FORK_Y, FORK_Y - GAP * 0.4, lw=1.4)
+draw_arrow(FCX_R, FORK_Y, FORK_Y - GAP * 0.4, lw=1.4)
 
-# left branch connector
-ax.plot([FCX_L, FCX_L], [y_botL2, MERGE_Y + 0.05], color=C_ARROW, lw=2.2, zorder=5)
-# right branch connector
-ax.plot([FCX_R, FCX_R], [y_botR3, MERGE_Y + 0.05], color=C_ARROW, lw=2.2, zorder=5)
-# horizontal merge line
-ax.plot([FCX_L, FCX_R], [MERGE_Y + 0.05, MERGE_Y + 0.05],
-        color=C_ARROW, lw=2.2, zorder=5)
-# arrow down from merge
-ax.annotate("", xy=(CX, MERGE_Y - 0.25), xytext=(CX, MERGE_Y + 0.05),
-            arrowprops=dict(arrowstyle="-|>", color=C_ARROW,
-                            lw=2.2, mutation_scale=14), zorder=5)
+y_fork = FORK_Y - GAP * 0.4
+
+# ── left branch: PCA ─────────────────────────────────────────────────────────
+yL = draw_node(
+    FX_L, y_fork, FW, C["pca"],
+    "5a  PCA",
+    ["Unsupervised variance decomposition",
+     "Scores plot (PC1 vs PC2)",
+     "Outlier detection & batch inspection",
+     "Cumulative explained variance (scree)"],
+    dtype_in="Aligned matrix",
+    dtype_out="Scores, loadings",
+    title_fs=8.8, item_fs=7.2,
+)
+
+# ── right branch: OPLS-DA ─────────────────────────────────────────────────────
+yR = draw_node(
+    FX_R, y_fork, FW, C["opls"],
+    "5b  Exploratory OPLS-DA",
+    ["Binary group modeling",
+     "Predictive vs orthogonal separation",
+     "Sample-level k-fold diagnostics (R²X, R²Y, Q²)",
+     "Study-aware validation required for inference"],
+    dtype_in="Aligned matrix + labels",
+    dtype_out="Model object (T_p, T_o)",
+    title_fs=8.8, item_fs=7.2,
+)
+
+# ── validation requirements (right branch continues) ────────────────────────
+GAP_F = 0.22
+draw_arrow(FCX_R, yR, yR - GAP_F, lw=1.4)
+yR = draw_node(
+    FX_R, yR - GAP_F, FW, C["valid"],
+    "Validation Requirements",
+    ["Participant-grouped data splitting",
+     "Preprocessing fitted within training folds",
+     "Permutation of the complete pipeline and score"],
+    dtype_in="Study design + model",
+    dtype_out="Defensible validation plan",
+    title_fs=8.8, item_fs=7.2,
+)
+
+# ── VIP scoring (right branch continues) ─────────────────────────────────────
+draw_arrow(FCX_R, yR, yR - GAP_F, lw=1.4)
+yR = draw_node(
+    FX_R, yR - GAP_F, FW, C["vip"],
+    "Variable Importance",
+    ["VIP scores for variable ranking",
+     "S-plot (covariance vs correlation)",
+     "Independent structural confirmation required"],
+    dtype_in="OPLS-DA loadings",
+    dtype_out="Ranked variable list",
+    title_fs=8.8, item_fs=7.2,
+)
+
+# ── STOCSY (left branch picks up VIP output) ─────────────────────────────────
+draw_arrow(FCX_L, yL, yL - GAP_F, lw=1.4)
+yL2 = draw_node(
+    FX_L, yL - GAP_F, FW, C["stocsy"],
+    "STOCSY",
+    ["Pearson correlation vs anchor resonance",
+     "Connectivity spectrum (r color-coded)",
+     "Metabolite spin-system deconvolution",
+     "Interactive Dash explorer"],
+    dtype_in="VIP anchor ppm",
+    dtype_out="Connectivity spectrum",
+    title_fs=8.8, item_fs=7.2,
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# 6 INTERACTIVE VISUALIZATION & OUTPUT
+# MERGE  ──  both branches converge to output
 # ─────────────────────────────────────────────────────────────────────────────
-y_botViz = node(
-    X0, MERGE_Y - 0.25, WW, C_VIZ,
-    "6 Interactive Visualization & Output",
-    [
-        "Plotly  ·  scores plots / loadings / VIP / S-plot / trajectory / 3D PCA",
-        "Dash apps  ·  STOCSY_app  ·  pickie_peak  (browser-based)",
-        "pandas DataFrame export  ·  PNG / SVG / HTML figures",
-    ],
-    badge="plotting.py",
+MERGE_Y = min(yL2, yR) - GAP * 0.5
+v_line(FCX_L, yL2, MERGE_Y)
+v_line(FCX_R, yR, MERGE_Y)
+h_line(FCX_L, FCX_R, MERGE_Y)
+draw_arrow(MX, MERGE_Y, MERGE_Y - GAP * 0.4, lw=1.8)
+
+y = MERGE_Y - GAP * 0.4
+
+# ─────────────────────────────────────────────────────────────────────────────
+# 6  INTERACTIVE OUTPUT
+# ─────────────────────────────────────────────────────────────────────────────
+y = draw_node(
+    MX0, y, MW, C["output"],
+    "6  Interactive Output & Export",
+    ["Plotly HTML figures — scores, loadings, VIP, S-plot, trajectory",
+     "Local Dash applications — STOCSY explorer, peak annotation",
+     "pandas DataFrame export (VIP scores, STOCSY correlations)",
+     "PNG / SVG / HTML — publication-ready figures"],
+    dtype_in="All analysis objects",
+    dtype_out="Figures · Tables · Reports",
 )
 
 # ─────────────────────────────────────────────────────────────────────────────
 # LEGEND
 # ─────────────────────────────────────────────────────────────────────────────
-legend_items = [
-    (C_INPUT, "Data Input"),
-    (C_PRE,   "Preprocessing"),
-    (C_NORM,  "Normalization"),
-    (C_ALIGN, "Alignment"),
-    (C_STAT,  "Statistical Modeling"),
-    (C_VIZ,   "Visualization / Output"),
+LEG_ITEMS = [
+    (C["input"],  "Spectral Input"),
+    (C["pre"],    "Preprocessing"),
+    (C["norm"],   "Normalization"),
+    (C["align"],  "Alignment"),
+    (C["opls"],   "Statistical Modeling"),
+    (C["output"], "Output"),
 ]
-
-LEG_Y    = y_botViz - 0.55
-LEG_SW   = 0.28    # swatch width
-LEG_SH   = 0.22   # swatch height
-n_items  = len(legend_items)
-LEG_W    = WW
-item_w   = LEG_W / n_items
-
-for i, (col, label) in enumerate(legend_items):
-    bx = X0 + i * item_w + (item_w - LEG_SW) / 2 - 0.50
-    rbox(bx, LEG_Y, LEG_SW, LEG_SH, col, r=0.07, zorder=6)
-    ax.text(bx + LEG_SW + 0.09, LEG_Y + LEG_SH / 2, label,
-            ha="left", va="center", fontsize=7, color=DARK, zorder=6)
-
-# ─────────────────────────────────────────────────────────────────────────────
-# FOOTER
-# ─────────────────────────────────────────────────────────────────────────────
+LEG_Y  = y - 0.55
+LEG_SW = 0.20
+LEG_SH = 0.18
+item_w = MW / len(LEG_ITEMS)
+for k, (col, lbl) in enumerate(LEG_ITEMS):
+    lx = MX0 + k * item_w + (item_w - LEG_SW) / 2 - 0.15
+    leg_box = FancyBboxPatch((lx, LEG_Y), LEG_SW, LEG_SH,
+                              boxstyle="round,pad=0,rounding_size=0.05",
+                              linewidth=0, facecolor=col, zorder=4)
+    ax.add_patch(leg_box)
+    ax.text(lx + LEG_SW + 0.07, LEG_Y + LEG_SH / 2, lbl,
+            ha="left", va="center",
+            fontsize=6.5, color=DARK, zorder=5)
 
 # ─────────────────────────────────────────────────────────────────────────────
-# SAVE  – clip canvas to content
+# FOOTER  ─  DOI / URL badge
 # ─────────────────────────────────────────────────────────────────────────────
-out = "workflow_diagram.png"
-fig.savefig(out, dpi=150, bbox_inches="tight", facecolor=BG)
+FOOT_Y = LEG_Y - 0.45
+ax.text(MX, FOOT_Y,
+        "github.com/aeiwz/metbit   ·   metbit-docs.vercel.app   ·   MIT License",
+        ha="center", va="center",
+        fontsize=7.5, color=MID, zorder=5)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SAVE
+# ─────────────────────────────────────────────────────────────────────────────
+out = os.path.join(os.path.dirname(__file__), "workflow_diagram.png")
+fig.savefig(out, dpi=200, bbox_inches="tight", facecolor=BG)
 print(f"Saved → {out}")
 plt.close()

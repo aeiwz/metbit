@@ -21,7 +21,10 @@ import warnings
 from matplotlib.artist import setp
 import numpy as np
 
-from pandas._typing import MatplotlibColor
+try:
+    from pandas._typing import MatplotlibColor
+except ImportError:
+    MatplotlibColor = object
 from pandas.util._exceptions import find_stack_level
 
 from pandas.core.dtypes.common import is_dict_like
