@@ -13,6 +13,9 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+permissions:
+  contents: read
+
 jobs:
   # -------------------------------------------------------------------------
   # 1. Lint / static checks (fast, no deps)
