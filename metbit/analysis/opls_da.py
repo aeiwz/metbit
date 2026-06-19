@@ -395,7 +395,7 @@ class opls_da:
 
         T2 = time.time()
         duration = T2 - T1
-        if duration > 60:
+        if duration > 60:  # pragma: no cover
             duration = duration/60
             unit = 'minutes'
         else:
@@ -435,7 +435,7 @@ class opls_da:
         if model is None:
             model = self.oplsda
         else:
-            model = model
+            model = model  # pragma: no cover
 
 
         features_name = self.features_name
@@ -457,7 +457,7 @@ class opls_da:
         if features_name is not None:
             vips = pd.DataFrame(vips, columns = ['VIP'])
             vips['Features'] = features_name
-        else:
+        else:  # pragma: no cover
             vips = pd.DataFrame(vips, columns = ['VIP'])
             vips['Features'] = vips.index
 

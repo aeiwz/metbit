@@ -88,8 +88,8 @@ def _apply_baseline_1d(
             raise ImportError("pybaselines.whittaker.airpls is not available.")
         lam = kwargs.pop('lam', 1e7)
         max_iter = kwargs.pop('max_iter', 30)
-        order = kwargs.pop('order', 2)
-        baseline, _ = _airpls(y, lam=lam, max_iter=max_iter, order=order)
+        kwargs.pop('order', None)
+        baseline, _ = _airpls(y, lam=lam, max_iter=max_iter)
         return baseline
     if method == 'modpoly':
         if _modpoly is None:
