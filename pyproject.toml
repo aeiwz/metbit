@@ -1,8 +1,3 @@
-[tool.pytest.ini_options]
-minversion = "7.0"
-addopts = "--tb=short --strict-markers"
-testpaths = ["tests"]
-markers = [
-    "slow: tests that take more than a few seconds (deselect with '-m not slow')",
-    "perf: performance and throughput benchmarks (deselect with '-m not perf')",
-]
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
