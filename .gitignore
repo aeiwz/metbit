@@ -1,26 +1,55 @@
+# Build artifacts
+build/
+dist/
+*.egg-info/
+*.egg
+MANIFEST
 
-metbit/__pycache__/__init__.cpython-311.pyc
-metbit/__pycache__/base.cpython-311.pyc
-metbit/__pycache__/cross_validation.cpython-311.pyc
-metbit/__pycache__/metbit.cpython-311.pyc
-metbit/__pycache__/opls.cpython-311.pyc
-metbit/__pycache__/pca_ellipse.cpython-311.pyc
-metbit/__pycache__/pls.cpython-311.pyc
-metbit/__pycache__/pretreatment.cpython-311.pyc
+# C extension binaries
+*.so
+*.pyd
+*.dll
 
-.codegpt
-.DS_Store
-/docs/node_modules
-/docs/.next
-# Test and coverage outputs
-reports/
+# Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Coverage and test output
 .coverage
-.pytest_cache/
+.coverage.*
+coverage.json
+coverage*.xml
 htmlcov/
+.pytest_cache/
+test-results/
+test-results*.xml
+reports/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Editor and OS artifacts
+.DS_Store
+.codegpt
+*.code-workspace
 .mypy_cache/
-/metbit/__pycache__
-/metbit/__pycache__
-*.pyc
-*.pyc
-.claude
-/manuscript/benchmark/data
+.leankg/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Docs build
+/docs/node_modules/
+/docs/.next/
+
+# Word temp lock files
+~$*.docx
+~$*.xlsx
+
+# Manuscript benchmark data (large)
+/manuscript/benchmark/data/
+/manuscript/benchmark/results/

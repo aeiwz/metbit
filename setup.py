@@ -1,5 +1,6 @@
 import io
 import os
+import re
 import sys
 import tempfile
 import subprocess
@@ -10,6 +11,14 @@ from setuptools.command.build_ext import build_ext
 
 HERE = dirname(abspath(__file__))
 LOAD_TEXT = lambda name: io.open(join(HERE, name), encoding='UTF-8').read()
+
+
+def _read_version():
+    text = io.open(join(HERE, "metbit", "__init__.py"), encoding="UTF-8").read()
+    m = re.search(r'^__version__\s*=\s*"([^"]+)"', text, re.MULTILINE)
+    if not m:
+        raise RuntimeError("Cannot find __version__ in metbit/__init__.py")
+    return m.group(1)
 DESCRIPTION = '\n\n'.join(LOAD_TEXT(_) for _ in [
     'README.rst'
 ])
@@ -101,7 +110,7 @@ setup(
     packages=find_packages(),
     ext_modules=[_native_ext],
     cmdclass={"build_ext": OptionalBuildExt},
-    version="9.0.0",
+    version=_read_version(),
     license="MIT",
     description="Metabolomics data analysis and visualization tools.",
     author="aeiwz",
@@ -118,7 +127,7 @@ setup(
         "numpy",
         "matplotlib",
         "seaborn",
-        "scipy==1.14.1",
+        "scipy>=1.10",
         "statsmodels",
         "plotly",
         "pyChemometrics",
