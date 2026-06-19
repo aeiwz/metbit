@@ -1,0 +1,17 @@
+include metbit/_native_backend.c
+include metbit/_native.py
+include metbit/analysis/large_scale.py
+include setup.py
+include setup.cfg
+include README.rst
+include LICENSE
+include CHANGELOG.md
+recursive-include metbit *.py *.c *.h
+recursive-include tests *.py
+prune build
+prune dist
+prune *.egg-info
+global-exclude __pycache__
+global-exclude *.pyc
+global-exclude .pyo
+global-exclude .DS_Store

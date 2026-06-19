@@ -6,12 +6,20 @@ __email__ = "theerayut_aeiw_123@hotmail.com"
 __maintainer__ = "aeiwz"
 __status__ = "Development"
 __copyright__ = "Copyright 2024, Theerayut"
-__version__ = "9.0.0-dev"
+__version__ = "9.0.0"
 
 # Core analysis
 from metbit.analysis.opls_da import opls_da
 from metbit.analysis.pca import pca
 from metbit.analysis.stocsy import STOCSY
+from metbit.analysis.large_scale import (
+    ChunkedSTOCSY,
+    MemoryEstimator,
+    LargeScaleAlignment,
+    feature_preselection,
+    memory_report,
+)
+from metbit._native import backend_info, gpu_available, native_available
 
 # NMR processing
 from metbit.nmr.preprocess import nmr_preprocessing
@@ -53,6 +61,14 @@ _always_exported = [
     "opls_da",
     "pca",
     "STOCSY",
+    "ChunkedSTOCSY",
+    "MemoryEstimator",
+    "LargeScaleAlignment",
+    "feature_preselection",
+    "memory_report",
+    "backend_info",
+    "gpu_available",
+    "native_available",
     "nmr_preprocessing",
     "calibrate",
     "detect_multiplets",

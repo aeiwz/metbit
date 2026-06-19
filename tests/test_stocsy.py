@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from metbit.analysis.stocsy import STOCSY
+from metbit.analysis.stocsy import STOCSY, _stocsy_statistics
 
 
 def _make_spectra(n=20, p=50, seed=0):
@@ -16,6 +16,37 @@ def _make_spectra(n=20, p=50, seed=0):
 
 
 class TestSTOCSY:
+    def test_statistics_match_scipy(self):
+        from scipy.stats import pearsonr
+
+        spectra = _make_spectra(n=32, p=75)
+        correlations, p_values = _stocsy_statistics(spectra, anchor_index=10)
+        expected = [
+            pearsonr(spectra.iloc[:, 10], spectra.iloc[:, column])
+            for column in range(spectra.shape[1])
+        ]
+
+        np.testing.assert_allclose(
+            correlations,
+            [result.statistic for result in expected],
+            rtol=1e-12,
+            atol=1e-12,
+        )
+        np.testing.assert_allclose(
+            p_values,
+            [result.pvalue for result in expected],
+            rtol=1e-10,
+            atol=1e-14,
+        )
+
+    def test_statistics_with_two_samples_use_unit_p_values(self):
+        spectra = _make_spectra(n=2, p=25)
+
+        correlations, p_values = _stocsy_statistics(spectra, anchor_index=1)
+
+        assert correlations.shape == (25,)
+        np.testing.assert_allclose(p_values, np.ones(25))
+
     def test_returns_plotly_figure(self):
         import plotly.graph_objects as go
         spectra = _make_spectra()

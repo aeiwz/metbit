@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "dev/**", "feature/**", "fix/**"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # -------------------------------------------------------------------------
+  # 1. Lint / static checks (fast, no deps)
+  # -------------------------------------------------------------------------
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install lint tools
+        run: pip install ruff
+
+      - name: Ruff check (errors and imports)
+        run: ruff check metbit/ tests/ --select E,F,I --ignore E501
+
+  # -------------------------------------------------------------------------
+  # 2. Test matrix (Linux, Python 3.10-3.13, with C extension)
+  # -------------------------------------------------------------------------
+  test:
+    name: "Test Python ${{ matrix.python-version }} on ${{ matrix.os }}"
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          # macOS arm64 runner only reliably supports 3.11+
+          - os: macos-latest
+            python-version: "3.10"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install build tools + dev deps
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          pip install -r requirements-dev.txt
+
+      - name: Build and install with C extension
+        run: pip install -e . --no-build-isolation
+
+      - name: Run test suite (no slow/perf tests)
+        run: |
+          pytest -q --no-header \
+            -m "not slow and not perf" \
+            --cov=metbit \
+            --cov-report=term-missing \
+            --cov-report=xml:coverage.xml \
+            --junitxml=test-results.xml
+
+      - name: Upload coverage to Codecov
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage.xml
+          fail_ci_if_error: false
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: test-results.xml
+
+  # -------------------------------------------------------------------------
+  # 3. Verify the C extension builds on Windows too
+  # -------------------------------------------------------------------------
+  build-windows:
+    name: Build C ext on Windows
+    needs: lint
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install build tools
+        run: python -m pip install --upgrade pip setuptools wheel
+
+      - name: Build extension (without OpenMP on Windows)
+        run: python setup.py build_ext --inplace
+
+      - name: Smoke test import
+        run: python -c "import metbit; print(metbit.__version__); print(metbit.backend_info())"
+
+  # -------------------------------------------------------------------------
+  # 4. Verify sdist can be installed clean (no in-tree sources)
+  # -------------------------------------------------------------------------
+  sdist-install:
+    name: sdist install check
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist
+        run: |
+          pip install build
+          python -m build --sdist
+
+      - name: Install from sdist in clean venv
+        run: |
+          python -m venv /tmp/clean-venv
+          /tmp/clean-venv/bin/pip install dist/*.tar.gz
+          /tmp/clean-venv/bin/python -c "import metbit; print(metbit.__version__)"

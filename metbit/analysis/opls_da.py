@@ -15,6 +15,7 @@ warnings.filterwarnings('ignore')
 
 from ..models.cross_validation import CrossValidation
 from ..preprocessing.scaler_ext import Scaler
+from .._native import vip_scores as _vip_scores_dispatch
 
 
 def _resolve_scale_power(method: str) -> float:
@@ -120,6 +121,7 @@ class opls_da:
         estimator: str = 'opls',
         random_state: int = 42,
         auto_ncomp: bool = True,
+        dtype: Optional[type] = None,
     ) -> None:
 
         '''
@@ -150,6 +152,10 @@ class opls_da:
         The random seed used for reproducibility.
             auto_ncomp: bool, optional (default=True)
         If True, automatically selects the optimal number of components for the model. If False, the number of components is set manually.
+            dtype: numpy dtype, optional (default=None)
+        Storage dtype for the feature matrix. None uses float64 (default). For cohorts with
+        >10,000 samples or >100,000 features, pass numpy.float32 to halve peak memory usage.
+        Metabolomics data rarely requires >6 significant figures, so float32 is safe in practice.
 
         Raises:
 
@@ -184,8 +190,17 @@ class opls_da:
         if resolved_features is None:
             resolved_features = X.columns if isinstance(X, pd.DataFrame) else np.arange(X.shape[1])
 
-        X_df = X if isinstance(X, pd.DataFrame) else pd.DataFrame(X, columns=resolved_features)
-        X_df = pd.DataFrame(np.nan_to_num(X_df.to_numpy()), columns=X_df.columns)
+        # Resolve storage dtype - auto-select float32 for large cohorts to halve peak RAM.
+        _n, _p = X.shape
+        if dtype is None:
+            _dtype = np.float32 if (_n * _p > 5_000_000) else np.float64
+        else:
+            _dtype = dtype
+
+        # Single allocation: extract to numpy with target dtype, replace NaN in-place.
+        X_arr = X.to_numpy(dtype=_dtype) if isinstance(X, pd.DataFrame) else np.asarray(X, dtype=_dtype)
+        np.nan_to_num(X_arr, copy=False)
+        X_df = pd.DataFrame(X_arr, columns=resolved_features)
 
         self.X = X_df
         self.y = pd.Series(y)
@@ -430,13 +445,14 @@ class opls_da:
         t = model.x_scores_
         w = model.x_weights_
         q = model.y_loadings_
-        p, h = w.shape
-        vips = np.zeros((p,))
-        s = np.diag(t.T @ t @ q.T @ q).reshape(h, -1)
-        total_s = np.sum(s)
-        for i in range(p):
-            weight = np.array([ (w[i,j] / np.linalg.norm(w[:,j]))**2 for j in range(h) ])
-            vips[i] = np.sqrt(p*(s.T @ weight)/total_s)
+        p, _ = w.shape
+
+        # Dispatch to GPU / C+OpenMP / NumPy depending on feature count and hardware.
+        vips = _vip_scores_dispatch(
+            t_scores=t.astype(np.float64, copy=False),
+            x_weights=w.astype(np.float64, copy=False),
+            y_loadings=q.astype(np.float64, copy=False),
+        )
 
         if features_name is not None:
             vips = pd.DataFrame(vips, columns = ['VIP'])

@@ -160,18 +160,17 @@ def icoshift_align(
     - aligned spectra (DataFrame)
     - per-sample list of applied integer-point shifts for each window
     """
-    X = spectra.copy()
-    cols = np.asarray(spectra.columns.astype(float))
-    ppm_vec = np.asarray(ppm, dtype=float)
-    if not np.allclose(cols, ppm_vec):
-        # coerce columns to provided ppm for safety
-        X.columns = ppm_vec
+    # Single allocation: extract to a writable numpy array and keep the index for reconstruction.
+    # The previous implementation created two full copies (spectra.copy() then .values.copy()),
+    # doubling peak memory. Here we allocate exactly once.
+    ppm_vec = np.asarray(ppm, dtype=np.float64)
+    aligned = spectra.to_numpy(dtype=np.float64, copy=True)
+    sample_index = spectra.index
 
     # build reference
-    ref = np.median(X.values, axis=0) if reference == 'median' else X.values.mean(axis=0)
+    ref = np.median(aligned, axis=0) if reference == 'median' else aligned.mean(axis=0)
 
-    aligned = X.values.copy()
-    shifts: Dict[str, List[int]] = {str(i): [] for i in X.index}
+    shifts: Dict[str, List[int]] = {str(i): [] for i in sample_index}
 
     for wmin, wmax in windows:
         # map ppm interval to indices
@@ -194,7 +193,7 @@ def icoshift_align(
         ref_z = ref_seg - ref_seg.mean()
         ref_norm = np.linalg.norm(ref_z) + 1e-12
 
-        for r, sid in enumerate(X.index):
+        for r, sid in enumerate(sample_index):
             y = aligned[r, idx]
             best_shift = 0
             best_corr = -np.inf
@@ -218,7 +217,7 @@ def icoshift_align(
                 aligned[r, idx] = np.roll(seg, best_shift)
             shifts[str(sid)].append(int(best_shift))
 
-    aligned_df = pd.DataFrame(aligned, index=X.index, columns=ppm_vec)
+    aligned_df = pd.DataFrame(aligned, index=sample_index, columns=ppm_vec)
     return aligned_df, shifts
 
 
@@ -248,7 +247,8 @@ class PeakAligner:
             i1 = np.argmin(np.abs(self.ppm - mp.end_ppm))
             if i0 > i1:
                 i0, i1 = i1, i0
-            area = float(np.trapz(ref.iloc[i0:i1+1], self.ppm[i0:i1+1]))
+            _trapezoid = getattr(np, "trapezoid", None) or getattr(np, "trapz")
+            area = float(_trapezoid(ref.iloc[i0:i1+1], self.ppm[i0:i1+1]))
             rows.append({**mp.__dict__, 'area': area})
         df = pd.DataFrame(rows).sort_values('area', ascending=False).head(top_n)
         # expand a bit to capture full shape
