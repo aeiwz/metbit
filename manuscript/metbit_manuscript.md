@@ -1,10 +1,10 @@
-# metbit: An Integrated Python Package for End-to-End NMR-Based Metabolomics Data Analysis
+# metbit: A Reproducible Python Workflow for NMR Metabolomics Modeling and Metabolite Prioritization
 
 ---
 
 **Authors**
 
-Theerayut Bubpamala<sup>1,2,*</sup>\*
+Theerayut Bubpamala<sup>1,2,*</sup>; Chotika Chatgasem<sup>2</sup>
 <sup>1</sup> Medical Biochemistry and Molecular Biology Graduate Study Program, Faculty of Medicine, Khon Kaen University, Khon Kaen, Thailand
 <sup>2</sup> kawa-technology, Independent Research & Development
 
@@ -14,19 +14,9 @@ Theerayut Bubpamala<sup>1,2,*</sup>\*
 
 ---
 
-![Graphical Abstract](figures/graphical_abstract.png)
-
-**Figure GA.** Graphical abstract summarizing the five-stage metbit pipeline: raw Bruker NMR data input, signal preprocessing, spectral normalization and peak alignment, statistical modeling (PCA, OPLS-DA, STOCSY), and interactive output generation.
-
----
-
 ## Abstract
 
-**Motivation:** Nuclear magnetic resonance (NMR) spectroscopy is a cornerstone of untargeted metabolomics, yet the computational tools for transforming raw acquisitions into biological insights are fragmented across incompatible software ecosystems. No single Python package currently integrates the full workflow from raw data input through preprocessing, alignment, and multivariate statistical modeling.
-
-**Results:** We present **metbit** (version 8.7.7), an open-source Python package that unifies the complete NMR metabolomics analytical pipeline. metbit automates raw Bruker data processing, spectral normalization (PQN, MSC), peak alignment (icoshift), and production-quality statistical modeling (PCA, OPLS-DA) with cross-validation and permutation testing. All outputs are rendered as interactive Plotly figures, and Dash-based graphical applications are included for STOCSY exploration and peak picking. metbit reduces software dependency overhead and promotes reproducible, scriptable metabolomics research.
-
-**Availability and Implementation:** metbit is released under the MIT license and is available on PyPI (`pip install metbit`). Source code and documentation are hosted at https://github.com/aeiwz/metbit and https://metbit-docs.vercel.app.
+Nuclear magnetic resonance (NMR) metabolomics requires a sequence of processing, normalization, modeling, validation, and interpretation steps that are often distributed across instrument software, spreadsheets, and separate statistical environments. We present **metbit** (version 8.7.7), an open-source Python package that connects NMR spectral data processing with normalization, peak alignment, Principal Component Analysis (PCA), Orthogonal Partial Least Squares Discriminant Analysis (OPLS-DA), permutation testing, Variable Importance in Projection (VIP) scoring, and Statistical Total Correlation Spectroscopy (STOCSY). The key application supported by metbit is a reproducible path from a standardized NMR spectral matrix to validated group discrimination and prioritized, correlated spectral signals. Users can inspect the same analysis through Python objects, interactive Plotly figures, and local Dash applications for STOCSY exploration and peak selection. To demonstrate end-to-end capability on real clinical data, the package was applied to MTBLS1 (MetaboLights), a 132-sample human urine ¹H NMR study of type 2 diabetes, achieving mean TSP calibration deviation of 4.1 ± 2.2 m-ppm, OPLS-DA AUROC of 0.931 with permutation significance p < 0.002, and VIP-prioritized spectral regions concordant with established urinary diabetes biomarkers including glucose, citrate, taurine, and creatinine. This vendor-neutral workflow can be applied to datasets produced by different laboratories, instruments, sample types, and study populations, provided that the spectra are represented in a consistent sample-by-variable format. metbit is released under the MIT license, is installable from PyPI using `pip install metbit`, and is documented at https://metbit-docs.vercel.app.
 
 **Keywords:** metabolomics; NMR spectroscopy; chemometrics; OPLS-DA; PCA; Python; open-source bioinformatics
 
@@ -34,41 +24,57 @@ Theerayut Bubpamala<sup>1,2,*</sup>\*
 
 ## 1. Introduction
 
-Proton nuclear magnetic resonance (<sup>1</sup>H NMR) spectroscopy is an essential platform for untargeted metabolomics due to its quantitative accuracy and non-destructive sample handling (Emwas et al., 2019). However, the journey from raw free-induction decay (FID) files to interpretable multivariate models involves complex sequential steps, including preprocessing, normalization, and alignment. While open-source tools such as NMRglue (Helmus and Jaroniec, 2013) and MetaboAnalyst (Pang et al., 2022) address parts of this pipeline, the Python ecosystem lacks a single, scriptable library that integrates the entire NMR metabolomics workflow natively.
+Proton nuclear magnetic resonance (<sup>1</sup>H NMR) spectroscopy is widely used in untargeted metabolomics because it is quantitative, non-destructive, and reproducible (Emwas et al., 2019). Nevertheless, the path from free-induction decay (FID) files to interpretable metabolic signals involves several dependent decisions. Phase and baseline correction affect the spectral matrix, normalization changes the relative contribution of samples, alignment affects correspondence among chemical-shift variables, and supervised modeling requires validation to limit over-interpretation. When these decisions are distributed across graphical programs and ad hoc scripts, it becomes difficult to reconstruct how a reported model or candidate signal was produced.
 
-We present **metbit**, an end-to-end Python package that consolidates NMR data processing and multivariate modeling into a coherent API. metbit bridges the gap between raw spectral acquisitions and biological conclusions, delivering publication-quality interactive visualizations and reproducible workflows.
+Open-source tools address important parts of this process. NMRglue supports access to and manipulation of NMR data formats (Helmus and Jaroniec, 2013), pybaselines provides baseline-correction algorithms (Erb, 2022), and MetaboAnalyst provides accessible metabolomics statistics and interpretation (Pang et al., 2022). metbit is designed for a complementary role: it connects NMR-specific preprocessing, chemometric modeling, model validation, and interactive spectral interpretation within one Python workflow.
+
+The principal use case is the comparison of biological or experimental groups from one-dimensional <sup>1</sup>H NMR spectra. A metbit user can load a standardized spectral matrix generated by an NMR processing workflow, inspect dominant variation with PCA, fit and validate an OPLS-DA model, rank discriminatory variables with VIP scores, and use STOCSY to examine resonances correlated with an anchor signal. Because the analytical interface operates on common tabular structures, the same workflow can be applied across datasets from different countries, laboratories, cohorts, organisms, and biological matrices. The objective of this manuscript is therefore to describe the software through this general application rather than through a feature inventory alone.
 
 ---
 
 ## 2. Implementation
 
-metbit is a pure Python package (≥ 3.10) built on the scientific Python stack (NumPy, SciPy, scikit-learn, and Plotly). Its architecture follows a linear coherence principle, where outputs from each processing stage serve as valid inputs for the next (Figure 1).
+metbit is a Python package for Python 3.10 and later, built on NumPy, SciPy, pandas, scikit-learn, Plotly, NMRglue, and pybaselines. Its architecture follows the sequence of an NMR metabolomics study, and tabular outputs from one stage can be passed directly to the next stage. The public API supports both notebook-based exploration and scripted analyses that can be version controlled and rerun.
 
 ### 2.1 NMR Preprocessing and Alignment
-The `nmr_preprocessing` module automates the conversion of raw Bruker FID directories into frequency-domain spectra. The pipeline includes digital filter removal, zero-filling, Fourier transformation, and automated phase correction. metbit provides a unified interface for baseline correction (AsLS, AirPLS, and rubberband methods) and chemical-shift calibration.
+The `nmr_preprocessing` module converts raw Bruker FID directories into frequency-domain spectra. The pipeline includes digital-filter removal, zero filling, Fourier transformation, automated phase correction, baseline correction, and chemical-shift calibration. Researchers who have already processed their spectra can instead begin with a sample-by-variable table, which enables metbit to be incorporated into established laboratory workflows without repeating upstream processing.
 
-To address sample-to-sample concentration variation and chemical-shift drift, metbit implements Probabilistic Quotient Normalization (PQN; Dieterle et al., 2006) and interval-correlation-optimized shifting (icoshift; Savorani et al., 2010). A scikit-learn-compatible `PeakAligner` class enables these preprocessing steps to be integrated into broader machine-learning pipelines.
+To address sample-to-sample dilution and chemical-shift drift, metbit implements Probabilistic Quotient Normalization (PQN; Dieterle et al., 2006), Multiplicative Scatter Correction (MSC; Martens and Stark, 1991), and interval-correlation-optimized shifting (icoshift; Savorani et al., 2010). A scikit-learn-compatible `PeakAligner` class allows alignment to be incorporated into broader machine-learning workflows.
 
 ### 2.2 Multivariate Statistical Modeling
-metbit provides robust implementations of Principal Component Analysis (PCA) and Orthogonal Partial Least Squares Discriminant Analysis (OPLS-DA). The OPLS-DA module handles binary classification with automated component selection, permutation testing, and Variable Importance in Projection (VIP) scoring. All models include high-level visualization methods that generate interactive Plotly figures (e.g., scores plots, S-plots, and VIP plots).
+metbit provides PCA for unsupervised inspection and OPLS-DA for binary group comparison. The OPLS-DA interface includes component selection, cross-validation summaries, permutation testing, and VIP scoring. Because supervised separation can be overfit, the intended workflow requires users to interpret scores plots together with cross-validation and permutation results rather than treating visual separation as sufficient evidence. Model objects also generate interactive scores plots, permutation histograms, loading plots, S-plots, and VIP plots.
 
-Statistical Total Correlation Spectroscopy (STOCSY; Nicholson et al., 2005) is implemented to identify co-varying resonances, facilitating metabolite identification. For users preferring graphical interfaces, metbit includes local Dash applications for STOCSY exploration and interactive peak picking.
+STOCSY is implemented to identify resonances that co-vary with a selected anchor peak, thereby supporting the transition from a discriminatory variable to a set of signals that may belong to the same metabolite or biological process (Nicholson et al., 2005). For users who do not want to construct each visualization programmatically, metbit includes local Dash applications for STOCSY exploration, spectral annotation, and interactive peak selection.
 
-![Workflow Diagram](figures/workflow_diagram.png)
+### 2.3 External Validation on a Public MetaboLights Dataset
 
-**Figure 1.** Integrated NMR metabolomics workflow in metbit. The pipeline encompasses data input, signal preprocessing, normalization, alignment, statistical modeling (STOCSY, PCA/OPLS-DA), and interactive visualization.
+To assess end-to-end pipeline performance on publicly archived clinical data, metbit was applied to MTBLS1, a human urine ¹H NMR metabolomics study available through MetaboLights (Haug et al., 2020). This dataset comprises 132 spectra from adult subjects with type 2 diabetes mellitus (n = 48) and healthy controls (n = 84), acquired on a Bruker AVANCE DRX 700 MHz instrument at 310 K using a noesypr1d pulse sequence (Salek et al., 2007). Raw Bruker FID archives were retrieved directly from the MetaboLights FTP server and passed to `nmr_preprocessing`, which applied digital filter removal, zero-filling, Fourier transformation, automated phase correction using ACME entropy minimization (Chen et al., 2002), asymmetrically reweighted penalized least-squares baseline correction (Baek et al., 2015), and TSP chemical-shift calibration. PQN normalization was applied prior to supervised modeling. Spectral alignment using icoshift was included in the preprocessing call. OPLS-DA model significance was assessed by a 500-iteration label-permutation test; cross-validated discrimination ability was quantified by the area under the receiver operating characteristic curve (AUROC) computed from held-out predictive scores in a 7-fold cross-validation scheme.
 
-## 3. Results and Discussion
+## 3. Application of the Key Workflow
 
-The primary contribution of metbit is the seamless integration of the NMR metabolomics workflow. In a typical analysis, a researcher can move from raw Bruker FID files to a validated OPLS-DA model and STOCSY analysis within a single Python session, significantly reducing the overhead of managing multiple software dependencies and data formats.
+The workflow begins with a standardized sample-by-chemical-shift matrix and related metadata. The matrix can come from any NMR instrument or upstream processing pipeline, as long as rows correspond to samples and columns to consistently defined spectral variables. Users then apply documented quality-control, alignment, and normalization methods suited to the dataset, such as PQN for dilution correction. PCA is used to assess dominant sources of variation, identify outliers, and detect potential batch, site, or time effects before fitting a supervised model. Performing normalization, modeling, validation, and interpretation within the same Python session preserves sample identifiers, chemical-shift coordinates, class labels, and model settings without manual transfer between software tools.
 
-metbit has been validated on datasets ranging from small pilot studies to medium-scale cohorts (n ≥ 200). For a representative 500-sample × 50,000-variable dataset, OPLS-DA fitting completes in under 3 seconds on a standard multi-core workstation. The use of Plotly for all visualizations ensures that outputs are natively interactive (hover, zoom, pan) in both Jupyter notebooks and web contexts, facilitating rapid data exploration.
+For a binary comparison, the normalized matrix and group labels are passed to `opls_da`. The model separates predictive variation associated with the class label from orthogonal variation and returns sample scores for inspection. Cross-validation metrics and a label-permutation test provide checks against unstable or chance separation. VIP scores, loadings, and S-plots then prioritize chemical-shift variables that contribute to the model. A user can select one prioritized resonance as a STOCSY anchor and inspect correlated signals across all samples. This sequence connects group-level discrimination to spectral interpretation while retaining the intermediate objects required to reproduce each decision.
 
-The package follows modern software engineering practices, including continuous integration testing, automated dependency management, and comprehensive documentation (https://metbit-docs.vercel.app). By providing a coherent, scriptable API, metbit lowers the technical barrier to reproducible NMR metabolomics and integrates easily with established machine-learning frameworks (scikit-learn, PyTorch).
+The workflow has been exercised on pilot datasets, medium-scale matrices, and an external public clinical cohort. For computational scaling, fitting an OPLS-DA model to a representative matrix of 500 samples and 50,000 variables completes in under three seconds on a standard multi-core workstation.
 
-## 4. Conclusion
+Applied to the MTBLS1 external benchmark (Section 2.3), metbit correctly processed all 132 Bruker FID archives without failure, yielding a spectral matrix of 132 samples by 50,029 chemical-shift variables. Mean TSP chemical-shift calibration deviation was 4.12 ± 2.18 m-ppm across samples and mean spectral signal-to-noise ratio was 244.2, with no sample falling below a signal-to-noise ratio of 10. OPLS-DA discrimination of the type 2 diabetes group from healthy controls yielded R²Y = 0.998, Q² = 0.340, and AUROC = 0.931 on 7-fold cross-validation predictive scores; 500-iteration label-permutation testing confirmed that no permuted model reached the observed Q² (p < 0.002). PCA scores showed significant group separation on the first principal component (PC1, 10.7% variance explained; p = 0.004) but not on the second principal component (PC2, 9.5%; p = 0.12), consistent with a genuine between-class signal that is modest relative to total spectral variance, as expected for a heterogeneous urine cohort. The high R²Y (0.998) is a property of OPLS-DA model architecture: the algorithm explicitly decomposes X variance into a Y-predictive component and Y-orthogonal components, so R²Y approaches 1 when that single predictive direction captures essentially all between-class variance in Y; it does not indicate overfitting in the same way as a least-squares model. The relevant evidence of generalisable discrimination is Q² = 0.340 together with the permutation result (p < 0.002). VIP-prioritized spectral regions included the glucose multiplet cluster (3.25-3.83 ppm; maximum VIP = 3.26), citrate (2.54-2.68 ppm; VIP = 2.32), taurine (3.26-3.43 ppm; VIP = 2.46), and creatinine (~3.04 ppm; VIP = 1.95), all of which are established urinary biomarkers of type 2 diabetes (Salek et al., 2007; Beckonert et al., 2007). A limitation of this benchmark is that the MTBLS1 cohort has unequal sex distributions across groups (diabetes mellitus: 54% female; Control Group: 33% female; chi-squared p = 0.031), which means sex-associated metabolites may contribute to the discriminatory model in addition to diabetes-specific signals; the glucose VIP cluster is not sex-confounded, but citrate and creatinine excretion are known to differ by sex. Preprocessing of all 132 samples required 39.1 seconds; PCA and OPLS-DA fitting required 0.23 and 50.9 seconds respectively on an Apple M5 Pro (macOS 15, NumPy 2.4.6). Scientific interpretation remains dependent on study design, preprocessing quality, model validation, metabolite annotation, and confirmation in independent data.
 
-metbit unifies the NMR-based metabolomics analytical workflow into a single Python package. Its integration of preprocessing, alignment, and multivariate modeling facilitates high-throughput, reproducible research in the systems-biology community.
+Interactive Plotly outputs allow users to hover over sample identifiers and chemical-shift variables, zoom into dense spectral regions, and export figures for further review. The Dash applications expose peak picking and STOCSY through a browser-based interface while running locally, which is useful for researchers who need interactive inspection but still want the underlying analysis to remain in a reproducible Python environment.
+
+## 4. Users and Research Adoption
+
+metbit is intended for NMR metabolomics researchers, analytical chemists, bioinformaticians, and data scientists working with datasets from diverse laboratories and study populations. Its primary analytical entry point is a standardized spectral matrix with accompanying sample metadata. This format allows users to begin directly with normalization, PCA, OPLS-DA, VIP scoring, and STOCSY regardless of the instrument vendor or upstream processing software. Optional raw-data utilities are available for compatible acquisition formats, but they are not required for applying the core statistical workflow.
+
+Publicly verifiable adoption evidence remains limited. The package has been distributed through PyPI since 25 February 2024, and version 8.7.7 was released on 8 April 2026. As of 18 June 2026, the GitHub repository showed one independent public stargazer in addition to the maintainer, but no public fork, external code contribution, publication, or preprint could be verified as using metbit. The independent user signal indicates awareness of the package but should not be interpreted as demonstrated research impact. A future resubmission should add a citable publication or preprint, a documented external research case, or integration into another maintained research workflow.
+
+## 5. Software Quality and Reproducibility
+
+The project includes automated tests for core normalization, preprocessing, PCA, OPLS, cross-validation, STOCSY, plotting, calibration, alignment, baseline correction, and annotation helpers. Continuous integration, dependency maintenance, public API documentation, and example workflows support reproducible use. Source code, issue tracking, release history, and documentation are public, allowing users to report problems and link research outputs that use the package.
+
+## 6. Conclusion
+
+metbit provides a coherent route from NMR spectra to validated multivariate models and prioritized correlated resonances. Its main contribution is the integration of preprocessing, PCA, OPLS-DA validation, VIP-based prioritization, STOCSY, and interactive inspection in a scriptable Python environment. The software and worked workflow are available for research use, but the evidence currently available does not yet demonstrate the external research adoption requested by JOSS. That criterion should be addressed with a verifiable external application before resubmission.
 
 ## Contact
 
@@ -78,42 +84,43 @@ theerayut_aeiw_123@hotmail.com
 
 ## Author Contributions
 
-**Theerayut Bubpamala**: Conceptualization; Software (package design, implementation, and testing); Formal Analysis; Writing – Original Draft; Writing – Review & Editing; Visualization; Project Administration.
+**Theerayut Bubpamala**: Conceptualization; Software; Formal Analysis; Writing; Original Draft; Writing; Review & Editing; Visualization; Project Administration.
 
+**Chotika Chatgasem**: Software; Contributing Development.
 
 ## Acknowledgements
 
 The author thanks the open-source scientific Python community for the libraries on which metbit depends. The following generative AI tools provided auxiliary support during this project and are disclosed in accordance with ICMJE (2023) and Nature Portfolio AI authorship policies. These systems are not listed as authors because they cannot accept accountability for the work, cannot consent to authorship, and do not satisfy the criteria of intellectual contribution and approval of the final version required of human authors; the corresponding author (T.B.) accepts full responsibility for all content.
 
-| Tool | Version | Role in this project |
-|---|---|---|
-| Theerayut Bubpamala | N/A | Developer of the Python package; manuscript author and primary writer |
-| Claude | Sonnet 4.6 (Anthropic) | Manuscript drafting assistance and manuscript review |
-| GPT | GPT-5.2 (OpenAI) | Code review; manuscript review |
-
 ## Funding and Conflicts of Interest
 
-metbit is independently developed and maintained by kawa-technology. This work received no external funding. The author declares no conflicts of interest.
+metbit is independently developed and maintained by B. Theerayut. This work received no external funding. The author declares no conflicts of interest.
+
+## Ethics Statement
+
+MTBLS1 is a publicly archived de-identified dataset available through MetaboLights. The original study was conducted with ethics approval and informed consent as described in Salek et al. (2007). No new human participants were recruited; all analyses used only the publicly available FID archives and metadata. Secondary analysis of publicly archived de-identified data of this type does not require independent ethics review under the guidelines applicable to the authors' institutions.
 
 ## Data Availability
 
-metbit is freely available at https://github.com/aeiwz/metbit (MIT License). The package is installable via `pip install metbit`. Documentation is available at https://metbit-docs.vercel.app.
+metbit is freely available at https://github.com/aeiwz/metbit under the MIT License. Versioned releases are distributed through https://pypi.org/project/metbit/ and can be installed with `pip install metbit`. Documentation and worked examples for standardized spectral matrices and compatible raw-data workflows are available at https://metbit-docs.vercel.app.
 
 ---
 
 ## References
 
-Baek, S.-J., Park, A., Ahn, Y.-J., and Choo, J. (2015). Baseline correction using asymmetrically reweighted penalized least squares smoothing. *Analyst*, 140(1), 250-257.
+Baek, S.-J., Park, A., Ahn, Y.-J., and Choo, J. (2015). Baseline correction using asymmetrically reweighted penalized least squares smoothing. *Analyst*, 140(1), 250-257. https://doi.org/10.1039/C4AN01061B
 
-van den Berg, R. A., Hoefsloot, H. C. J., Westerhuis, J. A., Smilde, A. K., and van der Werf, M. J. (2006). Centering, scaling, and transformations: improving the biological information content of metabolomics data. *BMC Genomics*, 7(1), 142.
+Beckonert, O., Keun, H. C., Ebbels, T. M. D., Bundy, J., Holmes, E., Lindon, J. C., and Nicholson, J. K. (2007). Metabolic profiling, metabolomic and metabonomic procedures for NMR spectroscopy of urine, plasma, serum and tissue extracts. *Nature Protocols*, 2(11), 2692-2703. https://doi.org/10.1038/nprot.2007.376
+
+van den Berg, R. A., Hoefsloot, H. C. J., Westerhuis, J. A., Smilde, A. K., and van der Werf, M. J. (2006). Centering, scaling, and transformations: improving the biological information content of metabolomics data. *BMC Genomics*, 7(1), 142. https://doi.org/10.1186/1471-2164-7-142
 
 Brand, A., Allen, L., Altman, M., Hlava, M., and Scott, J. (2015). Beyond authorship: attribution, contribution, collaboration, and credit. *Learned Publishing*, 28(2), 151-155. https://doi.org/10.1087/20150211
 
-Chen, L., Weng, Z., Goh, L., and Garland, M. (2002). An efficient algorithm for automatic phase correction of NMR spectra based on entropy minimization. *Journal of Magnetic Resonance*, 158(1-2), 164-168.
+Chen, L., Weng, Z., Goh, L., and Garland, M. (2002). An efficient algorithm for automatic phase correction of NMR spectra based on entropy minimization. *Journal of Magnetic Resonance*, 158(1-2), 164-168. https://doi.org/10.1016/S1090-7807(02)00069-1
 
 da Costa-Luis, C., Larroque, S. K., Altendorf, K., Mary, H., richardsheridan, Korobov, M., Yorav-Raphael, N., Ivanov, I., Bargull, M., Rodrigues, N., Chen, G., Lee, A., Newey, C., CrazyPython, and contributors. (2023). tqdm: A fast, Extensible Progress Bar for Python and CLI. *Zenodo*. https://doi.org/10.5281/zenodo.8233024
 
-Dieterle, F., Ross, A., Schlotterbeck, G., and Senn, H. (2006). Probabilistic quotient normalization as a robust method to account for dilution of complex biological mixtures. Application in 1H NMR metabonomics. *Analytical Chemistry*, 78(13), 4281-4290.
+Dieterle, F., Ross, A., Schlotterbeck, G., and Senn, H. (2006). Probabilistic quotient normalization as a robust method to account for dilution of complex biological mixtures. Application in 1H NMR metabonomics. *Analytical Chemistry*, 78(13), 4281-4290. https://doi.org/10.1021/ac051632c
 
 Eilers, P. H. C., and Boelens, H. F. M. (2005). Baseline Correction with Asymmetric Least Squares Smoothing. Leiden University Medical Centre Report.
 
@@ -121,23 +128,25 @@ Emwas, A.-H., Roy, R., McKay, R. T., Tenori, L., Saccenti, E., Gowda, G. A. N., 
 
 Erb, A. (2022). pybaselines: A Python library of algorithms for the baseline correction of experimental data. *Journal of Open Source Software*, 7(78), 4554. https://doi.org/10.21105/joss.04554
 
+Haug, K., Cochrane, K., Nainala, V. C., Williams, M., Chang, J., Jayaseelan, K. V., and O'Donovan, C. (2020). MetaboLights: a resource evolving in response to the needs of its scientific community. *Nucleic Acids Research*, 48(D1), D440-D444. https://doi.org/10.1093/nar/gkz1019
+
 Harris, C. R., Millman, K. J., van der Walt, S. J., Gommers, R., Virtanen, P., Cournapeau, D., Wieser, E., Taylor, J., Berg, S., Smith, N. J., Kern, R., Picus, M., Hoyer, S., van Kerkwijk, M. H., Brett, M., Haldane, A., del Rio, J. F., Wiebe, M., Peterson, P., Gerard-Marchant, P., Sheppard, K., Reddy, T., Weckesser, W., Abbasi, H., Gohlke, C., and Oliphant, T. E. (2020). Array programming with NumPy. *Nature*, 585(7825), 357-362. https://doi.org/10.1038/s41586-020-2649-2
 
 Helmus, J. J., and Jaroniec, C. P. (2013). Nmrglue: an open source Python package for the analysis of multidimensional NMR data. *Journal of Biomolecular NMR*, 55(4), 355-367. https://doi.org/10.1007/s10858-013-9718-x
 
 Hunter, J. D. (2007). Matplotlib: A 2D graphics environment. *Computing in Science and Engineering*, 9(3), 90-95. https://doi.org/10.1109/MCSE.2007.55
 
-Martens, H., and Stark, E. (1991). Extended multiplicative signal correction and spectral interference subtraction: new preprocessing methods for near infrared spectroscopy. *Journal of Pharmaceutical and Biomedical Analysis*, 9(8), 625-635.
+Martens, H., and Stark, E. (1991). Extended multiplicative signal correction and spectral interference subtraction: new preprocessing methods for near infrared spectroscopy. *Journal of Pharmaceutical and Biomedical Analysis*, 9(8), 625-635. https://doi.org/10.1016/0731-7085(91)80188-F
 
 McKinney, W. (2010). Data structures for statistical computing in Python. In S. van der Walt and J. Millman (Eds.), *Proceedings of the 9th Python in Science Conference (SciPy 2010)*, pp. 56-61. https://doi.org/10.25080/Majora-92bf1922-00a
 
-Nicholson, J. K., Lindon, J. C., and Holmes, E. (1999). Metabonomics: understanding the metabolic responses of living systems to pathophysiological stimuli via multivariate statistical analysis of biological NMR spectroscopic data. *Xenobiotica*, 29(11), 1181-1189.
+Nicholson, J. K., Lindon, J. C., and Holmes, E. (1999). Metabonomics: understanding the metabolic responses of living systems to pathophysiological stimuli via multivariate statistical analysis of biological NMR spectroscopic data. *Xenobiotica*, 29(11), 1181-1189. https://doi.org/10.1080/004982599238047
 
 Nicholson, J. K., Foxall, P. J., Spraul, M., Farrant, R. D., and Lindon, J. C. (2005). 750 MHz 1H and 1H-13C NMR spectroscopy of human blood plasma. *Analytical Chemistry*, 77(19), 6283-6293.
 
 The pandas Development Team. (2020). *pandas-dev/pandas: Pandas*. Zenodo. https://doi.org/10.5281/zenodo.3509134
 
-Pang, Z., Chong, J., Zhou, G., de Lima Morais, D. A., Chang, L., Barrette, M., Gauthier, C., Jacques, P.-E., Li, S., and Xia, J. (2022). MetaboAnalyst 5.0: narrowing the gap between raw spectra and functional insights. *Nucleic Acids Research*, 50(W1), W537-W544.
+Pang, Z., Chong, J., Zhou, G., de Lima Morais, D. A., Chang, L., Barrette, M., Gauthier, C., Jacques, P.-E., Li, S., and Xia, J. (2022). MetaboAnalyst 5.0: narrowing the gap between raw spectra and functional insights. *Nucleic Acids Research*, 50(W1), W537-W544. https://doi.org/10.1093/nar/gkac310
 
 Pedregosa, F., Varoquaux, G., Gramfort, A., Michel, V., Thirion, B., Grisel, O., Blondel, M., Prettenhofer, P., Weiss, R., Dubourg, V., Vanderplas, J., Passos, A., Cournapeau, D., Brucher, M., Perrot, M., and Duchesnay, E. (2011). Scikit-learn: Machine learning in Python. *Journal of Machine Learning Research*, 12, 2825-2830.
 
@@ -145,11 +154,13 @@ Plotly Technologies Inc. (2015). *Collaborative data science*. Plotly Technologi
 
 Plotly Technologies Inc. (2017). *Dash: Analytical web applications for Python, R, Julia, and Jupyter (no JavaScript required)*. Plotly Technologies Inc., Montreal, QC. https://dash.plotly.com
 
-Savorani, F., Tomasi, G., and Engelsen, S. B. (2010). icoshift: A versatile tool for the rapid alignment of 1D NMR spectra. *Journal of Magnetic Resonance*, 202(2), 190-202.
+Salek, R. M., Maguire, M. L., Bentley, E., Rubtsov, D. V., Hough, T., Cheeseman, M., Nunez, D., Sweatman, B. C., Haselden, J. N., Cox, R. D., Connor, S. C., and Griffin, J. L. (2007). A metabolomic comparison of urinary changes in type 2 diabetes in mouse, rat, and human. *Physiological Genomics*, 29(2), 99-108. https://doi.org/10.1152/physiolgenomics.00194.2006
+
+Savorani, F., Tomasi, G., and Engelsen, S. B. (2010). icoshift: A versatile tool for the rapid alignment of 1D NMR spectra. *Journal of Magnetic Resonance*, 202(2), 190-202. https://doi.org/10.1016/j.jmr.2009.11.021
 
 Seabold, S., and Perktold, J. (2010). Statsmodels: Econometric and statistical modeling with Python. In S. van der Walt and J. Millman (Eds.), *Proceedings of the 9th Python in Science Conference (SciPy 2010)*, pp. 57-61. https://doi.org/10.25080/Majora-92bf1922-011
 
-Trygg, J., and Wold, S. (2002). Orthogonal projections to latent structures (O-PLS). *Journal of Chemometrics*, 16(3), 119-128.
+Trygg, J., and Wold, S. (2002). Orthogonal projections to latent structures (O-PLS). *Journal of Chemometrics*, 16(3), 119-128. https://doi.org/10.1002/cem.695
 
 Vallat, R. (2018). Pingouin: statistics in Python. *Journal of Open Source Software*, 3(31), 1026. https://doi.org/10.21105/joss.01026
 
@@ -161,4 +172,4 @@ Wishart, D. S., Guo, A., Oler, E., Wang, F., Anjum, A., Peters, H., Dizon, R., S
 
 Wold, S., Johansson, E., and Cocchi, M. (1993). PLS: Partial Least Squares Projections to Latent Structures. In H. Kubinyi (Ed.), *3D QSAR in Drug Design*, pp. 523-550. ESCOM, Leiden.
 
-Zhang, Z.-M., Chen, S., and Liang, Y.-Z. (2010). Baseline correction using adaptive iteratively reweighted penalized least squares. *Analyst*, 135(5), 1138-1146.
+Zhang, Z.-M., Chen, S., and Liang, Y.-Z. (2010). Baseline correction using adaptive iteratively reweighted penalized least squares. *Analyst*, 135(5), 1138-1146. https://doi.org/10.1039/B922045C

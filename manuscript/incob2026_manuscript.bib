@@ -1,0 +1,780 @@
+% ============================================================
+% incob2026_manuscript.bib
+% BibTeX reference file for:
+%   metbit: An Integrated Python Framework for Reproducible
+%   NMR Metabolomics from Spectral Processing to Biological
+%   Interpretation
+% Submitted to InCoB 2026 / Bioinformatics Advances (OUP)
+% ============================================================
+
+% --- External applications of metbit ---
+
+@article{Karunasumetta2024atcs,
+  author    = {Karunasumetta, Chananya and Tourthong, Wijittra and Mala, Rachata and
+               Chatgasem, Chotika and Bubpamala, Theerayut and Punchai, Suriya and
+               Sawanyawisuth, Kittisak},
+  title     = {Comparative Analysis of Metabolomic Responses in On-Pump and
+               Off-Pump Coronary Artery Bypass Grafting},
+  journal   = {Annals of Thoracic and Cardiovascular Surgery},
+  volume    = {30},
+  number    = {1},
+  pages     = {24-00126},
+  year      = {2024},
+  doi       = {10.5761/atcs.oa.24-00126},
+  pmid      = {39631940},
+  note      = {Cites metbit (github.com/aeiwz/metbit) in the statistical methods section}
+}
+
+@article{Karunasumetta2024jpcs,
+  author    = {Karunasumetta, Chananya and Chatgasem, Chotika and
+               Punchai, Suriya and Sawanyawisuth, Kittisak},
+  title     = {Metabolomic Signatures Influenced by Different Cardioplegic
+               Solutions in Cardiac Surgery},
+  journal   = {Journal of the Practice of Cardiovascular Sciences},
+  volume    = {10},
+  number    = {3},
+  year      = {2024},
+  publisher = {Wolters Kluwer},
+  url       = {https://journals.lww.com/jpcs/fulltext/2024/10030/metabolomic_signatures_influenced_by_different.6.aspx}
+}
+
+@misc{Mencucini2025,
+  author      = {Mencucini, Luiz Gabriel Souza},
+  title       = {Ferramentas em {Python} para pr{\'e}-processamento e an{\'a}lise de
+                 dados de metab\^{o}mica baseada em espectrometria de massas},
+  howpublished= {Trabalho de Conclus\~{a}o de Curso, Faculdade de Ci\^{e}ncias
+                 Farmac\^{e}uticas de Ribeir\~{a}o Preto, Universidade de {S\~{a}o}
+                 Paulo},
+  year        = {2025},
+  note        = {Advisor: Ricardo Roberto da Silva. Cites metbit
+                 (github.com/aeiwz/metbit) for multivariate analysis of
+                 mass-spectrometry metabolomics data},
+  url         = {https://bdta.abcd.usp.br/directbitstream/9f44cace-c652-4d34-a9cd-ad308be6a5e9/003302676.pdf}
+}
+
+% --- Core NMR metabolomics background ---
+
+@article{Emwas2019,
+  author    = {Emwas, Abdel-Hamid and Roy, Rabindra and McKay, Ryan T and
+               Tenori, Leonardo and Saccenti, Edoardo and
+               Gowda, GA Nagana and Raftery, Daniel and Alahmari, Fatmah and
+               Jaremko, Lukasz and Jaremko, Mariusz and Wishart, David S},
+  title     = {{NMR} spectroscopy for metabolomics research},
+  journal   = {Metabolites},
+  volume    = {9},
+  number    = {7},
+  pages     = {123},
+  year      = {2019},
+  publisher = {MDPI},
+  doi       = {10.3390/metabo9070123}
+}
+
+@article{Moco2022,
+  author    = {Moco, Sofia},
+  title     = {Studying Metabolism by {NMR}-Based Metabolomics},
+  journal   = {Frontiers in Molecular Biosciences},
+  volume    = {9},
+  pages     = {882487},
+  year      = {2022},
+  doi       = {10.3389/fmolb.2022.882487}
+}
+
+@article{Huang2022,
+  author    = {Huang, Katherine and Thomas, Natalie and Gooley, Paul R. and
+               Armstrong, Christopher W.},
+  title     = {Systematic Review of {NMR}-Based Metabolomics Practices in
+               Human Disease Research},
+  journal   = {Metabolites},
+  volume    = {12},
+  number    = {10},
+  pages     = {963},
+  year      = {2022},
+  doi       = {10.3390/metabo12100963}
+}
+
+@article{Gowda2023,
+  author    = {Gowda, G. A. Nagana and Raftery, Daniel},
+  title     = {{NMR} Metabolomics Methods for Investigating Disease},
+  journal   = {Analytical Chemistry},
+  volume    = {95},
+  number    = {1},
+  pages     = {83--99},
+  year      = {2023},
+  doi       = {10.1021/acs.analchem.2c04606}
+}
+
+@article{Powers2024,
+  author    = {Powers, Robert and Andersson, Erik R. and Bayless, Amanda L. and
+               Brua, Robert B. and Chang, Mario C. and Cheng, Leo L. and others},
+  title     = {Best Practices in {NMR} Metabolomics: Current State},
+  journal   = {TrAC Trends in Analytical Chemistry},
+  volume    = {171},
+  pages     = {117478},
+  year      = {2024},
+  doi       = {10.1016/j.trac.2023.117478}
+}
+
+@article{Beckonert2007,
+  author    = {Beckonert, Oliver and Keun, Hector C and Ebbels, Timothy M D and
+               Bundy, Jacob and Holmes, Elaine and Lindon, John C and
+               Nicholson, Jeremy K},
+  title     = {Metabolic profiling, metabolomic and metabonomic procedures for
+               {NMR} spectroscopy of urine, plasma, serum and tissue extracts},
+  journal   = {Nature Protocols},
+  volume    = {2},
+  number    = {11},
+  pages     = {2692--2703},
+  year      = {2007},
+  publisher = {Nature Publishing Group},
+  doi       = {10.1038/nprot.2007.376}
+}
+
+@article{Nicholson1999,
+  author    = {Nicholson, Jeremy K and Lindon, John C and Holmes, Elaine},
+  title     = {Metabonomics: understanding the metabolic responses of living
+               systems to pathophysiological stimuli via multivariate
+               statistical analysis of biological {NMR} spectroscopic data},
+  journal   = {Xenobiotica},
+  volume    = {29},
+  number    = {11},
+  pages     = {1181--1189},
+  year      = {1999},
+  doi       = {10.1080/004982599238047}
+}
+
+@article{Markley2017,
+  author    = {Markley, John L and Brüschweiler, Rafael and Edison, Arthur S and
+               Eghbalnia, Hamid R and Powers, Robert and Raftery, Daniel and
+               Wishart, David S},
+  title     = {The future of {NMR}-based metabolomics},
+  journal   = {Current Opinion in Biotechnology},
+  volume    = {43},
+  pages     = {34--40},
+  year      = {2017},
+  publisher = {Elsevier},
+  doi       = {10.1016/j.copbio.2016.08.001}
+}
+
+@article{Lindon2008,
+  author    = {Lindon, John C and Nicholson, Jeremy K},
+  title     = {Spectroscopic and statistical techniques for information recovery
+               in metabonomics and metabolomics},
+  journal   = {Annual Review of Analytical Chemistry},
+  volume    = {1},
+  pages     = {45--69},
+  year      = {2008},
+  doi       = {10.1146/annurev.anchem.1.031207.112854}
+}
+
+@article{Worley2013,
+  author    = {Worley, Bradley and Powers, Robert},
+  title     = {Multivariate analysis in metabolomics},
+  journal   = {Current Metabolomics},
+  volume    = {1},
+  number    = {1},
+  pages     = {92--107},
+  year      = {2013},
+  doi       = {10.2174/2213235X11301010092}
+}
+
+% --- Chemometrics: PCA, PLS, OPLS-DA, VIP ---
+
+@article{Trygg2002,
+  author    = {Trygg, Johan and Wold, Svante},
+  title     = {Orthogonal projections to latent structures ({O-PLS})},
+  journal   = {Journal of Chemometrics},
+  volume    = {16},
+  number    = {3},
+  pages     = {119--128},
+  year      = {2002},
+  publisher = {Wiley Online Library},
+  doi       = {10.1002/cem.695}
+}
+
+@article{Wold2001,
+  author    = {Wold, Svante and Sj{\"o}str{\"o}m, Michael and Eriksson, Lennart},
+  title     = {{PLS}-regression: a basic tool of chemometrics},
+  journal   = {Chemometrics and Intelligent Laboratory Systems},
+  volume    = {58},
+  number    = {2},
+  pages     = {109--130},
+  year      = {2001},
+  publisher = {Elsevier},
+  doi       = {10.1016/S0169-7439(01)00155-1}
+}
+
+@incollection{Wold1993,
+  author    = {Wold, Svante and Johansson, Erik and Cocchi, Marina},
+  title     = {{PLS}: Partial Least Squares Projections to Latent Structures},
+  booktitle = {3{D} {QSAR} in Drug Design},
+  pages     = {523--550},
+  year      = {1993},
+  publisher = {ESCOM, Leiden}
+}
+
+@article{Westerhuis2008,
+  author    = {Westerhuis, Johan A and Hoefsloot, Huub C J and Smit, Suzanne and
+               Vis, Daniel J and Smilde, Age K and van Velzen, Elwin J J and
+               van Duijnhoven, John P M and van Dorsten, Ferdi A},
+  title     = {Assessment of {PLSDA} cross validation},
+  journal   = {Metabolomics},
+  volume    = {4},
+  number    = {1},
+  pages     = {81--89},
+  year      = {2008},
+  publisher = {Springer},
+  doi       = {10.1007/s11306-007-0099-6}
+}
+
+@article{Eriksson2008,
+  author    = {Eriksson, Lennart and Trygg, Johan and Wold, Svante},
+  title     = {{CV-ANOVA} for significance testing of {PLS} and {OPLS} models},
+  journal   = {Journal of Chemometrics},
+  volume    = {22},
+  number    = {11-12},
+  pages     = {594--600},
+  year      = {2008},
+  publisher = {Wiley Online Library},
+  doi       = {10.1002/cem.1187}
+}
+
+@article{Gromski2015,
+  author    = {Gromski, Piotr S and Muhamadali, Howbeer and Ellis, David I and
+               Xu, Yun and Correa, Elon and Turner, Matthew L and Goodacre, Royston},
+  title     = {A tutorial review: Metabolomics and partial least squares-discriminant
+               analysis --- a marriage of convenience or a shotgun wedding},
+  journal   = {Analytica Chimica Acta},
+  volume    = {879},
+  pages     = {10--23},
+  year      = {2015},
+  publisher = {Elsevier},
+  doi       = {10.1016/j.aca.2015.02.012}
+}
+
+@article{Triba2015,
+  author    = {Triba, Mohamed N and Le Moyec, Laurence and Amathieu, Roland and
+               Goossens, Charlotte and Bouchemal, Nadia and Nahon, Pierre and
+               Rutledge, Douglas N and Savarin, Philippe},
+  title     = {{PLS/OPLS} models in metabolomics: the impact of permutation of
+               dataset prior to cross-validation},
+  journal   = {Molecular BioSystems},
+  volume    = {11},
+  number    = {1},
+  pages     = {13--19},
+  year      = {2015},
+  publisher = {Royal Society of Chemistry},
+  doi       = {10.1039/C4MB00414K}
+}
+
+@article{Saccenti2014,
+  author    = {Saccenti, Edoardo and Hoefsloot, Huub C J and Smilde, Age K and
+               Westerhuis, Johan A and Hendriks, Margriet M W B},
+  title     = {Reflections on univariate and multivariate analysis of metabolomics
+               data},
+  journal   = {Metabolomics},
+  volume    = {10},
+  number    = {3},
+  pages     = {361--374},
+  year      = {2014},
+  publisher = {Springer},
+  doi       = {10.1007/s11306-013-0570-0}
+}
+
+@article{vanDenBerg2006,
+  author    = {van den Berg, Robert A and Hoefsloot, Huub C J and Westerhuis, Johan A
+               and Smilde, Age K and van der Werf, Mariet J},
+  title     = {Centering, scaling, and transformations: improving the biological
+               information content of metabolomics data},
+  journal   = {BMC Genomics},
+  volume    = {7},
+  number    = {1},
+  pages     = {142},
+  year      = {2006},
+  publisher = {BioMed Central},
+  doi       = {10.1186/1471-2164-7-142}
+}
+
+% --- STOCSY ---
+
+@article{Cloarec2005,
+  author    = {Cloarec, Olivier and Dumas, Marc-Emmanuel and Craig, Andrew and
+               Barton, Richard H and Trygg, Johan and Hudson, Jane and
+               Blancher, Christine and Gauguier, Dominique and Lindon, John C and
+               Holmes, Elaine and Nicholson, Jeremy K},
+  title     = {Statistical Total Correlation Spectroscopy: An Exploratory Approach
+               for Latent Biomarker Identification from Metabolic {1H NMR} Data Sets},
+  journal   = {Analytical Chemistry},
+  volume    = {77},
+  number    = {5},
+  pages     = {1282--1289},
+  year      = {2005},
+  publisher = {ACS Publications},
+  doi       = {10.1021/ac048630x}
+}
+
+@article{Blaise2009,
+  author    = {Blaise, Benjamin J and Gaubert, Gwenaelle and Thabuis, Carine and
+               Gilles, Catherine and Haas, Christophe and Guillot, Dominique and
+               Favre, Pierre and Lacassagne, Marie-Noel and
+               Cren-Olive, Cecile and Emsley, Lyndon and Toulhoat, Helene},
+  title     = {Statistical recoupling prior to significance testing in nuclear
+               magnetic resonance based metabolomics},
+  journal   = {Analytical Chemistry},
+  volume    = {81},
+  number    = {15},
+  pages     = {6242--6251},
+  year      = {2009},
+  publisher = {ACS Publications},
+  doi       = {10.1021/ac9006434}
+}
+
+@article{Blaise2021,
+  author    = {Blaise, Benjamin J. and Correia, Gon{\c{c}}alo D. S. and
+               Haggart, Gordon A. and Surowiec, Izabella and Sands, Caroline and
+               Lewis, Matthew R. and Pearce, Jake T. M. and Trygg, Johan and
+               Nicholson, Jeremy K. and Holmes, Elaine and Ebbels, Timothy M. D.},
+  title     = {Statistical Analysis in Metabolic Phenotyping},
+  journal   = {Nature Protocols},
+  volume    = {16},
+  number    = {9},
+  pages     = {4299--4326},
+  year      = {2021},
+  doi       = {10.1038/s41596-021-00579-1}
+}
+
+@article{Debik2022,
+  author    = {Debik, Julia and Sangermani, Matteo and Wang, Feng and
+               Madssen, Torfinn S. and Giske{\o}deg{\aa}rd, Guro F.},
+  title     = {Multivariate Analysis of {NMR}-Based Metabolomic Data},
+  journal   = {NMR in Biomedicine},
+  volume    = {35},
+  number    = {2},
+  pages     = {e4638},
+  year      = {2022},
+  doi       = {10.1002/nbm.4638}
+}
+
+% --- Preprocessing ---
+
+@article{Chen2002,
+  author    = {Chen, L and Weng, Z and Goh, L and Garland, M},
+  title     = {An efficient algorithm for automatic phase correction of {NMR}
+               spectra based on entropy minimization},
+  journal   = {Journal of Magnetic Resonance},
+  volume    = {158},
+  number    = {1-2},
+  pages     = {164--168},
+  year      = {2002},
+  publisher = {Elsevier},
+  doi       = {10.1016/S1090-7807(02)00069-1}
+}
+
+@article{Baek2015,
+  author    = {Baek, Sung-June and Park, Aaron and Ahn, Young-Jin and Choo, Jaebeom},
+  title     = {Baseline correction using asymmetrically reweighted penalized least
+               squares smoothing},
+  journal   = {Analyst},
+  volume    = {140},
+  number    = {1},
+  pages     = {250--257},
+  year      = {2015},
+  publisher = {Royal Society of Chemistry},
+  doi       = {10.1039/C4AN01061B}
+}
+
+@techreport{Eilers2005,
+  author      = {Eilers, Paul H C and Boelens, Hans F M},
+  title       = {Baseline Correction with Asymmetric Least Squares Smoothing},
+  institution = {Leiden University Medical Centre Report},
+  year        = {2005}
+}
+
+@article{Zhang2010,
+  author    = {Zhang, Zhi-Min and Chen, Shan and Liang, Yi-Zeng},
+  title     = {Baseline correction using adaptive iteratively reweighted penalized
+               least squares},
+  journal   = {Analyst},
+  volume    = {135},
+  number    = {5},
+  pages     = {1138--1146},
+  year      = {2010},
+  publisher = {Royal Society of Chemistry},
+  doi       = {10.1039/b922045c}
+}
+
+@article{Savorani2010,
+  author    = {Savorani, Francesco and Tomasi, Giorgio and Engelsen, S{\o}ren Balling},
+  title     = {icoshift: A versatile tool for the rapid alignment of 1{D NMR} spectra},
+  journal   = {Journal of Magnetic Resonance},
+  volume    = {202},
+  number    = {2},
+  pages     = {190--202},
+  year      = {2010},
+  publisher = {Elsevier},
+  doi       = {10.1016/j.jmr.2009.11.021}
+}
+
+@article{Dieterle2006,
+  author    = {Dieterle, Frank and Ross, Andreas and Schlotterbeck, G{\"o}tz and
+               Senn, Hans},
+  title     = {Probabilistic quotient normalization as a robust method to account
+               for dilution of complex biological mixtures. Application in
+               {1H NMR} metabonomics},
+  journal   = {Analytical Chemistry},
+  volume    = {78},
+  number    = {13},
+  pages     = {4281--4290},
+  year      = {2006},
+  publisher = {ACS Publications},
+  doi       = {10.1021/ac051632c}
+}
+
+@article{Martens1991,
+  author    = {Martens, Harald and Stark, Edward},
+  title     = {Extended multiplicative signal correction and spectral interference
+               subtraction: new preprocessing methods for near infrared spectroscopy},
+  journal   = {Journal of Pharmaceutical and Biomedical Analysis},
+  volume    = {9},
+  number    = {8},
+  pages     = {625--635},
+  year      = {1991},
+  doi       = {10.1016/0731-7085(91)80188-F}
+}
+
+% --- Databases and reporting standards ---
+
+@article{Wishart2022,
+  author    = {Wishart, David S and Guo, Alan and Oler, Erik and Wang, Felice and
+               Anjum, Afia and Peters, Harrison and Dizon, Raynard and
+               Sayeeda, Zakia and Tian, Siyang and Lee, Brian L and
+               Berjanskii, Mark and Mah, Randy and Yamamoto, Mai and
+               Jovel, Juan and Torres-Calzada, Claudia and
+               Hiebert-Lauderdale, Matthew and Pon, Allison and Budinski, Zachary and
+               Chin, Jordan and Bertozzi, Sagan M and Lau, Jonathan X and
+               Nickel, Justin and Sokolenko, Simon and Li, Hyal and
+               Motlagh, Jafar and Tymensen, Lisa and Srivastava, Priyanka},
+  title     = {{HMDB} 5.0: the Human Metabolome Database for 2022},
+  journal   = {Nucleic Acids Research},
+  volume    = {50},
+  number    = {D1},
+  pages     = {D622--D631},
+  year      = {2022},
+  publisher = {Oxford University Press},
+  doi       = {10.1093/nar/gkab1062}
+}
+
+@article{Ulrich2008,
+  author    = {Ulrich, Eldon L and Akutsu, Hideo and Doreleijers, Jens F and
+               Harano, Yoko and Ioannidis, Yannis E and Lin, Jundong and
+               Livny, Miron and Mading, Steve and Maziuk, Dimitri and Miller, Zachary
+               and Nakatani, Etsuko and Schulte, Christopher F and Tolmie, David E and
+               Kent Wenger, R and Yao, Hongyang and Markley, John L},
+  title     = {{BioMagResBank}},
+  journal   = {Nucleic Acids Research},
+  volume    = {36},
+  number    = {suppl\_1},
+  pages     = {D402--D408},
+  year      = {2008},
+  publisher = {Oxford University Press},
+  doi       = {10.1093/nar/gkm957}
+}
+
+@article{Haug2020,
+  author    = {Haug, Kenneth and Cochrane, Keeva and Nainala, Venkata Chandrasekhar and
+               Williams, Mark and Chang, Jiakang and Jayaseelan, Kalai Vani and
+               O'Donovan, Claire},
+  title     = {{MetaboLights}: a resource evolving in response to the needs of
+               its scientific community},
+  journal   = {Nucleic Acids Research},
+  volume    = {48},
+  number    = {D1},
+  pages     = {D440--D444},
+  year      = {2020},
+  publisher = {Oxford University Press},
+  doi       = {10.1093/nar/gkz1019}
+}
+
+@article{Salek2007,
+  author    = {Salek, Reza M and Maguire, Michelle L and Bentley, Erica and
+               Rubtsov, Dmitry V and Hough, Toby and Cheeseman, Michael and
+               Nunez, David and Sweatman, Brian C and Haselden, John N and
+               Cox, Roger D and Connor, Steve C and Griffin, Julian L},
+  title     = {A metabolomic comparison of urinary changes in type 2 diabetes
+               in mouse, rat, and human},
+  journal   = {Physiological Genomics},
+  volume    = {29},
+  number    = {2},
+  pages     = {99--108},
+  year      = {2007},
+  publisher = {American Physiological Society},
+  doi       = {10.1152/physiolgenomics.00194.2006}
+}
+
+@article{Sumner2007,
+  author    = {Sumner, Lloyd W and Amberg, Alexander and Barrett, Dave and
+               Beale, Michael H and Beger, Richard and Daykin, Clare A and
+               Fan, Teresa W-M and Fiehn, Oliver and Goodacre, Royston and
+               Griffin, Julian L and Hankemeier, Thomas and Hardy, Nigel and
+               Harnly, James and Higashi, Richard and Ikeda, Jun and
+               Lewis, Matthew R and Lindon, John C and Little, Esra and
+               Martin, Glen E and Mazur, Bryan and McNeil, Christal and
+               Miller, Amy and Murray, James and Nicholls, Carolyn and
+               Reily, Michael D and Rozema, Joel J and Schauer, Nicolas and
+               Schomburg, Ida and Sheridan, Rachel C and Sumner, Suzanne C and
+               Trauger, Susanne A and Ward, Marta and Hardy, Siobhan M and
+               Harrigan, George G},
+  title     = {Proposed minimum reporting standards for chemical analysis},
+  journal   = {Metabolomics},
+  volume    = {3},
+  number    = {3},
+  pages     = {211--221},
+  year      = {2007},
+  publisher = {Springer},
+  doi       = {10.1007/s11306-007-0082-2}
+}
+
+@article{Fiehn2007,
+  author    = {Fiehn, Oliver and Kristal, Bruce and van Ommen, Ben and Sumner, Lloyd W and
+               Sansone, Susanna-Assunta and Taylor, Chris and Hardy, Nigel and
+               Kaddurah-Daouk, Rima},
+  title     = {Establishing reporting standards for metabolomic and metabonomic
+               studies: a call for participation},
+  journal   = {OMICS: A Journal of Integrative Biology},
+  volume    = {11},
+  number    = {2},
+  pages     = {158--163},
+  year      = {2007},
+  publisher = {Mary Ann Liebert},
+  doi       = {10.1089/omi.2007.0008}
+}
+
+@article{Broadhurst2018,
+  author    = {Broadhurst, David and Goodacre, Royston and Reinke, Stacey N and
+               Kuligowski, Julia and Wilson, Ian D and Lewis, Matthew R and
+               Dunn, Warwick B},
+  title     = {Guidelines and considerations for the use of system suitability
+               and quality control samples in mass spectrometry assays applied in
+               untargeted clinical metabolomic studies},
+  journal   = {Metabolomics},
+  volume    = {14},
+  number    = {6},
+  pages     = {72},
+  year      = {2018},
+  publisher = {Springer},
+  doi       = {10.1007/s11306-018-1367-3}
+}
+
+% --- Related metabolomics software ---
+
+@article{Pang2022,
+  author    = {Pang, Zhanzhong and Chong, Zhiqiang and Zhou, Guangyan and
+               de Lima Morais, David A and Chang, Liya and Barrette, Mathieu and
+               Gauthier, Chantal and Jacques, Pierre-Etienne and Li, Shuzhao and
+               Xia, Jianguo},
+  title     = {{MetaboAnalyst} 5.0: narrowing the gap between raw spectra and
+               functional insights},
+  journal   = {Nucleic Acids Research},
+  volume    = {50},
+  number    = {W1},
+  pages     = {W537--W544},
+  year      = {2022},
+  publisher = {Oxford University Press},
+  doi       = {10.1093/nar/gkac310}
+}
+
+@article{Jacob2017,
+  author    = {Jacob, Daniel and Deborde, Catherine and Lefebvre, Marie and
+               Maucourt, Mickael and Moing, Annick},
+  title     = {{NMRProcFlow}: a graphical and interactive tool dedicated to 1{D}
+               spectra processing for {NMR}-based metabolomics},
+  journal   = {Metabolomics},
+  volume    = {13},
+  number    = {4},
+  pages     = {36},
+  year      = {2017},
+  publisher = {Springer},
+  doi       = {10.1007/s11306-017-1178-y}
+}
+
+@article{Helmus2013,
+  author    = {Helmus, Jonathan J and Jaroniec, Christopher P},
+  title     = {Nmrglue: an open source {Python} package for the analysis of
+               multidimensional {NMR} data},
+  journal   = {Journal of Biomolecular NMR},
+  volume    = {55},
+  number    = {4},
+  pages     = {355--367},
+  year      = {2013},
+  publisher = {Springer},
+  doi       = {10.1007/s10858-013-9718-x}
+}
+
+@article{Erb2022,
+  author    = {Erb, Andrew},
+  title     = {pybaselines: A {Python} library of algorithms for the baseline
+               correction of experimental data},
+  journal   = {Journal of Open Source Software},
+  volume    = {7},
+  number    = {78},
+  pages     = {4554},
+  year      = {2022},
+  doi       = {10.21105/joss.04554}
+}
+
+% --- Scientific Python ecosystem ---
+
+@article{Harris2020,
+  author    = {Harris, Charles R and Millman, K Jarrod and van der Walt, St{\'e}fan J
+               and Gommers, Ralf and Virtanen, Pauli and Cournapeau, David and
+               Wieser, Eric and Taylor, Julian and Berg, Sebastian and
+               Smith, Nathaniel J and Kern, Robert and Picus, Matti and
+               Hoyer, Stephan and van Kerkwijk, Marten H and Brett, Matthew and
+               Haldane, Allan and del Rio, Jaime Fernandez and Wiebe, Mark and
+               Peterson, Pearu and Gerard-Marchant, Pierre and Sheppard, Kevin and
+               Reddy, Tyler and Weckesser, Warren and Abbasi, Hameer and
+               Gohlke, Christoph and Oliphant, Travis E},
+  title     = {Array programming with {NumPy}},
+  journal   = {Nature},
+  volume    = {585},
+  number    = {7825},
+  pages     = {357--362},
+  year      = {2020},
+  publisher = {Nature Publishing Group},
+  doi       = {10.1038/s41586-020-2649-2}
+}
+
+@article{Virtanen2020,
+  author    = {Virtanen, Pauli and Gommers, Ralf and Oliphant, Travis E and
+               Haberland, Matt and Reddy, Tyler and Cournapeau, David and
+               Burovski, Evgeni and Peterson, Pearu and Weckesser, Warren and
+               Bright, Jonathan and van der Walt, St{\'e}fan J and Brett, Matthew and
+               Wilson, Joshua and Millman, K Jarrod and Mayorov, Nikolay and
+               Nelson, Andrew R J and Jones, Eric and Kern, Robert and Larson, Eric and
+               Carey, C J and Polat, Ilhan and Feng, Yu and Moore, Eric W and
+               VanderPlas, Jake and Laxalde, Denis and Perktold, Josef and
+               Cimrman, Robert and Henriksen, Ian and Quintero, E A and
+               Harris, Charles R and Archibald, Anne M and Ribeiro, Antonio H and
+               Pedregosa, Fabian and van Mulbregt, Paul and
+               {SciPy 1.0 Contributors}},
+  title     = {{SciPy} 1.0: Fundamental algorithms for scientific computing in
+               {Python}},
+  journal   = {Nature Methods},
+  volume    = {17},
+  number    = {3},
+  pages     = {261--272},
+  year      = {2020},
+  publisher = {Nature Publishing Group},
+  doi       = {10.1038/s41592-019-0686-2}
+}
+
+@article{Pedregosa2011,
+  author    = {Pedregosa, Fabian and Varoquaux, Ga{\"e}l and Gramfort, Alexandre and
+               Michel, Vincent and Thirion, Bertrand and Grisel, Olivier and
+               Blondel, Mathieu and Prettenhofer, Peter and Weiss, Ron and
+               Dubourg, Vincent and Vanderplas, Jake and Passos, Alexandre and
+               Cournapeau, David and Brucher, Matthieu and Perrot, Matthieu and
+               Duchesnay, Edouard},
+  title     = {Scikit-learn: Machine learning in {Python}},
+  journal   = {Journal of Machine Learning Research},
+  volume    = {12},
+  pages     = {2825--2830},
+  year      = {2011}
+}
+
+@inproceedings{McKinney2010,
+  author    = {McKinney, Wes},
+  title     = {Data structures for statistical computing in {Python}},
+  booktitle = {Proceedings of the 9th Python in Science Conference (SciPy 2010)},
+  volume    = {445},
+  pages     = {51--56},
+  year      = {2010},
+  doi       = {10.25080/Majora-92bf1922-00a}
+}
+
+@software{pandas2020,
+  author    = {{The pandas Development Team}},
+  title     = {pandas-dev/pandas: {Pandas}},
+  year      = {2020},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.3509134}
+}
+
+@software{Plotly2015,
+  author    = {{Plotly Technologies Inc.}},
+  title     = {Collaborative data science},
+  year      = {2015},
+  url       = {https://plot.ly}
+}
+
+@software{Dash2017,
+  author    = {{Plotly Technologies Inc.}},
+  title     = {Dash: Analytical web applications for {Python}, {R}, {Julia},
+               and {Jupyter}},
+  year      = {2017},
+  url       = {https://dash.plotly.com}
+}
+
+@article{Hunter2007,
+  author    = {Hunter, John D},
+  title     = {Matplotlib: A 2{D} graphics environment},
+  journal   = {Computing in Science \& Engineering},
+  volume    = {9},
+  number    = {03},
+  pages     = {90--95},
+  year      = {2007},
+  publisher = {IEEE Computer Society},
+  doi       = {10.1109/MCSE.2007.55}
+}
+
+@article{Waskom2021,
+  author    = {Waskom, Michael L},
+  title     = {seaborn: statistical data visualization},
+  journal   = {Journal of Open Source Software},
+  volume    = {6},
+  number    = {60},
+  pages     = {3021},
+  year      = {2021},
+  doi       = {10.21105/joss.03021}
+}
+
+@inproceedings{Seabold2010,
+  author    = {Seabold, Skipper and Perktold, Josef},
+  title     = {Statsmodels: Econometric and statistical modeling with {Python}},
+  booktitle = {Proceedings of the 9th Python in Science Conference (SciPy 2010)},
+  pages     = {57--61},
+  year      = {2010},
+  doi       = {10.25080/Majora-92bf1922-011}
+}
+
+@article{Vallat2018,
+  author    = {Vallat, Raphael},
+  title     = {Pingouin: statistics in {Python}},
+  journal   = {Journal of Open Source Software},
+  volume    = {3},
+  number    = {31},
+  pages     = {1026},
+  year      = {2018},
+  doi       = {10.21105/joss.01026}
+}
+
+@software{tqdm2023,
+  author    = {da Costa-Luis, Casper and others},
+  title     = {tqdm: A fast, Extensible Progress Bar for {Python} and {CLI}},
+  year      = {2023},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.8233024}
+}
+
+% --- Authorship and reporting ---
+
+@article{Brand2015,
+  author    = {Brand, Amy and Allen, Liz and Altman, Micah and Hlava, Marjorie
+               and Scott, Jo},
+  title     = {Beyond authorship: attribution, contribution, collaboration, and credit},
+  journal   = {Learned Publishing},
+  volume    = {28},
+  number    = {2},
+  pages     = {151--155},
+  year      = {2015},
+  doi       = {10.1087/20150211}
+}
