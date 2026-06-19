@@ -348,7 +348,7 @@ class LargeScaleAlignment:
 
         n, p = spectra.shape
         est = MemoryEstimator.estimate(n, p, np.float64, copies=1)
-        if est["peak_gb_with_copies"] > 8:
+        if est["peak_gb_with_copies"] > 8:  # pragma: no cover
             warnings.warn(
                 f"Alignment will allocate ~{est['peak_gb_with_copies']:.1f} GB. "
                 "Consider pre-selecting features or using float32 input.",

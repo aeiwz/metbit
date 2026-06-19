@@ -69,7 +69,7 @@ def _apply_baseline_1d(
     """Apply a baseline method to a 1D spectrum and return the estimated baseline."""
     method = method.lower()
     if method == 'asls':
-        if _asls is None:
+        if _asls is None:  # pragma: no cover
             raise ImportError("pybaselines.whittaker.asls is not available.")
         lam = kwargs.pop('lam', 1e7)
         max_iter = kwargs.pop('max_iter', 30)
@@ -77,22 +77,22 @@ def _apply_baseline_1d(
         baseline, _ = _asls(y, lam=lam, p=p, max_iter=max_iter)
         return baseline
     if method == 'arpls':
-        if _arpls is None:
+        if _arpls is None:  # pragma: no cover
             raise ImportError("pybaselines.whittaker.arpls is not available.")
         lam = kwargs.pop('lam', 1e7)
         max_iter = kwargs.pop('max_iter', 30)
         baseline, _ = _arpls(y, lam=lam, max_iter=max_iter)
         return baseline
     if method == 'airpls':
-        if _airpls is None:
+        if _airpls is None:  # pragma: no cover
             raise ImportError("pybaselines.whittaker.airpls is not available.")
         lam = kwargs.pop('lam', 1e7)
         max_iter = kwargs.pop('max_iter', 30)
-        order = kwargs.pop('order', 2)
-        baseline, _ = _airpls(y, lam=lam, max_iter=max_iter, order=order)
+        kwargs.pop('order', None)
+        baseline, _ = _airpls(y, lam=lam, max_iter=max_iter)
         return baseline
     if method == 'modpoly':
-        if _modpoly is None:
+        if _modpoly is None:  # pragma: no cover
             raise ImportError("pybaselines.polynomial.modpoly is not available.")
         poly_order = kwargs.pop('poly_order', 3)
         max_iter = kwargs.pop('max_iter', 50)
@@ -100,7 +100,7 @@ def _apply_baseline_1d(
         baseline, _ = _modpoly(y, poly_order=poly_order, max_iter=max_iter, tol=tol)
         return baseline
     if method == 'imodpoly':
-        if _imodpoly is None:
+        if _imodpoly is None:  # pragma: no cover
             raise ImportError("pybaselines.polynomial.imodpoly is not available.")
         poly_order = kwargs.pop('poly_order', 3)
         max_iter = kwargs.pop('max_iter', 50)

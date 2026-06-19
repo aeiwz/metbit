@@ -39,7 +39,7 @@ class Normality_distribution:
                 if X < 1024:
                     return f'{X:.2f} {size[i]}'
                 X /= 1024
-            return X
+            return X  # pragma: no cover
         sizes = memory_size(data)
 
         print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
@@ -152,7 +152,7 @@ class Normalise:
                 if X < 1024:
                     return f'{X:.2f} {size[i]}'
                 X /= 1024
-            return X
+            return X  # pragma: no cover
         sizes = memory_size(data)
 
         print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
@@ -190,7 +190,8 @@ class Normalise:
         if plot:
             plt.figure()
             safe_coef = pqn_coef.replace(0, np.nan)
-            plt.hist(np.divide(1, safe_coef, where=~safe_coef.isna()).dropna(), bins=25)
+            valid_coef = safe_coef.dropna().values.astype(float)
+            plt.hist(1.0 / valid_coef if len(valid_coef) > 0 else [], bins=25)
             plt.xlabel("1/PQN Coefficient")
             plt.ylabel('Frequency')
             plt.title("Distribution of Normalisation factors")

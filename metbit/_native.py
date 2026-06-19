@@ -61,15 +61,15 @@ _LARGE_THRESH = 500_000_000   # 500 M -> GPU preferred above this
 try:
     if _DISABLE_NATIVE:
         raise ImportError("native backend disabled by METBIT_DISABLE_NATIVE")
-    from . import _native_backend
-    _NATIVE_OK = True
+    from . import _native_backend  # pragma: no cover
+    _NATIVE_OK = True  # pragma: no cover
 except ImportError:
     _native_backend = None  # type: ignore[assignment]
     _NATIVE_OK = False
 
 # Detect number of OpenMP threads reported by the C extension
 _OPENMP_THREADS: int = 0
-if _NATIVE_OK:
+if _NATIVE_OK:  # pragma: no cover
     try:
         _OPENMP_THREADS = _native_backend.openmp_threads()
     except AttributeError:
@@ -79,7 +79,7 @@ if _NATIVE_OK:
 _cupy  = None
 _torch = None
 
-if not _DISABLE_GPU:
+if not _DISABLE_GPU:  # pragma: no cover
     try:
         import cupy as _cupy  # type: ignore[import]
         _cupy.cuda.Device(0).use()  # validate at least one GPU
@@ -137,7 +137,7 @@ def _asf32_c(arr: np.ndarray) -> np.ndarray:
 # GPU implementations
 # ---------------------------------------------------------------------------
 
-def _pearson_gpu(matrix: np.ndarray, anchor_index: int) -> np.ndarray:
+def _pearson_gpu(matrix: np.ndarray, anchor_index: int) -> np.ndarray:  # pragma: no cover
     """Pearson correlation on GPU. Returns numpy float64 array."""
     if _cupy is not None:
         X = _cupy.asarray(matrix, dtype=_cupy.float32)
@@ -171,7 +171,7 @@ def _pearson_gpu(matrix: np.ndarray, anchor_index: int) -> np.ndarray:
     raise RuntimeError("GPU backend requested but none available")
 
 
-def _column_variances_gpu(matrix: np.ndarray) -> np.ndarray:
+def _column_variances_gpu(matrix: np.ndarray) -> np.ndarray:  # pragma: no cover
     """Per-column variance on GPU. Returns numpy float64 array."""
     if _cupy is not None:
         X = _cupy.asarray(matrix, dtype=_cupy.float32)
@@ -187,7 +187,7 @@ def _column_variances_gpu(matrix: np.ndarray) -> np.ndarray:
     raise RuntimeError("GPU backend requested but none available")
 
 
-def _vip_scores_gpu(t: np.ndarray, w: np.ndarray, q: np.ndarray) -> np.ndarray:
+def _vip_scores_gpu(t: np.ndarray, w: np.ndarray, q: np.ndarray) -> np.ndarray:  # pragma: no cover
     """VIP scores on GPU."""
     if _cupy is not None:
         t_g = _cupy.asarray(t, dtype=_cupy.float64)
@@ -386,14 +386,14 @@ def pearson_columns(
     size = _n_elements(n, p)
 
     # -- GPU path ----------------------------------------------------------
-    if gpu_available() and size > _SMALL_THRESH:
+    if gpu_available() and size > _SMALL_THRESH:  # pragma: no cover
         try:
             return _pearson_gpu(matrix, anchor_index)
         except Exception:
             pass  # fall through to CPU
 
     # -- C extension paths -------------------------------------------------
-    if _NATIVE_OK:
+    if _NATIVE_OK:  # pragma: no cover
         if matrix.dtype == np.float32 and hasattr(_native_backend, "pearson_columns_f32"):
             mat = _asf32_c(matrix)
             packed = _native_backend.pearson_columns_f32(
@@ -418,7 +418,7 @@ def pearson_columns(
     if n_jobs > 1 and size > _SMALL_THRESH:
         try:
             return _pearson_multiprocessing(matrix, anchor_index, chunk_size, n_jobs)
-        except Exception:
+        except Exception:  # pragma: no cover
             pass  # multiprocessing may fail in notebooks/subprocesses
 
     return _pearson_numpy_chunked(matrix, anchor_index, chunk_size)
@@ -453,14 +453,14 @@ def column_variances(
     size = _n_elements(n, p)
 
     # -- GPU ---------------------------------------------------------------
-    if gpu_available() and size > _SMALL_THRESH:
+    if gpu_available() and size > _SMALL_THRESH:  # pragma: no cover
         try:
             return _column_variances_gpu(matrix)
         except Exception:
             pass
 
     # -- C extension -------------------------------------------------------
-    if _NATIVE_OK:
+    if _NATIVE_OK:  # pragma: no cover
         if matrix.dtype == np.float32 and hasattr(_native_backend, "column_variances_f32"):
             mat = _asf32_c(matrix)
             packed = _native_backend.column_variances_f32(memoryview(mat), n, p)
@@ -473,7 +473,7 @@ def column_variances(
     if n_jobs > 1 and size > _SMALL_THRESH:
         try:
             return _variance_multiprocessing(matrix, chunk_size, n_jobs)
-        except Exception:
+        except Exception:  # pragma: no cover
             pass
 
     # -- NumPy chunked -----------------------------------------------------
@@ -519,14 +519,14 @@ def vip_scores(
     n_feat = w.shape[0]
 
     # -- GPU ---------------------------------------------------------------
-    if gpu_available() and n_feat > 100_000:
+    if gpu_available() and n_feat > 100_000:  # pragma: no cover
         try:
             return _vip_scores_gpu(t, w, q)
         except Exception:
             pass
 
     # -- C extension -------------------------------------------------------
-    if _NATIVE_OK and hasattr(_native_backend, "vip_scores"):
+    if _NATIVE_OK and hasattr(_native_backend, "vip_scores"):  # pragma: no cover
         q_c = np.ascontiguousarray(q)
         packed = _native_backend.vip_scores(
             memoryview(t), memoryview(w), memoryview(q_c),

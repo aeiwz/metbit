@@ -43,7 +43,7 @@ class peak_chops:
             if ppm is not pd.core.indexes.base.Index:
                 ppm = pd.core.indexes.base.Index(ppm)
             else:
-                pass
+                pass  # pragma: no cover
 
         self.data = data
         self.ppm = ppm

@@ -38,23 +38,23 @@ from metbit.preprocessing.normalize import Normalization
 # Dash apps (optional heavy deps)
 try:
     from metbit.apps.annotate import annotate_peak
-except Exception:
+except Exception:  # pragma: no cover
     pass
 
 try:
     from metbit.apps.stocsy_app import STOCSY_app
-except Exception:
+except Exception:  # pragma: no cover
     pass
 
 try:
     from metbit.apps.peak_picker import pickie_peak
-except Exception:
+except Exception:  # pragma: no cover
     pass
 
 # Legacy flat-layout class not yet moved to a sub-package
 try:
     from metbit.lazy_opls_da import lazy_opls_da
-except Exception:
+except Exception:  # pragma: no cover
     pass
 
 _always_exported = [
