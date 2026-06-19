@@ -73,6 +73,60 @@ def load_coverage(path: Path):
     return {"percent": percent, "lowest": lowest}
 
 
+def load_benchmark(path: Path):
+    """Load benchmark_results.json if it exists; return None otherwise."""
+    if not path.exists():
+        return None
+    try:
+        with path.open() as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+def _perf_summary_lines(bench: dict) -> list:
+    """Return markdown lines summarising the key speedups from benchmark data."""
+    results = bench.get("results", [])
+    if not results:
+        return ["- No benchmark data found."]
+
+    # Reference label per benchmark name
+    ref_labels = {
+        "vip_scores": "Python loop",
+        "pearson_columns": "Full-copy NumPy (baseline)",
+        "column_variances": "NumPy (baseline)",
+        "feature_preselection": "Raw NumPy var (baseline)",
+        "stocsy": "Standard STOCSY",
+        "opls_da_pipeline": "float64 pipeline",
+    }
+
+    # Build reference lookup
+    refs: dict = {}
+    for r in results:
+        name, label = r["name"], r["label"]
+        ref = ref_labels.get(name)
+        if label == ref:
+            key = (name, r["n_samples"], r["n_features"])
+            refs[key] = r["min_ms"]
+
+    lines = []
+    for r in results:
+        name = r["name"]
+        ref = ref_labels.get(name)
+        if not ref or r["label"] == ref:
+            continue
+        key = (name, r["n_samples"], r["n_features"])
+        ref_ms = refs.get(key)
+        if ref_ms and r["min_ms"] and r["min_ms"] == r["min_ms"]:
+            ratio = ref_ms / max(r["min_ms"], 1e-9)
+            ds = f"{r['n_samples']:,}x{r['n_features']:,}"
+            lines.append(
+                f"- `{name}` {r['label']} @ {ds}: "
+                f"**{ratio:.1f}x** speedup ({r['min_ms']:.1f} ms vs {ref_ms:.1f} ms baseline)"
+            )
+    return lines or ["- No speedup data available."]
+
+
 def main():
     root = Path(__file__).resolve().parent.parent
     reports_dir = root / "reports"
@@ -80,6 +134,7 @@ def main():
 
     junit = load_junit_report(reports_dir / "junit.xml")
     coverage = load_coverage(reports_dir / "coverage.json")
+    bench = load_benchmark(reports_dir / "benchmark_results.json")
 
     try:
         from metbit import __version__ as package_version
@@ -110,6 +165,21 @@ def main():
             lines.append(f"- {entry['file']}: {entry['percent']:.2f}%")
     else:
         lines.append("- N/A")
+
+    lines.append("")
+    lines.append("## Performance")
+    if bench:
+        b_ts = bench.get("timestamp", "unknown")
+        b_backend = bench.get("backend", {})
+        native = "yes" if b_backend.get("native_c") else "no"
+        omp    = b_backend.get("openmp_threads", 0)
+        gpu    = "yes" if (b_backend.get("gpu_cupy") or b_backend.get("gpu_torch")) else "no"
+        lines.append(f"- Benchmark run: {b_ts}")
+        lines.append(f"- Backend: native_c={native}, openmp_threads={omp}, gpu={gpu}")
+        lines += _perf_summary_lines(bench)
+        lines.append(f"- Full report: reports/PERFORMANCE.md")
+    else:
+        lines.append("- No benchmark results found. Run: `python scripts/perf_report.py`")
 
     lines.append("")
     lines.append("## Failures")

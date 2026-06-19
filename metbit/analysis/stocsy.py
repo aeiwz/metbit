@@ -11,9 +11,29 @@ __status__ = "Development"
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-from scipy.stats import pearsonr
+from scipy.special import stdtr
+
+from .._native import pearson_columns
 
 
+def _stocsy_statistics(spectra: pd.DataFrame, anchor_index: int):
+    """Return vectorized Pearson correlations and two-sided p-values."""
+    values = spectra.to_numpy(dtype=np.float64, copy=False)
+    correlations = pearson_columns(values, anchor_index)
+    degrees_of_freedom = values.shape[0] - 2
+
+    if values.shape[0] == 2:
+        p_values = np.ones(values.shape[1], dtype=np.float64)
+        p_values[np.isnan(correlations)] = np.nan
+        return correlations, p_values
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        denominator = np.maximum(1.0 - correlations ** 2, 0.0)
+        t_statistics = correlations * np.sqrt(
+            degrees_of_freedom / denominator
+        )
+    p_values = 2.0 * stdtr(degrees_of_freedom, -np.abs(t_statistics))
+    return correlations, p_values
 
 
 def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
@@ -59,18 +79,8 @@ def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
     # Step 3: Find the index of the anchor ppm in the list of ppm values
     anchor_index = np.argmin(np.abs(np.array(ppm) - anchor_ppm_value))
 
-    # Step 4: Calculate Pearson correlation and p-values for the anchor point against all others
-    correlations = []
-    p_values = []
-
-    for col in X.columns:
-        # Calculate correlation between the anchor signal and each other signal
-        corr, p_val = pearsonr(X.iloc[:, anchor_index], X[col])
-        correlations.append(corr)
-        p_values.append(p_val)
-
-    correlations = np.array(correlations)
-    p_values = np.array(p_values)
+    # Step 4: Calculate correlations and p-values in one matrix pass.
+    correlations, p_values = _stocsy_statistics(X, anchor_index)
 
     # Step 5: Calculate r^2 (squared correlation) for each point
     r_squared = correlations ** 2
