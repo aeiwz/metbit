@@ -1,249 +1,436 @@
 # metbit
 
+[![PyPI version](https://img.shields.io/pypi/v/metbit?color=green&style=for-the-badge)](https://pypi.org/project/metbit/)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/metbit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/metbit)
+[![Python](https://img.shields.io/pypi/pyversions/metbit?style=for-the-badge)](https://pypi.org/project/metbit/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Open Documentation](https://img.shields.io/badge/Docs-metbit--docs.vercel.app-2563EB?style=for-the-badge&logo=readthedocs&logoColor=white)](https://metbit-docs.vercel.app)
 
-[![PyPI Downloads](https://static.pepy.tech/personalized-badge/metbit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/metbit)
+An open-source Python package for reproducible 1H NMR metabolomics - from raw FID preprocessing through normalization, chemometrics, and interactive visualization, in a single scriptable workflow.
 
-Documentation
--------------
+metbit v9.0.0 adds a four-tier auto-dispatch compute backend (GPU - C+OpenMP - multiprocessing - chunked NumPy), a native C extension with optional OpenMP parallelism, memory-bounded algorithms for biobank-scale cohorts, and a 305-test validation suite.
 
-A full, searchable documentation site is available at the link above. It includes:
+---
 
-- Getting Started guide with pip install and a minimal workflow
-- API Reference for all public classes, functions, and utilities
-- Examples for preprocessing (NMR), modeling (PCA/OPLS‑DA), and visualization
+## Contents
 
-Quick links:
+- [Installation](#installation)
+- [Quick Start](#quick-start)
+- [Workflow Overview](#workflow-overview)
+- [NMR Preprocessing](#nmr-preprocessing)
+- [Normalization and Alignment](#normalization-and-alignment)
+- [Principal Component Analysis](#principal-component-analysis)
+- [OPLS-DA](#opls-da)
+- [STOCSY](#stocsy)
+- [Large-Scale Compute Backend](#large-scale-compute-backend)
+- [Interactive Dash Applications](#interactive-dash-applications)
+- [Performance](#performance)
+- [Testing](#testing)
+- [Citation](#citation)
 
-- Getting Started: https://metbit-docs.vercel.app/docs/getting-started
-- API Reference: https://metbit-docs.vercel.app/docs/api
+---
 
-Metbit is a Python package designed for the analysis of metabolomics data. It provides a range of tools and functions to process, visualize, and interpret metabolomics datasets. With Metbit, you can perform various statistical analyses, identify biomarkers, and generate informative visualizations to gain insights into your metabolomics experiments. Whether you are a researcher, scientist, or data analyst working in the field of metabolomics, Metbit can help streamline your data analysis workflow and facilitate the interpretation of complex metabolomics data.
-
-
-# How to install
+## Installation
 
 ```bash
 pip install metbit
 ```
-# Features: 
 
-[1. PCA model and visualisation](#principal-component-analysis)
+The C extension (VIP kernel, Pearson correlation, column variance) is compiled automatically at install time when a C compiler is available. OpenMP parallelism is enabled when the compiler supports `-fopenmp`.
 
-[2. OPLS-DA model and visualisation](#orthogonal-partial-least-squares-discriminant-analysis-(opls-da))
-
-[3. STOCSY and STOCSY app](src/page/STOCSY.md)
-
-# Example:
-
-# **Principal component analysis**
-
-PCA is used to transform a large set of variables into a smaller one
-that still contains most of the information in the large set. This is
-particularly useful when dealing with high-dimensional data, where
-visualizing and analyzing the data can be challenging.
-
-To perform Principal Component Analysis (PCA) in a Python environment,
-you can use the metbit library. Here\'s a step-by-step guide to import
-the necessary package and perform PCA:
-
-``` python
-import pandas as pd
-from metbit import pca
+```bash
+# Verify the active compute backend after installation
+python -c "import metbit; print(metbit.backend_info())"
+# {'native_c': True, 'openmp_threads': 8, 'gpu_cupy': False, 'gpu_torch': False, ...}
 ```
 
-``` python
-df = pd.read_csv("metbit_tutorial_data.csv")
+**Optional GPU acceleration** - install CuPy or PyTorch with CUDA support:
+
+```bash
+pip install cupy-cuda12x   # or torch with CUDA
 ```
 
+---
 
-Use .iloc or df.head(10)[df.columns[:10]] to display 10 rows and 10 columns first
+## Quick Start
 
 ```python
-df.iloc[:10, :10]
+import pandas as pd
+from metbit import nmr_preprocessing, pca, opls_da, STOCSY
+
+# 1. Load a preprocessed spectral matrix (samples x variables)
+df = pd.read_csv("nmr_data.csv")
+X = df.iloc[:, 2:]          # spectral matrix
+y = df["Group"]             # binary class label
+ppm = X.columns.astype(float).tolist()
+
+# 2. PCA - exploratory overview
+pca_mod = pca(X=X, label=y, features_name=ppm, n_components=3)
+pca_mod.fit()
+pca_mod.plot_pca_scores(pc=["PC1", "PC2"])
+
+# 3. OPLS-DA - supervised discrimination
+model = opls_da(X=X, y=y, features_name=ppm, scale="uv", auto_ncomp=True)
+model.fit()
+model.plot_oplsda_scores()
+model.vip_scores()
+model.vip_plot(threshold=2)
+
+# 4. STOCSY - correlation from a VIP anchor peak
+stocsy = STOCSY(X=X, ppm=ppm)
+stocsy.fit(driver=3.05)
+stocsy.plot()
 ```
-Output:
 
+---
 
-| Group   |   Time point |       0.0 |   0.0001716414 |   0.0003432828 |   0.0005149242 |   0.0006865656 |   0.000858207 |   0.0010298484 |   0.0012014898 |
-|:--------|-------------:|----------:|---------------:|---------------:|---------------:|---------------:|--------------:|---------------:|---------------:|
-| Group B |            3 |  3024.2   |       3923.9   |       4758.23  |       4551.28  |       3737.53  |      3469.81  |       3646.49  |      3278.41   |
-| Group A |            3 |  3776.08  |       3441.18  |       3479.89  |       4102.29  |       5089.12  |      6000.92  |       6556.49  |      6687.83   |
-| Group A |            2 |  3823.99  |       3227.06  |       2793.23  |       2544.2   |       2254.06  |      1843.89  |       1470.21  |      1362.43   |
-| Group B |            2 | 21926     |      21546.2   |      21155.6   |      20190.6   |      18755.6   |     17993.4   |      18545.5   |     19496.6    |
-| Group A |            4 |  2997.22  |       2130.68  |       1993.8   |       2948.87  |       4414.49  |      5267.69  |       4897.94  |      3868.98   |
-| Group B |            4 | 12988.5   |      14361.2   |      15288.7   |      15439.6   |      15410.4   |     15513.2   |      15528     |     15446.5    |
-| Group A |            2 |   202.293 |        111.968 |        640.931 |       1732.62  |       2926.78  |      3299.18  |       2308.54  |       783.053  |
-| Group A |            3 |  4813.91  |       4822.44  |       4153.81  |       2861.74  |       1405.9   |       575.416 |        725.433 |      1315.78   |
-| Group A |            4 | 34822.5   |      34380.2   |      33536.9   |      32369.3   |      31296.5   |     30737.1   |      30694.3   |     30909.4    |
-| Group A |            4 |   124.841 |        677.809 |        841.232 |        659.092 |        479.715 |       438.279 |        323.827 |       -43.9303 |
+## Workflow Overview
 
+```
+Raw Bruker FID
+      │
+      ▼
+nmr_preprocessing          # digital filter removal, zero-fill, FFT,
+      │                    # ACME phase correction, arPLS baseline correction,
+      │                    # TSP/DSS calibration, region exclusion
+      ▼
+Normalization              # PQN / MSC / TSP-area
+      │
+      ▼
+icoshift_align             # segment-wise spectral alignment
+      │
+      ▼
+pca                        # exploratory variance overview
+      │
+      ▼
+opls_da                    # supervised binary classification
+      │                    # VIP scoring, permutation test, CV-ANOVA
+      ▼
+STOCSY / ChunkedSTOCSY     # structural correlation from anchor peaks
+      │
+      ▼
+Interactive Dash apps      # local browser exploration, no data upload
+```
 
+---
 
-## **Assign object to perform PCA**
+## NMR Preprocessing
 
-X: data frame of features to test
+```python
+from metbit import nmr_preprocessing
 
-features_name: features name of X data frame
+# Process a folder of Bruker FID experiments
+proc = nmr_preprocessing(
+    path="path/to/bruker/experiments",
+    ppm_range=(-0.5, 10.0),
+    water_region=(4.7, 4.9),
+    reference_peak=0.0,   # TSP/DSS at 0 ppm
+)
+spectra_df = proc.process()   # returns samples x ppm DataFrame
+```
 
-color_: series of group to label with color
+The preprocessing pipeline applies, in order:
 
-symbol_: series of time point to label with symbol
+| Step | Method |
+|------|--------|
+| Digital filter removal | FID truncation at group delay |
+| Zero filling | Next power of two |
+| Fourier transform | FFT with apodization |
+| Phase correction | ACME entropy minimization (Chen et al., 2002) |
+| Baseline correction | arPLS (Baek et al., 2015) |
+| Chemical shift calibration | TSP/DSS reference at 0 ppm |
+| Region exclusion | Water, solvent, user-defined windows |
 
-time_order: assign order of symbol
+---
 
-``` python
+## Normalization and Alignment
+
+```python
+from metbit import Normalise, icoshift_align
+
+# Probabilistic Quotient Normalization
+normalised = Normalise(spectra_df).pqn()
+
+# Multiplicative Scatter Correction
+normalised = Normalise(spectra_df).msc()
+
+# Icoshift spectral alignment
+aligned = icoshift_align(normalised, n_intervals="whole")
+```
+
+v9.0.0: `icoshift_align` now allocates a single output array instead of two full-matrix copies, halving peak memory at large cohort sizes.
+
+---
+
+## Principal Component Analysis
+
+```python
+from metbit import pca
+
 X = df.iloc[:, 2:]
-features_name = X.columns.astype(float).to_list()
+ppm = X.columns.astype(float).tolist()
 color_ = df["Group"]
 symbol_ = df["Time point"]
-time_order = {1:0, 2:1, 3:2, 4:2}
-```
+time_order = {1: 0, 2: 1, 3: 2, 4: 3}
 
-Assign and fit PCA model
-``` python
 pca_mod = pca(X=X, label=color_, features_name=ppm, n_components=3)
 pca_mod.fit()
-```
 
-## **Visualisation**
-
-```python
 pca_mod.plot_cumulative_observed()
-```
-Output:
-![Cumurative varian](./src/img/cumulative_observed.svg)
-
-``` python
 pca_mod.plot_pca_scores(pc=["PC1", "PC2"], symbol_=symbol_)
-```
-Output:
-![PCA scores plot](./src/img/pca_scores[PC1-PC2].svg)
-
-```python
 pca_mod.plot_pca_scores(pc=["PC1", "PC3"], symbol_=symbol_)
-```
-Output:
-
-![PCA scores plot](./src/img/pca_scores[PC1-PC3].svg)
-
-
-``` python
 pca_mod.plot_3d_pca(marker_size=10, symbol_=symbol_)
-```
-Output:
-
-![3D plot](./src/img/3d_pca.svg)
-
-To observe time series of PCA you can perform times trajectory plot use function plot_trajectory
-
-``` python
 pca_mod.plot_pca_trajectory(time_=symbol_, time_order=time_order, pc=["PC1", "PC2"])
 ```
-Output:
 
-![Trajectory plot](./src/img/pca_trajectory[PC1-PC2].svg)
+All plots are returned as interactive Plotly HTML figures.
 
-``` python
-pca_mod.plot_pca_trajectory(time_=symbol_, time_order=time_order, pc=["PC1", "PC3"])
-```
-Output:
-![trajectory plot](./src/img/pca_trajectory[PC1-PC3].svg)
-# **Orthogonal Partial Least Squares Discriminant Analysis (OPLS-DA)**
+---
 
-Orthogonal Partial Least Squares Discriminant Analysis (OPLS-DA) was
-proposed by Prof. Svante Wold in 2002 as a variant of PLS-DA, using a
-mathematical filter to remove systematic variance unrelated to the
-sample class. This is particularly advantageous in metabolomics, such as
-distinguishing the metabolomic signature of coronary disease without
-confounding factors like sex. However, OPLS-DA is less common than
-PLS-DA due to increased risk of overfitting and its limitation to binary
-classification.
+## OPLS-DA
 
+```python
+from metbit import opls_da
 
-``` python
-
-from metbit import opls_da 
-import pandas as pd 
+model = opls_da(
+    X=X,
+    y=y,
+    features_name=ppm,
+    scale="uv",          # unit-variance scaling
+    auto_ncomp=True,     # automatic component selection via cross-validation
+)
+model.fit()
 ```
 
-1.  Load the data and data manipulation
+### Scores and loadings
 
-``` python
-df = pd.read_csv("metbit_tutorial_data.csv")
-#Exclude base line (Time point 1)
-df.drop(df.loc[df["Time point"]==1].index, inplace=True)
+```python
+model.plot_oplsda_scores()   # predictive vs orthogonal scores
+model.plot_loading()         # loading plot (color by correlation)
+model.plot_s_scores()        # S-plot (covariance vs correlation)
 ```
 
-``` python
-X = df.iloc[:, 2:]
-ppm = X.columns.astype(float).to_list()
-y = df["Group"]
+### Model validation
+
+```python
+# Permutation test
+model.permutation_test(n_permutations=1000, n_jobs=-1)
+model.plot_hist()            # R2 / Q2 null distribution
+
+# VIP scores - identifies discriminating variables
+model.vip_scores()
+model.vip_plot(threshold=2)  # highlight features with VIP > threshold
 ```
 
-``` python
-opls_da_mod = opls_da(X=X, y=y, features_name=ppm, scale='uv', auto_ncomp=True)
+### Model metrics
+
+```python
+print(model.R2Y)    # variance explained in Y
+print(model.Q2)     # cross-validated predictive ability
+print(model.AUROC)  # area under the ROC curve
 ```
 
-``` python
-opls_da_mod.fit()
+### Large-cohort option (v9.0.0)
+
+```python
+# Halve peak memory with float32 (auto-selected when n*p > 5,000,000)
+model = opls_da(X=X, y=y, features_name=ppm, scale="uv", dtype="float32")
 ```
-Output:
 
-OPLS-DA model is fitted in 2.5721652507782 seconds
+The `vip_scores()` method in v9.0.0 dispatches to the native C kernel, replacing the previous O(p) Python loop over features (up to 2,680x faster at large feature counts).
 
+---
 
-## **Visualisation**
+## STOCSY
 
+Statistical Total Correlation Spectroscopy identifies structurally related resonances by correlating every spectral variable against an anchor peak.
 
-``` python
-opls_da_mod.plot_oplsda_scores()
+```python
+from metbit import STOCSY
+
+stocsy = STOCSY(X=spectra_df, ppm=ppm)
+stocsy.fit(driver=3.05)   # anchor ppm - typically a high-VIP peak
+stocsy.plot()             # interactive spectrum colored by Pearson r
 ```
-Output:
-![opls da scores](./src/img/oplsda_scores.svg)
 
-``` python
-opls_da_mod.plot_loading()
+### ChunkedSTOCSY - for large feature counts (v9.0.0)
+
+`ChunkedSTOCSY` processes correlations in feature batches, bounding peak memory to O(n × chunk_size) regardless of total feature count. Suitable for datasets exceeding available RAM.
+
+```python
+from metbit import ChunkedSTOCSY
+
+cs = ChunkedSTOCSY(X=spectra_df, ppm=ppm, chunk_size=10_000)
+cs.fit(driver=3.05)
+cs.plot()
+
+# Inspect which backend is active
+print(ChunkedSTOCSY.active_backend())
 ```
-Output:
-![opls da loading](./src/img/oplsda_loading.svg)
-``` python
-opls_da_mod.plot_s_scores()
+
+---
+
+## Large-Scale Compute Backend
+
+v9.0.0 introduces a four-tier auto-dispatch compute backend. The backend is selected automatically based on dataset size and available hardware - no code changes required.
+
 ```
-Output:
-![opls da S scores](./src/img//oplsda_s_scores.svg)
-
-``` python
-opls_da_mod.permutation_test(n_permutations=100, n_jobs=-1)
+GPU (CuPy / PyTorch CUDA)     >500 M elements, GPU memory fits
+        ↓
+C + OpenMP                     >10 M elements, C extension compiled
+        ↓
+Multiprocessing + NumPy        C extension absent, many cores available
+        ↓
+Chunked NumPy                  universal fallback, bounded memory
 ```
-Output:
 
-    [Parallel(n_jobs=-1)]: Using backend LokyBackend with 8 concurrent workers.
-    [Parallel(n_jobs=-1)]: Done   2 tasks      | elapsed:    8.5s
-    [Parallel(n_jobs=-1)]: Done   9 tasks      | elapsed:   11.1s
-    [Parallel(n_jobs=-1)]: Done  16 tasks      | elapsed:   13.2s
-    [Parallel(n_jobs=-1)]: Done  25 tasks      | elapsed:   17.5s
-    [Parallel(n_jobs=-1)]: Done  34 tasks      | elapsed:   20.8s
-    [Parallel(n_jobs=-1)]: Done  45 tasks      | elapsed:   23.7s
-    [Parallel(n_jobs=-1)]: Done  56 tasks      | elapsed:   27.4s
-    [Parallel(n_jobs=-1)]: Done  69 tasks      | elapsed:   33.5s
-    [Parallel(n_jobs=-1)]: Done  82 tasks      | elapsed:   37.9s
-    [Parallel(n_jobs=-1)]: Done  96 out of 100 | elapsed:   42.7s remaining:    1.8s
+```python
+import metbit
 
+# Inspect active backends
+print(metbit.backend_info())
+# {'native_c': True, 'openmp_threads': 8, 'gpu_cupy': False, 'gpu_torch': False,
+#  'n_jobs': 8, 'default_chunk': 50000}
 
-    Permutation test is performed in 46.19982290267944 seconds
-
-    [Parallel(n_jobs=-1)]: Done 100 out of 100 | elapsed:   43.6s finished
-
-
-opls_da_mod.plot_hist()
+print(metbit.native_available())   # True if C extension compiled
+print(metbit.gpu_available())      # True if CuPy or PyTorch+CUDA present
 ```
-Output:
-![opls da permutation histogram](./src/img/oplsda_hist.svg)
 
-``` python
-opls_da_mod.vip_scores()
-opls_da_mod.vip_plot(threshold=2)
+### Environment overrides
+
+| Variable | Effect |
+|----------|--------|
+| `METBIT_DISABLE_NATIVE=1` | Skip the C extension, use NumPy paths |
+| `METBIT_DISABLE_GPU=1` | Skip CuPy and PyTorch GPU backends |
+| `METBIT_N_JOBS=N` | Override worker count for multiprocessing |
+| `METBIT_CHUNK=N` | Override feature chunk size (default 50,000) |
+
+### Memory estimation
+
+```python
+from metbit import MemoryEstimator, memory_report
+
+# Estimate peak RAM before loading
+est = MemoryEstimator()
+info = est.estimate(n_samples=10_000, n_features=65_536, dtype="float64")
+print(info)
+# {'peak_gb': 4.88, 'recommended_dtype': 'float32', 'float32_peak_gb': 2.44}
+
+# Quick one-liner for a DataFrame
+memory_report(X)
 ```
-Output:
-![opls da VIP score](./src/img/oplsda_vip_plot.svg)
+
+### Variance-based feature pre-selection
+
+Reduces feature count before expensive downstream modeling by removing low-variance spectral bins (typically instrument noise).
+
+```python
+from metbit import feature_preselection
+
+X_reduced = feature_preselection(
+    X,
+    threshold_percentile=20,  # remove bottom 20% by variance
+)
+```
+
+### LargeScaleAlignment
+
+```python
+from metbit import LargeScaleAlignment
+
+aligner = LargeScaleAlignment(memory_limit_gb=8.0)
+aligned = aligner.fit_transform(spectra_df)
+```
+
+---
+
+## Interactive Dash Applications
+
+Four local Dash applications ship with metbit for browser-based exploration. All run locally - no data is uploaded to external servers.
+
+```python
+from metbit.apps import stocsy_app, opls_app, pca_app, spectra_app
+
+# Launch STOCSY explorer
+stocsy_app(X=spectra_df, ppm=ppm, port=8050)
+
+# Launch OPLS-DA explorer
+opls_app(model=model, port=8051)
+```
+
+Apps operate on the same Python objects used in scripted analysis, so results are always consistent with the command-line workflow.
+
+---
+
+## Performance
+
+Benchmarks measured on Apple M5 Pro, single-threaded C extension, no GPU (minimum of 5 wall-clock repetitions, one warm-up discarded).
+
+| Kernel | Dataset (n x p) | Implementation | Speedup | Memory reduction |
+|--------|----------------|----------------|---------|-----------------|
+| VIP scores | 80 x 5,000 | C vs Python loop | **2,680x** | - |
+| VIP scores | 80 x 5,000 | NumPy vec. vs Python loop | 817x | - |
+| Pearson correlation | 500 x 30,000 | C vs full-copy NumPy | 1.2x | **126x** |
+| Column variance | 500 x 100,000 | C float32 vs NumPy | 2.0x | **251x** |
+| ChunkedSTOCSY | 100 x 5,000 | Chunked vs standard | **47x** | bounded |
+
+Reproduce these numbers locally:
+
+```bash
+python scripts/perf_report.py
+# Writes reports/benchmark_results.json and reports/PERFORMANCE.md
+```
+
+---
+
+## Testing
+
+metbit ships with a 305-test suite organized into four collections:
+
+| Collection | Tests | Covers |
+|------------|-------|--------|
+| `test_e2e_pipeline.py` | 44 | Full pipeline: preprocessing - OPLS-DA - STOCSY - alignment |
+| `test_ab_aa.py` | 22 | Statistical validity: AB (must discriminate), AA (must not discriminate on noise) |
+| `test_large_scale.py` | 23 | Backend dispatch, memory efficiency via `tracemalloc` |
+| `test_performance.py` | 24 | Speedup ratios and performance regression guards |
+
+```bash
+# Run full suite
+pytest
+
+# Run performance benchmarks
+pytest -m perf
+
+# Run without performance tests (faster)
+pytest -m "not perf"
+```
+
+---
+
+## Links
+
+- Documentation: https://metbit-docs.vercel.app
+- Getting Started: https://metbit-docs.vercel.app/docs/getting-started
+- API Reference: https://metbit-docs.vercel.app/docs/api
+- PyPI: https://pypi.org/project/metbit/
+- Source: https://github.com/aeiwz/metbit
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
+
+---
+
+## Citation
+
+If you use metbit in your research, please cite:
+
+> Bubpamala T, Chatgasem C. metbit: An Integrated Python Framework for Reproducible NMR Metabolomics from Spectral Processing to Biological Interpretation. *Bioinformatics Advances* (submitted, 2026).
+
+metbit has been applied in peer-reviewed clinical NMR metabolomics studies:
+
+- Karunasumetta C et al. Comparative analysis of metabolomic responses in on-pump and off-pump coronary artery bypass graft surgery. *Metabolomics* 2024.
+- Karunasumetta C et al. Metabolomic signatures influenced by different cardioplegic solutions in cardiac surgery. *J Pract Cardiovasc Sci* 2024.
+
+---
+
+## License
+
+MIT License. See [LICENSE](LICENSE) for details.
