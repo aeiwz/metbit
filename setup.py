@@ -74,6 +74,20 @@ def _detect_openmp():
 _OMP_COMPILE, _OMP_LINK = _detect_openmp()
 
 
+def _native_compile_args():
+    """Return optimization flags suitable for local and portable wheel builds."""
+    if sys.platform == "win32":
+        return ["/O2"]
+
+    args = ["-O3", "-ffast-math"]
+    portable_build = os.environ.get("METBIT_PORTABLE_BUILD", "").lower() in {
+        "1", "true", "yes",
+    }
+    if not portable_build:
+        args.insert(1, "-march=native")
+    return args
+
+
 # ---------------------------------------------------------------------------
 # Custom build_ext: tolerate compiler errors so a missing C toolchain never
 # prevents a pure-Python install.
@@ -99,7 +113,7 @@ class OptionalBuildExt(build_ext):
 _native_ext = Extension(
     "metbit._native_backend",
     sources=["metbit/_native_backend.c"],
-    extra_compile_args=["-O3", "-march=native", "-ffast-math"] + _OMP_COMPILE,
+    extra_compile_args=_native_compile_args() + _OMP_COMPILE,
     extra_link_args=_OMP_LINK,
     optional=True,
 )
@@ -149,5 +163,6 @@ setup(
         "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: 3.12",
         "Programming Language :: Python :: 3.13",
+        "Programming Language :: Python :: 3.14",
     ],
 )

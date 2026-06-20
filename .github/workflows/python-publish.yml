@@ -106,7 +106,7 @@ jobs:
 
   # ---------------------------------------------------------------------------
   # 3. Binary wheels via cibuildwheel
-  #    Linux:   manylinux_2_28 x86_64 + aarch64 (QEMU), musllinux x86_64
+  #    Linux:   manylinux_2_28 x86_64 + aarch64 (QEMU)
   #    macOS:   x86_64 + arm64
   #    Windows: AMD64
   # ---------------------------------------------------------------------------
@@ -133,28 +133,19 @@ jobs:
           python-version: "3.12"
 
       - name: Install cibuildwheel
-        run: pip install cibuildwheel==2.21.3
+        run: pip install "cibuildwheel>=3.0,<4"
 
       - name: Build wheels
         env:
-          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-*"
-          CIBW_SKIP: "*-win32 *-manylinux_i686 pp*"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_SKIP: "*-win32 *-manylinux_i686 *-musllinux_* pp*"
           CIBW_MANYLINUX_X86_64_IMAGE: manylinux_2_28
           CIBW_MANYLINUX_AARCH64_IMAGE: manylinux_2_28
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "AMD64"
-          CIBW_ENVIRONMENT_LINUX: "CFLAGS='-fopenmp' LDFLAGS='-lgomp'"
-          CIBW_TEST_COMMAND: >
-            python -c "
-            import metbit;
-            assert metbit.__version__, 'version missing';
-            from metbit._native import pearson_columns, backend_info;
-            import numpy as np;
-            r = pearson_columns(np.eye(5), anchor_index=0);
-            assert abs(r[0] - 1.0) < 1e-12, r[0];
-            print('OK - backend:', backend_info())
-            "
+          CIBW_ENVIRONMENT: "METBIT_PORTABLE_BUILD=1"
+          CIBW_TEST_COMMAND: 'python -c "import metbit; assert metbit.__version__, \"version missing\"; from metbit._native import pearson_columns, backend_info; import numpy as np; info = backend_info(); assert info[\"native_c\"], info; r = pearson_columns(np.eye(5), anchor_index=0); assert abs(r[0] - 1.0) < 1e-12, r[0]; print(\"OK - backend:\", info)"'
           CIBW_TEST_REQUIRES: "numpy scipy scikit-learn"
           CIBW_BUILD_VERBOSITY: 1
         run: cibuildwheel --output-dir wheelhouse
@@ -175,10 +166,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all built artifacts
+      - name: Download source distribution
         uses: actions/download-artifact@v4
         with:
-          pattern: "sdist wheels-*"
+          name: sdist
+          path: dist/
+
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "wheels-*"
           path: dist/
           merge-multiple: true
 
@@ -210,10 +207,16 @@ jobs:
       url: https://pypi.org/project/metbit/${{ env.RELEASE_TAG }}
 
     steps:
-      - name: Download all built artifacts
+      - name: Download source distribution
         uses: actions/download-artifact@v4
         with:
-          pattern: "sdist wheels-*"
+          name: sdist
+          path: dist/
+
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "wheels-*"
           path: dist/
           merge-multiple: true
 
@@ -250,10 +253,16 @@ jobs:
         env:
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
 
-      - name: Download all built artifacts
+      - name: Download source distribution
         uses: actions/download-artifact@v4
         with:
-          pattern: "sdist wheels-*"
+          name: sdist
+          path: release-assets/
+
+      - name: Download wheels
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "wheels-*"
           path: release-assets/
           merge-multiple: true
 

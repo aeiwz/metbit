@@ -341,6 +341,7 @@ pearson_columns_f32(PyObject *self, PyObject *args)
 
     const float *data = (const float *)buf.buf;
     double anchor_sq = 0.0;
+    int oom_f32 = 0;
 
     Py_BEGIN_ALLOW_THREADS
 
@@ -355,7 +356,6 @@ pearson_columns_f32(PyObject *self, PyObject *args)
 
     /* Pass 2: covariance and sum-of-squares (parallel when OpenMP available) */
 #ifdef _OPENMP
-    int oom_f32 = 0;
     #pragma omp parallel reduction(+:anchor_sq)
     {
         double *lc  = (double *)calloc((size_t)columns, sizeof(double));
@@ -386,12 +386,6 @@ pearson_columns_f32(PyObject *self, PyObject *args)
             free(lc); free(ls);
         }
     }
-    if (oom_f32) {
-        Py_END_ALLOW_THREADS
-        PyMem_Free(means); PyMem_Free(cov); PyMem_Free(col_sq);
-        PyBuffer_Release(&buf); Py_DECREF(output);
-        return PyErr_NoMemory();
-    }
 #else
     for (Py_ssize_t r = 0; r < rows; ++r) {
         const float *row = data + r * columns;
@@ -405,17 +399,23 @@ pearson_columns_f32(PyObject *self, PyObject *args)
     }
 #endif
 
-    for (Py_ssize_t c = 0; c < columns; ++c) {
-        double denom = sqrt(anchor_sq * col_sq[c]);
-        if (denom == 0.0) { corr[c] = 0.0 / 0.0; continue; }
-        double r = cov[c] / denom;
-        corr[c] = (r > 1.0) ? 1.0 : (r < -1.0) ? -1.0 : r;
+    if (!oom_f32) {
+        for (Py_ssize_t c = 0; c < columns; ++c) {
+            double denom = sqrt(anchor_sq * col_sq[c]);
+            if (denom == 0.0) { corr[c] = 0.0 / 0.0; continue; }
+            double r = cov[c] / denom;
+            corr[c] = (r > 1.0) ? 1.0 : (r < -1.0) ? -1.0 : r;
+        }
     }
 
     Py_END_ALLOW_THREADS
 
     PyMem_Free(means); PyMem_Free(cov); PyMem_Free(col_sq);
     PyBuffer_Release(&buf);
+    if (oom_f32) {
+        Py_DECREF(output);
+        return PyErr_NoMemory();
+    }
     return output;
 }
 
@@ -461,6 +461,7 @@ column_variances(PyObject *self, PyObject *args)
     memset(var, 0, (size_t)columns * sizeof(double));
 
     const double *data = (const double *)buf.buf;
+    int oom_var = 0;
 
     Py_BEGIN_ALLOW_THREADS
 
@@ -475,7 +476,6 @@ column_variances(PyObject *self, PyObject *args)
 
     /* Pass 2: sum of squared deviations - OpenMP parallel over rows */
 #ifdef _OPENMP
-    int oom_var = 0;
     #pragma omp parallel
     {
         double *lvar = (double *)calloc((size_t)columns, sizeof(double));
@@ -519,6 +519,12 @@ column_variances(PyObject *self, PyObject *args)
 
     PyMem_Free(means);
     PyBuffer_Release(&buf);
+#ifdef _OPENMP
+    if (oom_var) {
+        Py_DECREF(output);
+        return PyErr_NoMemory();
+    }
+#endif
     return output;
 }
 
@@ -565,6 +571,7 @@ column_variances_f32(PyObject *self, PyObject *args)
     memset(var, 0, (size_t)columns * sizeof(double));
 
     const float *data = (const float *)buf.buf;
+    int oom_vf = 0;
 
     Py_BEGIN_ALLOW_THREADS
 
@@ -577,7 +584,6 @@ column_variances_f32(PyObject *self, PyObject *args)
         means[c] /= (double)rows;
 
 #ifdef _OPENMP
-    int oom_vf = 0;
     #pragma omp parallel
     {
         double *lv = (double *)calloc((size_t)columns, sizeof(double));
@@ -621,6 +627,12 @@ column_variances_f32(PyObject *self, PyObject *args)
 
     PyMem_Free(means);
     PyBuffer_Release(&buf);
+#ifdef _OPENMP
+    if (oom_vf) {
+        Py_DECREF(output);
+        return PyErr_NoMemory();
+    }
+#endif
     return output;
 }
 
