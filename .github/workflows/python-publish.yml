@@ -23,6 +23,10 @@ on:
         required: true
         type: string
 
+# Normalize the release tag across both trigger types.
+env:
+  RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+
 permissions:
   contents: write   # create GitHub Release + upload assets
   id-token: write   # OIDC trusted publishing to PyPI
@@ -31,8 +35,8 @@ jobs:
   # ---------------------------------------------------------------------------
   # 1. Gate: full functional test suite must be green on all supported Pythons
   # ---------------------------------------------------------------------------
-  test-gate:
-    name: "Gate – Python ${{ matrix.python-version }}"
+  test:
+    name: "Test – Python ${{ matrix.python-version }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: true
@@ -54,33 +58,33 @@ jobs:
       - name: Build and install (including C extension)
         run: pip install -e . --no-build-isolation
 
-      - name: Run functional tests (excluding slow/perf)
+      - name: Run test suite (excluding slow/perf)
         run: |
           pytest \
             -m "not slow and not perf" \
-            --junit-xml=test-results/py${{ matrix.python-version }}.xml \
-            --cov-report=xml:coverage-py${{ matrix.python-version }}.xml
+            --junit-xml=test-results.xml \
+            --cov-report=xml:coverage.xml
 
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: test-results-py${{ matrix.python-version }}
-          path: test-results/
+          path: test-results.xml
 
       - name: Upload coverage report
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-py${{ matrix.python-version }}
-          path: coverage-py${{ matrix.python-version }}.xml
+          path: coverage.xml
 
   # ---------------------------------------------------------------------------
   # 2. Source distribution
   # ---------------------------------------------------------------------------
   build-sdist:
     name: Build sdist
-    needs: test-gate
+    needs: test
     runs-on: ubuntu-latest
 
     steps:
@@ -92,9 +96,8 @@ jobs:
 
       - name: Build source distribution
         run: |
-          pip install build twine
+          pip install build
           python -m build --sdist
-          twine check dist/*.tar.gz
 
       - uses: actions/upload-artifact@v4
         with:
@@ -109,7 +112,7 @@ jobs:
   # ---------------------------------------------------------------------------
   build-wheels:
     name: "Wheels – ${{ matrix.os }}"
-    needs: test-gate
+    needs: test
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -141,9 +144,7 @@ jobs:
           CIBW_ARCHS_LINUX: "x86_64 aarch64"
           CIBW_ARCHS_MACOS: "x86_64 arm64"
           CIBW_ARCHS_WINDOWS: "AMD64"
-          # Enable OpenMP on Linux (gomp is available in manylinux_2_28)
           CIBW_ENVIRONMENT_LINUX: "CFLAGS='-fopenmp' LDFLAGS='-lgomp'"
-          # Post-build smoke test verifies the wheel installs and the C ext loads
           CIBW_TEST_COMMAND: >
             python -c "
             import metbit;
@@ -152,7 +153,7 @@ jobs:
             import numpy as np;
             r = pearson_columns(np.eye(5), anchor_index=0);
             assert abs(r[0] - 1.0) < 1e-12, r[0];
-            print('OK – backend:', backend_info())
+            print('OK - backend:', backend_info())
             "
           CIBW_TEST_REQUIRES: "numpy scipy scikit-learn"
           CIBW_BUILD_VERBOSITY: 1
@@ -164,73 +165,57 @@ jobs:
           path: wheelhouse/*.whl
 
   # ---------------------------------------------------------------------------
-  # 4. Security scan (Trivy on the sdist)
+  # 4. Verify all artifacts: integrity check + security scan
   # ---------------------------------------------------------------------------
-  security-scan:
-    name: Security scan
-    needs: build-sdist
+  verify:
+    name: Verify artifacts
+    needs: [build-sdist, build-wheels]
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download sdist
+      - name: Download all built artifacts
         uses: actions/download-artifact@v4
         with:
-          name: sdist
+          pattern: "sdist wheels-*"
           path: dist/
-
-      - name: Scan with Trivy (CRITICAL/HIGH only, fail on CRITICAL)
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: fs
-          scan-ref: .
-          severity: "CRITICAL,HIGH"
-          exit-code: "0"   # warn only; set to "1" to fail on CRITICAL
-
-  # ---------------------------------------------------------------------------
-  # 5. Publish to PyPI (OIDC trusted publishing – no API token needed)
-  # ---------------------------------------------------------------------------
-  publish-pypi:
-    name: Publish to PyPI
-    needs: [build-sdist, build-wheels, security-scan]
-    runs-on: ubuntu-latest
-    environment:
-      name: pypi
-      url: https://pypi.org/project/metbit/${{ github.ref_name }}
-
-    steps:
-      - name: Download sdist
-        uses: actions/download-artifact@v4
-        with:
-          name: sdist
-          path: dist/
-
-      - name: Download Linux wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-ubuntu-latest
-          path: dist/
-
-      - name: Download macOS wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-macos-latest
-          path: dist/
-
-      - name: Download Windows wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: wheels-windows-latest
-          path: dist/
+          merge-multiple: true
 
       - name: List artifacts
         run: ls -lh dist/
 
-      - name: Final twine check
+      - name: Integrity check (twine)
         run: |
           pip install twine
           twine check dist/*
+
+      - name: Security scan (Trivy, warn only)
+        uses: aquasecurity/trivy-action@0.31.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          severity: "CRITICAL,HIGH"
+          exit-code: "0"
+
+  # ---------------------------------------------------------------------------
+  # 5. Publish to PyPI (OIDC trusted publishing - no API token needed)
+  # ---------------------------------------------------------------------------
+  publish-pypi:
+    name: Publish to PyPI
+    needs: verify
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/metbit/${{ env.RELEASE_TAG }}
+
+    steps:
+      - name: Download all built artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: "sdist wheels-*"
+          path: dist/
+          merge-multiple: true
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
@@ -255,25 +240,28 @@ jobs:
         id: changelog
         shell: bash
         run: |
-          VERSION="${GITHUB_REF_NAME#v}"
+          VERSION="${RELEASE_TAG#v}"
           NOTES=$(awk "/^## \[${VERSION}\]/{found=1; next} found && /^## \[/{exit} found{print}" CHANGELOG.md)
           {
             echo "notes<<EOF"
             echo "$NOTES"
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
+        env:
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
 
       - name: Download all built artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: "wheels-* sdist"
+          pattern: "sdist wheels-*"
           path: release-assets/
           merge-multiple: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "metbit ${{ github.ref_name }}"
+          tag_name: ${{ env.RELEASE_TAG }}
+          name: "metbit ${{ env.RELEASE_TAG }}"
           body: ${{ steps.changelog.outputs.notes }}
           draft: false
           prerelease: false
