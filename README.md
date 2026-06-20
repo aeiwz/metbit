@@ -418,19 +418,6 @@ pytest -m "not perf"
 
 ---
 
-## Citation
-
-If you use metbit in your research, please cite:
-
-> Bubpamala T, Chatgasem C. metbit: An Integrated Python Framework for Reproducible NMR Metabolomics from Spectral Processing to Biological Interpretation. *Bioinformatics Advances* (submitted, 2026).
-
-metbit has been applied in peer-reviewed clinical NMR metabolomics studies:
-
-- Karunasumetta C et al. Comparative analysis of metabolomic responses in on-pump and off-pump coronary artery bypass graft surgery. *Metabolomics* 2024.
-- Karunasumetta C et al. Metabolomic signatures influenced by different cardioplegic solutions in cardiac surgery. *J Pract Cardiovasc Sci* 2024.
-
----
-
 ## License
 
 MIT License. See [LICENSE](LICENSE) for details.
