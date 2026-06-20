@@ -2,6 +2,8 @@
 
 [![Open Documentation](https://img.shields.io/badge/Docs-metbit--docs.vercel.app-2563EB?style=for-the-badge&logo=readthedocs&logoColor=white)](https://metbit-docs.vercel.app)
 
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/metbit?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/metbit)
+
 Documentation
 -------------
 
