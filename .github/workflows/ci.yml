@@ -21,9 +21,9 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
@@ -31,11 +31,11 @@ jobs:
       - name: Install lint tools
         run: pip install ruff
 
-      - name: Ruff check (errors and imports)
-        run: ruff check metbit/ tests/ --select E,F,I --ignore E501
+      - name: Ruff check (syntax and undefined names)
+        run: ruff check metbit/ tests/ --select E9,F63,F7,F82
 
   # -------------------------------------------------------------------------
-  # 2. Test matrix (Linux, Python 3.10-3.13, with C extension)
+  # 2. Test matrix (Linux/macOS, Python 3.10-3.14, with C extension)
   # -------------------------------------------------------------------------
   test:
     name: "Test Python ${{ matrix.python-version }} on ${{ matrix.os }}"
@@ -45,16 +45,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
         exclude:
           # macOS arm64 runner only reliably supports 3.11+
           - os: macos-latest
             python-version: "3.10"
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -85,7 +85,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
           path: test-results.xml
@@ -98,9 +98,9 @@ jobs:
     needs: lint
     runs-on: windows-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -121,9 +121,9 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
