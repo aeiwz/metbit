@@ -140,7 +140,7 @@ pearson_columns(PyObject *self, PyObject *args)
     /* Final correlations */
     for (Py_ssize_t c = 0; c < columns; ++c) {
         double denom = sqrt(anchor_sq * col_sq[c]);
-        if (denom == 0.0) { corr[c] = 0.0 / 0.0; continue; }  /* NaN */
+        if (denom == 0.0) { corr[c] = Py_NAN; continue; }
         double r = cov[c] / denom;
         corr[c] = (r > 1.0) ? 1.0 : (r < -1.0) ? -1.0 : r;
     }
@@ -268,7 +268,7 @@ pearson_columns_par(PyObject *self, PyObject *args)
     if (!oom) {
         for (Py_ssize_t c = 0; c < columns; ++c) {
             double denom = sqrt(anchor_sq * col_sq[c]);
-            if (denom == 0.0) { corr[c] = 0.0 / 0.0; continue; }
+            if (denom == 0.0) { corr[c] = Py_NAN; continue; }
             double r = cov[c] / denom;
             corr[c] = (r > 1.0) ? 1.0 : (r < -1.0) ? -1.0 : r;
         }
@@ -402,7 +402,7 @@ pearson_columns_f32(PyObject *self, PyObject *args)
     if (!oom_f32) {
         for (Py_ssize_t c = 0; c < columns; ++c) {
             double denom = sqrt(anchor_sq * col_sq[c]);
-            if (denom == 0.0) { corr[c] = 0.0 / 0.0; continue; }
+            if (denom == 0.0) { corr[c] = Py_NAN; continue; }
             double r = cov[c] / denom;
             corr[c] = (r > 1.0) ? 1.0 : (r < -1.0) ? -1.0 : r;
         }
@@ -461,7 +461,9 @@ column_variances(PyObject *self, PyObject *args)
     memset(var, 0, (size_t)columns * sizeof(double));
 
     const double *data = (const double *)buf.buf;
+#ifdef _OPENMP
     int oom_var = 0;
+#endif
 
     Py_BEGIN_ALLOW_THREADS
 
@@ -571,7 +573,9 @@ column_variances_f32(PyObject *self, PyObject *args)
     memset(var, 0, (size_t)columns * sizeof(double));
 
     const float *data = (const float *)buf.buf;
+#ifdef _OPENMP
     int oom_vf = 0;
+#endif
 
     Py_BEGIN_ALLOW_THREADS
 

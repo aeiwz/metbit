@@ -79,7 +79,7 @@ def _native_compile_args():
     if sys.platform == "win32":
         return ["/O2"]
 
-    args = ["-O3", "-ffast-math"]
+    args = ["-O3"]
     portable_build = os.environ.get("METBIT_PORTABLE_BUILD", "").lower() in {
         "1", "true", "yes",
     }
