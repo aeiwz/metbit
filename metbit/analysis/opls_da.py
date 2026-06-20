@@ -197,8 +197,12 @@ class opls_da:
         else:
             _dtype = dtype
 
-        # Single allocation: extract to numpy with target dtype, replace NaN in-place.
-        X_arr = X.to_numpy(dtype=_dtype) if isinstance(X, pd.DataFrame) else np.array(X, dtype=_dtype)
+        # Ensure the array is writeable before replacing NaN/inf in-place.
+        X_arr = (
+            X.to_numpy(dtype=_dtype, copy=True)
+            if isinstance(X, pd.DataFrame)
+            else np.array(X, dtype=_dtype, copy=True)
+        )
         np.nan_to_num(X_arr, copy=False)
         X_df = pd.DataFrame(X_arr, columns=resolved_features)
 

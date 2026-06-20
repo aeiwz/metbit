@@ -158,6 +158,23 @@ class TestOPLSDAScoresPlot:
 
 
 class TestOPLSDAPermutationPlot:
+    def test_permutation_test_records_scores(self, fitted_opls, monkeypatch):
+        def fake_permutation_test_score(*args, **kwargs):
+            return 0.75, np.array([0.2, 0.3]), 0.05
+
+        monkeypatch.setattr(
+            "metbit.analysis.opls_da.permutation_test_score",
+            fake_permutation_test_score,
+        )
+
+        fitted_opls.permutation_test(n_permutations=2, cv=2, n_jobs=1, verbose=0)
+
+        assert fitted_opls.acc_score == pytest.approx(0.75)
+        np.testing.assert_array_equal(
+            fitted_opls.permutation_scores, np.array([0.2, 0.3])
+        )
+        assert fitted_opls.p_value == pytest.approx(0.05)
+
     def test_plot_hist_after_mock_permutation(self, fitted_opls):
         fitted_opls.permutation_scores = np.random.uniform(0.4, 0.8, 100)
         fitted_opls.acc_score = 0.9

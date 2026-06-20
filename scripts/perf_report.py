@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import platform
 import statistics
@@ -102,6 +103,8 @@ def _measure_peak_mb(fn: Callable) -> float:
 
 
 def _speedup_str(ref_ms: float, new_ms: float) -> str:
+    if not math.isfinite(ref_ms) or not math.isfinite(new_ms):
+        return "N/A"
     if new_ms <= 0:
         return "inf"
     r = ref_ms / new_ms

@@ -57,6 +57,51 @@ def test_pearson_columns_fallback_matches_native(monkeypatch):
     )
 
 
+def test_pearson_columns_multiprocessing_fallback(monkeypatch):
+    rng = np.random.default_rng(92)
+    matrix = rng.normal(size=(12, 9))
+
+    monkeypatch.setattr(_native, "_native_backend", None)
+    monkeypatch.setattr(_native, "_NATIVE_OK", False)
+    monkeypatch.setattr(_native, "_SMALL_THRESH", 1)
+
+    actual = _native.pearson_columns(
+        matrix, anchor_index=4, chunk_size=3, n_jobs=2
+    )
+    expected = _reference_correlations(matrix, anchor_index=4)
+
+    np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-12)
+
+
+def test_column_variances_fallback_paths(monkeypatch):
+    rng = np.random.default_rng(93)
+    matrix = rng.normal(size=(12, 9))
+    expected = matrix.var(axis=0, ddof=1)
+
+    monkeypatch.setattr(_native, "_native_backend", None)
+    monkeypatch.setattr(_native, "_NATIVE_OK", False)
+
+    actual_numpy = _native.column_variances(matrix, chunk_size=4, n_jobs=1)
+    np.testing.assert_allclose(actual_numpy, expected, rtol=1e-12, atol=1e-12)
+
+    monkeypatch.setattr(_native, "_SMALL_THRESH", 1)
+    actual_mp = _native.column_variances(matrix, chunk_size=4, n_jobs=2)
+    np.testing.assert_allclose(actual_mp, expected, rtol=1e-12, atol=1e-12)
+
+
+def test_vip_scores_zero_signal_returns_zeros(monkeypatch):
+    monkeypatch.setattr(_native, "_native_backend", None)
+    monkeypatch.setattr(_native, "_NATIVE_OK", False)
+
+    actual = _native.vip_scores(
+        np.zeros((6, 2)),
+        np.ones((5, 2)),
+        np.array([0.0, 0.0]),
+    )
+
+    np.testing.assert_array_equal(actual, np.zeros(5))
+
+
 @pytest.mark.parametrize(
     ("matrix", "anchor_index", "error"),
     [
