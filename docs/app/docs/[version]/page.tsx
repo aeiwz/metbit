@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { FiActivity, FiArrowRight, FiDatabase, FiLayers, FiSettings } from 'react-icons/fi'
 
+import MetbitMark from '../../components/MetbitMark'
 import { formatDate, getRelease, getSnapshot, moduleHref } from '@/lib/versioned-docs'
 
 export async function generateMetadata({
@@ -27,6 +28,9 @@ export default async function VersionOverview({
 
   return (
     <article className="referencePage" id="top">
+      <div className="referenceHeroBrand">
+        <MetbitMark />
+      </div>
       <div className="breadcrumbs">Documentation / {release.tag}</div>
       <div className="versionNotice">
         You are viewing metbit {release.version}, published {formatDate(release.publishedAt)}.

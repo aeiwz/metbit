@@ -267,7 +267,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   display: grid;
   grid-template-columns: auto auto minmax(220px, 1fr) auto auto auto;
   align-items: center;
-  gap: 22px;
+  gap: 14px;
   height: 64px;
   padding: 0 28px;
   color: #edf7fa;
@@ -279,20 +279,49 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 .docsBrand {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: #fff;
-  font-size: 1.38rem;
-  font-weight: 760;
-  letter-spacing: -0.035em;
 }
 
-.metbitMark {
-  width: 40px;
-  height: 28px;
-  fill: none;
-  stroke: #48c8cf;
-  stroke-width: 2.4;
-  stroke-linecap: round;
+.docsBrand .metbitLogo {
+  width: 154px;
+  height: 40px;
+}
+
+.metbitLogo {
+  position: relative;
+  display: block;
+  width: 126px;
+  height: 34px;
+  flex: 0 0 auto;
+}
+
+.referenceHeroBrand {
+  margin: 0 0 22px;
+}
+
+.referenceHeroBrand .metbitLogo {
+  width: 260px;
+  height: 70px;
+}
+
+.metbitLogoImage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: left center;
+  display: none;
+}
+
+:root[data-theme="light"] .metbitLogoLight,
+:root:not([data-theme]) .metbitLogoLight {
+  display: block;
+}
+
+:root[data-theme="dark"] .metbitLogoDark {
+  display: block;
 }
 
 .primaryDocsNav {
@@ -415,17 +444,17 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 
 .docsWorkspace {
   display: grid;
-  grid-template-columns: 284px minmax(0, 1fr) 190px;
+  grid-template-columns: 352px minmax(0, 1fr) 220px;
+  align-items: stretch;
   min-height: calc(100vh - 64px);
 }
 
 .docsSidebar {
   position: sticky;
   top: 64px;
-  align-self: start;
-  height: calc(100vh - 64px);
-  overflow-y: auto;
-  padding: 24px 20px 30px;
+  align-self: stretch;
+  min-height: calc(100vh - 64px);
+  padding: 28px 26px 30px;
   background: var(--docs-sidebar);
   border-right: 1px solid var(--border);
 }
@@ -482,12 +511,12 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 
 .docsMain {
   min-width: 0;
-  padding: 42px clamp(28px, 5vw, 76px) 80px;
+  padding: 42px clamp(32px, 4vw, 88px) 80px;
   background: var(--card);
 }
 
 .referencePage {
-  width: min(100%, 880px);
+  width: min(100%, 1100px);
   margin: 0 auto;
   color: var(--text);
   line-height: 1.68;
@@ -687,7 +716,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   top: 64px;
   align-self: start;
   height: calc(100vh - 64px);
-  padding: 38px 24px;
+  padding: 38px 26px;
   border-left: 1px solid var(--border);
   background: var(--card);
 }
@@ -708,7 +737,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 .docsMobileFooter { display: none; }
 
 .downloadFooter {
-  width: min(100%, 880px);
+  width: min(100%, 1100px);
   margin: 72px auto 0;
   padding: 28px 0 6px;
   color: var(--text);
@@ -816,7 +845,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 @media (max-width: 1180px) {
   .docsTopbar { grid-template-columns: auto minmax(220px, 1fr) auto auto auto; }
   .primaryDocsNav { display: none; }
-  .docsWorkspace { grid-template-columns: 260px minmax(0, 1fr); }
+  .docsWorkspace { grid-template-columns: 308px minmax(0, 1fr); }
   .docsToc { display: none; }
 }
 
@@ -838,7 +867,8 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
     position: relative;
     top: auto;
     height: auto;
-    padding: 12px 16px;
+    min-height: 0;
+    padding: 12px 18px;
     border-right: 0;
     border-bottom: 1px solid var(--border);
   }
@@ -847,6 +877,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   .docsMain { padding: 30px 20px 70px; }
   .referencePage { max-width: 100%; overflow-wrap: anywhere; }
   .referencePage h1 { font-size: 2rem; }
+  .referenceHeroBrand .metbitLogo { width: 200px; height: 54px; }
   .quickActions { flex-wrap: wrap; }
   .releaseTable > div { grid-template-columns: 1fr; }
   .releaseTable > div > a:first-child { justify-content: space-between; }

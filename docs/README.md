@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="public/logo/Metbit-logo-only.svg" alt="metbit" width="180" />
+</p>
+
 # metbit documentation site
 
 This is the Next.js documentation app for `metbit`. It provides release-specific

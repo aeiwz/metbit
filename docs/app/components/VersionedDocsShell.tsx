@@ -57,9 +57,12 @@ export default function VersionedDocsShell({
   return (
     <div className="versionedDocs">
       <header className="docsTopbar">
-        <Link className="docsBrand" href={`/docs/${encodeURIComponent(release.tag)}`}>
+        <Link
+          className="docsBrand"
+          href={`/docs/${encodeURIComponent(release.tag)}`}
+          aria-label="metbit documentation home"
+        >
           <MetbitMark />
-          <span>metbit</span>
         </Link>
         <nav className="primaryDocsNav" aria-label="Primary documentation">
           <Link href={`/docs/${encodeURIComponent(release.tag)}/getting-started`}>Install</Link>
