@@ -5,6 +5,7 @@ import type { ApiSnapshot, Release } from '@/lib/versioned-docs'
 import { moduleHref } from '@/lib/versioned-docs'
 
 import DocsSearch from './DocsSearch'
+import DownloadFooter from './DownloadFooter'
 import MetbitMark from './MetbitMark'
 import ThemeToggle from './ThemeToggle'
 import VersionSelector from './VersionSelector'
@@ -111,7 +112,14 @@ export default function VersionedDocsShell({
           </div>
         </aside>
 
-        <main className="docsMain">{children}</main>
+        <main className="docsMain">
+          {children}
+          <DownloadFooter
+            releaseTag={release.tag}
+            version={release.version}
+            isLatest={release.tag === releases[0]?.tag}
+          />
+        </main>
 
         <aside className="docsToc" aria-label="On this page">
           <h2>On this page</h2>

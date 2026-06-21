@@ -32,6 +32,23 @@ Run `git fetch --tags` first when new releases have been published. The
 generator stores identical parsed APIs once and maps every release to its
 matching snapshot, keeping the Vercel deployment compact.
 
+## Download statistics
+
+The footer loads download statistics from
+[PyPI Stats](https://pypistats.org/), [Pepy](https://pepy.tech/),
+[ClickPy](https://clickpy.clickhouse.com/), and the
+[GitHub Releases API](https://docs.github.com/en/rest/releases/releases).
+The same-origin `/api/downloads/[version]` route caches responses for 24 hours
+and uses stale data for up to seven days while refreshing.
+
+- The latest documentation page shows package-wide PyPI downloads for the last
+  30 days, PyPI Stats' retained 180-day overall count, ClickPy's approximate
+  per-version counts, Pepy's all-time package count, and total GitHub
+  release-asset downloads.
+- Every documentation version shows its ClickPy per-version total and GitHub
+  release-asset downloads.
+- Provider failures return an unavailable state and never fail the docs page.
+
 ## Authoring notes
 
 - New releases require a GitHub Release and a matching local Git tag.
