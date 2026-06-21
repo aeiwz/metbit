@@ -110,6 +110,9 @@ jobs:
       - name: Build extension (without OpenMP on Windows)
         run: python setup.py build_ext --inplace
 
+      - name: Install package runtime dependencies
+        run: pip install -e . --no-build-isolation
+
       - name: Smoke test import
         run: python -c "import metbit; print(metbit.__version__); print(metbit.backend_info())"
 
