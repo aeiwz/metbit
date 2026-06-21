@@ -5,7 +5,7 @@ export default function MetbitMark() {
     <span className="metbitLogo" aria-hidden="true">
       <Image
         className="metbitLogoImage metbitLogoLight"
-        src="/logo/Metbit-logo-light-mode.svg"
+        src="/logo/Metbit-logo-dark-mode.svg"
         alt=""
         aria-hidden="true"
         fill
