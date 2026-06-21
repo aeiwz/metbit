@@ -59,7 +59,7 @@ export default function VersionedDocsShell({
       <header className="docsTopbar">
         <Link
           className="docsBrand"
-          href={`/docs/${encodeURIComponent(release.tag)}`}
+          href="/"
           aria-label="metbit documentation home"
         >
           <MetbitMark />

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="public/logo/Metbit-logo-only.svg" alt="metbit" width="180" />
+  <img src="public/logo/Metbit-logo-dark-mode.svg" alt="metbit" width="180" />
 </p>
 
 # metbit documentation site

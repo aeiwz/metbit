@@ -1,17 +1,50 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 import { FiSun, FiMonitor, FiMoon } from 'react-icons/fi'
 
 type Mode = 'light' | 'dark' | 'system'
+type ThemeSnapshot = 'light' | 'dark' | 'system-light' | 'system-dark'
 
 function getStoredMode(): Mode {
-  if (typeof window === 'undefined') return 'system'
   const stored = localStorage.getItem('theme')
-  if (stored === 'light' || stored === 'dark' || stored === 'system') {
-    return stored
+  return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
+}
+
+function getThemeSnapshot(): ThemeSnapshot {
+  if (typeof window === 'undefined') return 'system-light'
+  const stored = getStoredMode()
+  if (stored === 'system') {
+    const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    return isDark ? 'system-dark' : 'system-light'
   }
-  return 'system'
+  return stored
+}
+
+function subscribe(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {}
+
+  const mq = window.matchMedia('(prefers-color-scheme: dark)')
+  const onThemeChange = () => onStoreChange()
+
+  window.addEventListener('storage', onThemeChange)
+  window.addEventListener('themechange', onThemeChange)
+  mq.addEventListener?.('change', onThemeChange)
+
+  return () => {
+    window.removeEventListener('storage', onThemeChange)
+    window.removeEventListener('themechange', onThemeChange)
+    mq.removeEventListener?.('change', onThemeChange)
+  }
+}
+
+function snapshotToMode(snapshot: ThemeSnapshot): Mode {
+  return snapshot === 'light' || snapshot === 'dark' ? snapshot : 'system'
+}
+
+function snapshotToAppliedTheme(snapshot: ThemeSnapshot): Exclude<Mode, 'system'> {
+  if (snapshot === 'light' || snapshot === 'dark') return snapshot
+  return snapshot === 'system-dark' ? 'dark' : 'light'
 }
 
 function applyTheme(mode: Mode) {
@@ -26,24 +59,21 @@ function applyTheme(mode: Mode) {
 }
 
 export default function ThemeToggle() {
-  const [mode, setMode] = useState<Mode>(getStoredMode)
+  const snapshot = useSyncExternalStore<ThemeSnapshot>(
+    subscribe,
+    getThemeSnapshot,
+    () => 'system-light',
+  )
+  const mode = snapshotToMode(snapshot)
 
   useEffect(() => {
-    const current = getStoredMode()
-    applyTheme(current)
-
-    const mq = window.matchMedia('(prefers-color-scheme: dark)')
-    const onChange = () => {
-      if (getStoredMode() === 'system') applyTheme('system')
-    }
-    mq.addEventListener?.('change', onChange)
-    return () => mq.removeEventListener?.('change', onChange)
-  }, [])
+    applyTheme(snapshotToAppliedTheme(snapshot))
+  }, [snapshot])
 
   const choose = (m: Mode) => {
     localStorage.setItem('theme', m)
-    setMode(m)
     applyTheme(m)
+    window.dispatchEvent(new Event('themechange'))
   }
 
   return (

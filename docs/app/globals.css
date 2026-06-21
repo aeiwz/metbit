@@ -173,6 +173,327 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 
+/* Home landing page */
+.homePage {
+  min-height: 100vh;
+  padding: 0 24px 72px;
+  background:
+    radial-gradient(circle at top, rgba(13, 141, 155, 0.12), transparent 34%),
+    linear-gradient(180deg, var(--bg), var(--bg));
+}
+
+.homeThemeControl {
+  width: fit-content;
+  margin: 16px 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--card) 88%, transparent);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.04);
+  backdrop-filter: blur(10px);
+}
+
+.homeThemeControlText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1px;
+}
+
+.homeThemeControlText span {
+  color: var(--text);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.homeThemeControlText small {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+[data-theme="dark"] .homePage {
+  background:
+    radial-gradient(circle at top, rgba(72, 200, 207, 0.12), transparent 34%),
+    linear-gradient(180deg, #08111f, #0b1220);
+}
+
+.homeHero {
+  width: min(100%, 1160px);
+  margin: 0 auto;
+  padding: 16px 0 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
+  gap: 20px;
+  align-items: center;
+  text-align: left;
+}
+
+.homeHeroCopy {
+  min-width: 0;
+}
+
+.homeHeroMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.homeKicker,
+.homeMetaValue,
+.homeReleaseNote {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  background: var(--card);
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.04);
+}
+
+.homeKicker {
+  padding: 7px 12px;
+  color: var(--docs-accent-strong);
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.homeMetaValue {
+  padding: 7px 12px;
+  color: var(--muted);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.homeHeroLogo {
+  position: relative;
+  width: min(80vw, 260px);
+  aspect-ratio: 9803 / 9280;
+  margin: 0 auto 14px;
+}
+
+.homeHeroLogo .metbitLogo {
+  width: 100%;
+  height: 100%;
+}
+
+.homeHero h1 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(2.25rem, 4.6vw, 4rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+}
+
+.homeLead {
+  max-width: 920px;
+  margin: 14px auto 0;
+  color: var(--muted);
+  font-size: clamp(1.08rem, 2vw, 1.28rem);
+  line-height: 1.75;
+}
+
+.homeActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 22px;
+}
+
+.homeReleaseNote {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: 14px;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.homeReleaseNote > svg {
+  color: var(--docs-accent);
+}
+
+.homeHighlights {
+  width: min(100%, 1160px);
+  margin: 24px auto 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.homeCard,
+.homeOverviewCopy,
+.homeOverviewPanel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
+}
+
+.homeCard {
+  padding: 20px;
+  text-align: left;
+}
+
+.homeCardIcon {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  margin-bottom: 14px;
+  color: var(--docs-accent-strong);
+  background: rgba(13, 141, 155, 0.09);
+  border-radius: 12px;
+  font-size: 1.15rem;
+}
+
+.homeCard h2 {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 1.06rem;
+  letter-spacing: -0.02em;
+}
+
+.homeCard p {
+  color: var(--muted);
+  font-size: 0.94rem;
+  line-height: 1.62;
+}
+
+.homeOverview {
+  width: min(100%, 1160px);
+  margin: 12px auto 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(340px, 0.95fr);
+  gap: 16px;
+}
+
+.homeOverviewCopy,
+.homeOverviewPanel {
+  padding: 24px;
+}
+
+.homeOverviewCopy h2 {
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: 1.25rem;
+  letter-spacing: -0.02em;
+}
+
+.homeList {
+  display: grid;
+  gap: 12px;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.homeList li {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.homeOverviewPanel {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+}
+
+.homePanelRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.homePanelRow span {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.homePanelRow strong {
+  color: var(--text);
+  font-size: 0.96rem;
+}
+
+.homePanelLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--docs-accent-strong);
+  font-weight: 800;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (max-width: 1100px) {
+  .homeHero {
+    grid-template-columns: 1fr;
+  }
+  .homeHeroVisual {
+    max-width: 560px;
+    margin: 0 auto;
+  }
+  .homeHighlights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .homeOverview {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  .homePage {
+    padding: 0 16px 56px;
+  }
+  .homeThemeControl {
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+  }
+  .homeThemeControlText {
+    align-items: flex-start;
+  }
+  .homeThemeControlText small {
+    display: none;
+  }
+  .homeHeroLogo {
+    width: min(90vw, 180px);
+  }
+  .homeHighlights {
+    grid-template-columns: 1fr;
+  }
+  .homeOverviewCopy,
+  .homeOverviewPanel,
+  .homeCard {
+    border-radius: 16px;
+  }
+}
+
+.homeHeroVisual {
+  display: grid;
+  gap: 14px;
+  justify-items: center;
+}
+
+.homeHeroPanel {
+  width: min(100%, 420px);
+  padding: 18px 20px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.05);
+}
+
 /* Buttons */
 .btn {
   display: inline-flex; align-items: center; gap: 8px;

@@ -1,11 +1,18 @@
 import Image from 'next/image'
 
-export default function MetbitMark() {
+type MetbitMarkProps = {
+  variant?: 'full' | 'compact'
+}
+
+export default function MetbitMark({ variant = 'full' }: MetbitMarkProps) {
+  const lightSrc = variant === 'compact' ? '/logo/Metbit-logo-only.svg' : '/logo/Metbit-logo-light-mode.svg'
+  const darkSrc = variant === 'compact' ? '/logo/Metbit-logo-only.svg' : '/logo/Metbit-logo-dark-mode.svg'
+
   return (
     <span className="metbitLogo" aria-hidden="true">
       <Image
         className="metbitLogoImage metbitLogoLight"
-        src="/logo/Metbit-logo-dark-mode.svg"
+        src={lightSrc}
         alt=""
         aria-hidden="true"
         fill
@@ -14,7 +21,7 @@ export default function MetbitMark() {
       />
       <Image
         className="metbitLogoImage metbitLogoDark"
-        src="/logo/Metbit-logo-dark-mode.svg"
+        src={darkSrc}
         alt=""
         aria-hidden="true"
         fill
