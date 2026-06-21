@@ -1,4 +1,5 @@
-"use client"
+'use client'
+
 import { useEffect, useState } from 'react'
 import { FiSun, FiMonitor, FiMoon } from 'react-icons/fi'
 
@@ -46,36 +47,37 @@ export default function ThemeToggle() {
   }
 
   return (
-    <div className="themeToggle" aria-label="Theme">
-      <div className="seg" role="group" aria-label="Theme toggle">
-        <button
-          type="button"
-          className={mode==='light' ? 'active' : ''}
-          onClick={() => choose('light')}
-          aria-pressed={mode==='light'}
-          aria-label="Light theme"
-        >
-          <FiSun aria-hidden /> Light
-        </button>
-        <button
-          type="button"
-          className={mode==='system' ? 'active' : ''}
-          onClick={() => choose('system')}
-          aria-pressed={mode==='system'}
-          aria-label="System theme"
-        >
-          <FiMonitor aria-hidden /> System
-        </button>
-        <button
-          type="button"
-          className={mode==='dark' ? 'active' : ''}
-          onClick={() => choose('dark')}
-          aria-pressed={mode==='dark'}
-          aria-label="Dark theme"
-        >
-          <FiMoon aria-hidden /> Dark
-        </button>
-      </div>
+    <div className="themeToggle" role="group" aria-label="Color theme">
+      <button
+        type="button"
+        className={mode === 'light' ? 'active' : ''}
+        onClick={() => choose('light')}
+        aria-pressed={mode === 'light'}
+        aria-label="Use light theme"
+        title="Light theme"
+      >
+        <FiSun aria-hidden />
+      </button>
+      <button
+        type="button"
+        className={mode === 'system' ? 'active' : ''}
+        onClick={() => choose('system')}
+        aria-pressed={mode === 'system'}
+        aria-label="Use system theme"
+        title="System theme"
+      >
+        <FiMonitor aria-hidden />
+      </button>
+      <button
+        type="button"
+        className={mode === 'dark' ? 'active' : ''}
+        onClick={() => choose('dark')}
+        aria-pressed={mode === 'dark'}
+        aria-label="Use dark theme"
+        title="Dark theme"
+      >
+        <FiMoon aria-hidden />
+      </button>
     </div>
   )
 }

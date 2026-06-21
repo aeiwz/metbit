@@ -1,0 +1,1099 @@
+{
+  "rootExports": [
+    "STOCSY",
+    "STOCSY_app",
+    "lazy_opls_da",
+    "opls_da",
+    "pca",
+    "peak_chops",
+    "pickie_peak"
+  ],
+  "modules": [
+    {
+      "name": "metbit.base",
+      "path": "metbit/base.py",
+      "category": "Other",
+      "doc": "",
+      "classes": [],
+      "functions": [
+        {
+          "name": "nipals",
+          "signature": "nipals(x: np.ndarray, y: np.ndarray, tol: float=1e-10, max_iter: int=1000, dot=np.dot)",
+          "doc": "Non-linear Iterative Partial Least Squares\n\nParameters\n----------\nx: np.ndarray\n    Variable matrix with size n by p, where n number of samples,\n    p number of variables.\ny: np.ndarray\n    Dependent variable with size n by 1.\ntol: float\n    Tolerance for the convergence.\nmax_iter: int\n    Maximal number of iterations.\n\nReturns\n-------\nw: np.ndarray\n    Weights with size p by 1.\nu: np.ndarray\n    Y-scores with size n by 1.\nc: float\n    Y-weight\nt: np.ndarray\n    Scores with size n by 1\n\nReferences\n----------\n[1] Wold S, et al. PLS-regression: a basic tool of chemometrics.\n    Chemometr Intell Lab Sys 2001, 58, 109–130.\n[2] Bylesjo M, et al. Model Based Preprocessing and Background\n    Elimination: OSC, OPLS, and O2PLS. in Comprehensive Chemometrics."
+        }
+      ],
+      "parseError": null
+    },
+    {
+      "name": "metbit.boxplot",
+      "path": "metbit/boxplot.py",
+      "category": "Visualization and apps",
+      "doc": "",
+      "classes": [
+        {
+          "name": "BoxPlot",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data, return_type: str='axes', **kwargs)",
+              "doc": ""
+            },
+            {
+              "name": "maybe_color_bp",
+              "signature": "maybe_color_bp(self, bp)",
+              "doc": ""
+            },
+            {
+              "name": "orientation",
+              "signature": "orientation(self)",
+              "doc": ""
+            },
+            {
+              "name": "result",
+              "signature": "result(self)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "name": "boxplot",
+          "signature": "boxplot(data, column=None, by=None, ax=None, fontsize=None, rot: int=0, grid: bool=True, figsize=None, layout=None, return_type=None, **kwds)",
+          "doc": ""
+        },
+        {
+          "name": "boxplot_frame",
+          "signature": "boxplot_frame(self, column=None, by=None, ax=None, fontsize=None, rot: int=0, grid: bool=True, figsize=None, layout=None, return_type=None, **kwds)",
+          "doc": ""
+        },
+        {
+          "name": "boxplot_frame_groupby",
+          "signature": "boxplot_frame_groupby(grouped, subplots: bool=True, column=None, fontsize=None, rot: int=0, grid: bool=True, ax=None, figsize=None, layout=None, sharex: bool=False, sharey: bool=True, **kwds)",
+          "doc": ""
+        }
+      ],
+      "parseError": null
+    },
+    {
+      "name": "metbit.cross_validation",
+      "path": "metbit/cross_validation.py",
+      "category": "Analysis and models",
+      "doc": "",
+      "classes": [
+        {
+          "name": "CrossValidation",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, estimator='opls', kfold=10, scaler='pareto')",
+              "doc": ""
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self, x, y)",
+              "doc": "Fitting variable matrix X\n\nParameters\n----------\nx : np.ndarray\n    Variable matrix with size n samples by p variables.\ny : np.ndarray | list\n    Dependent matrix with size n samples by 1. The values in\n    this vector must be 0 and 1, otherwise the classification\n    performance will be wrongly concluded.\n\nReturns\n-------\nCrossValidation object"
+            },
+            {
+              "name": "predict",
+              "signature": "predict(self, x)",
+              "doc": "Do prediction using optimal model.\n\nParameters\n----------\nx: np.ndarray\n    Variable matrix with size n samples by p variables.\n\nReturns\n-------\nnp.ndarray\n    Predictions for the x"
+            },
+            {
+              "name": "reset_optimal_num_component",
+              "signature": "reset_optimal_num_component(self, k)",
+              "doc": "Reset the optimal number of components for manual setup.\n\nParameters\n----------\nk: int\n    Number of components according to the error plot.\n\nReturns\n-------\nNone"
+            },
+            {
+              "name": "orthogonal_score",
+              "signature": "orthogonal_score(self)",
+              "doc": "Cross validated orthogonal score.\n\nReturns\n-------\nnp.ndarray\n    The first orthogonal scores.\n\nRaises\n------\nValueError\n    If OPLS / OPLS-DA is not used."
+            },
+            {
+              "name": "predictive_score",
+              "signature": "predictive_score(self)",
+              "doc": "Cross validated predictive score.\n\nReturns\n-------\nnp.ndarray\n    The first predictive scores.\n\nRaises\n------\nValueError\n    If OPLS / OPLS-DA is not used."
+            },
+            {
+              "name": "scores",
+              "signature": "scores(self)",
+              "doc": "Returns\n-------\nnp.ndarray\n    The first predictive score, if the method is OPLS/OPLS-DA,\n    otherwise is the scores of X"
+            },
+            {
+              "name": "q2",
+              "signature": "q2(self)",
+              "doc": "Q2\n\nReturns\n-------\nq2: float"
+            },
+            {
+              "name": "optimal_component_num",
+              "signature": "optimal_component_num(self)",
+              "doc": "Number of components determined by CV.\n\nReturns\n-------\nint"
+            },
+            {
+              "name": "R2Xcorr",
+              "signature": "R2Xcorr(self)",
+              "doc": "Returns\n-------\nfloat\n    Modeled joint X-y covariation of X.\n\nRaises\n------\nValueError\n    If OPLS / OPLS-DA is not used."
+            },
+            {
+              "name": "R2XYO",
+              "signature": "R2XYO(self)",
+              "doc": "Returns\n-------\nfloat\n    Modeled structured noise variation of X.\n\nRaises\n------\nValueError\n    If OPLS / OPLS-DA is not used."
+            },
+            {
+              "name": "R2X",
+              "signature": "R2X(self)",
+              "doc": "Returns\n-------\nfloat\n    Modeled variation of X"
+            },
+            {
+              "name": "R2y",
+              "signature": "R2y(self)",
+              "doc": "Returns\n-------\nfloat\n    Modeled variation of y"
+            },
+            {
+              "name": "correlation",
+              "signature": "correlation(self)",
+              "doc": "Correlation\nReturns\n-------\nnp.ndarray\n    Correlation loading profile\n\nRaises\n------\nValueError\n    If OPLS / OPLS-DA is not used.\n\nReferences\n----------\n[1] Wiklund S, et al. Visualization of GC/TOF-MS-Based\nMetabolomics Data for Identification of Biochemically\nInteresting Compounds Using OPLS Class Models. Anal Chem.\n2008, 80, 115-122."
+            },
+            {
+              "name": "covariance",
+              "signature": "covariance(self)",
+              "doc": "Covariance\nReturns\n-------\nnp.ndarray\n    Correlation loading profile\n\nRaises\n------\nValueError\n    If OPLS / OPLS-DA is not used.\n\nReferences\n----------\n[1] Wiklund S, et al. Visualization of GC/TOF-MS-Based\nMetabolomics Data for Identification of Biochemically\nInteresting Compounds Using OPLS Class Models. Anal Chem.\n2008, 80, 115-122."
+            },
+            {
+              "name": "loadings_cv",
+              "signature": "loadings_cv(self)",
+              "doc": "Loadings from cross validation.\n\nReturns\n-------\nnp.ndarray\n    Correlation loading profile\n\nRaises\n------\nValueError\n    If OPLS / OPLS-DA is not used."
+            },
+            {
+              "name": "min_nmc",
+              "signature": "min_nmc(self)",
+              "doc": "Returns\n-------\nfloat\n    Minimal number of mis-classifications"
+            },
+            {
+              "name": "mis_classifications",
+              "signature": "mis_classifications(self)",
+              "doc": "Returns\n-------\nlist\n    Mis-classifications at different principal components."
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.denoise_spec",
+      "path": "metbit/denoise_spec.py",
+      "category": "NMR and preprocessing",
+      "doc": "",
+      "classes": [
+        {
+          "name": "Denoise",
+          "doc": "",
+          "methods": [
+            {
+              "name": "decrease_noise",
+              "signature": "decrease_noise(spectra, window_length=11, polyorder=2)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.dev",
+      "path": "metbit/dev.py",
+      "category": "Other",
+      "doc": "",
+      "classes": [
+        {
+          "name": "opls_da",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, X, y, features_name=None, n_components=2, scale='pareto', kfold=3, estimator='opls', random_state=42)",
+              "doc": ""
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self)",
+              "doc": ""
+            },
+            {
+              "name": "permutation_test",
+              "signature": "permutation_test(self, n_permutations=500, cv=3, n_jobs=-1, verbose=10)",
+              "doc": ""
+            },
+            {
+              "name": "vip_scores",
+              "signature": "vip_scores(self, model=None, features_name=None)",
+              "doc": ""
+            },
+            {
+              "name": "get_vip_scores",
+              "signature": "get_vip_scores(self)",
+              "doc": ""
+            },
+            {
+              "name": "vip_plot",
+              "signature": "vip_plot(self, x_range=9, threshold=2, size=12, width=1000, height=500, filter_=False)",
+              "doc": ""
+            },
+            {
+              "name": "plot_oplsda_scores",
+              "signature": "plot_oplsda_scores(self, color_dict=None, symbol=None, symbol_dict=None, fig_height=900, fig_width=1300, marker_size=35, marker_opacity=0.7)",
+              "doc": ""
+            },
+            {
+              "name": "plot_hist",
+              "signature": "plot_hist(self, nbins_=50, height_=500, width_=1000)",
+              "doc": ""
+            },
+            {
+              "name": "plot_s_scores",
+              "signature": "plot_s_scores(self, height_=900, width_=2000, range_color_=[-0.05, 0.05], color_continuous_scale_='jet')",
+              "doc": ""
+            },
+            {
+              "name": "plot_loading",
+              "signature": "plot_loading(self, height_=900, width_=2000, range_color_=[-0.05, 0.05], color_continuous_scale_='jet')",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "pca",
+          "doc": "Principal Component Analysis (PCA) model.\n\nParameters\n----------\nX : array-like, shape (n_samples, n_features)\n    Training data, where n_samples is the number of samples and n_features is the number of features.\nlabel : array-like, shape (n_samples,)\n    Target data, where n_samples is the number of samples.\nfeatures_name : array-like, shape (n_features,), default=None\n    Name of features.\nn_components : int, default=2\n    Number of components to keep.\nscale : str, default='pareto'\n    Method of scaling. 'pareto' for pareto scaling, 'mean' for mean centering, 'uv' for unitvarian scaling.\nrandom_state : int, default=42\n    Random state for permutation test.\ntest_size : float, default=0.3\n    Size of test set.\n\nExamples\n----------\nimport pandas as pd\nimport numpy as np\nfrom metbit import pca\n\n# Create a dataset\ndata = pd.DataFrame(np.random.rand(500, 50000))\nclass_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group')\ntime = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point')\n\n# Assign X and target\nX = datasets.iloc[:, 2:]\ny = datasets['Group']\ntime = datasets['Time point']\nfeatures_name = list(X.columns.astype(float))\n\n## Perform PCA model\npca_mod = pca(X=X, label=y, features_name=features_name, n_components=2, scale='pareto', random_state=42, test_size=0.3)\npca_mod.fit()\n\n# Visualisation of PCA model\npca_mod.plot_observe_variance()\npca_mod.plot_cumulative_observed()\nshape_ = {'1-wk': 'circle', '2-wk': 'square', '3-wk': 'diamond', '4-wk': 'cross'}\npca_mod.plot_pca_scores(symbol=time, symbol_dict=shape_)\npca_mod.plot_loading_()\npca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, X, label, features_name=None, n_components=2, scale='pareto', random_state=42, test_size=0.3)",
+              "doc": "Initialize the PCA model.\n\nParameters\n----------\nX : array-like, shape (n_samples, n_features)\n    Training data, where n_samples is the number of samples and n_features is the number of features.\nlabel : array-like, shape (n_samples,)\n    Target data, where n_samples is the number of samples.\nfeatures_name : array-like, shape (n_features,), default=None\n    Name of features.\nn_components : int, default=2\n    Number of components to keep.\nscale : str, default='pareto'\n    Method of scaling. 'pareto' for pareto scaling, 'mean' for mean centering, 'uv' for unitvarian scaling.\nrandom_state : int, default=42\n    Random state for permutation test.\ntest_size : float, default=0.3\n    Size of test set."
+            },
+            {
+              "name": "plot_cumulative_observed",
+              "signature": "plot_cumulative_observed(self)",
+              "doc": ""
+            },
+            {
+              "name": "plot_pca_scores",
+              "signature": "plot_pca_scores(self, pc=['PC1', 'PC2'], color_=None, color_dict=None, symbol=None, symbol_dict=None, fig_height=900, fig_width=1300, marker_size=35, marker_opacity=0.7, text_=None)",
+              "doc": ""
+            },
+            {
+              "name": "plot_loading_",
+              "signature": "plot_loading_(self, pc=['PC1', 'PC2'], height_=600, width_=1800)",
+              "doc": ""
+            },
+            {
+              "name": "plot_pca_trajectory",
+              "signature": "plot_pca_trajectory(self, time_, time_order, stat_=['mean', 'sem'], pc=['PC1', 'PC2'], color_dict=None, symbol_dict=None, height_=900, width_=1300, marker_size=35, marker_opacity=0.7)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.genpage",
+      "path": "metbit/genpage.py",
+      "category": "Other",
+      "doc": "",
+      "classes": [
+        {
+          "name": "gen_page",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data_path)",
+              "doc": "This function takes in the path to the data folder and returns the HTML files for the OPLS-DA plots.\nParameters\n----------\ndata_path: str\n    The path to the data folder.\ngen_page(data_path).get_files()"
+            },
+            {
+              "name": "get_files",
+              "signature": "get_files(self)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.lazy_opls_da",
+      "path": "metbit/lazy_opls_da.py",
+      "category": "Analysis and models",
+      "doc": "",
+      "classes": [
+        {
+          "name": "lazy_opls_da",
+          "doc": "Parameters:\n-----------\n    •       data (pd.DataFrame): DataFrame containing the dataset.\n    •       groups (list): List of class labels for each data sample.\n    •       working_dir (str): Directory path for storing output files.\n    •       feature_names (list, optional): Names of features, defaults to None.\n    •       n_components (int, optional): Number of components for OPLS-DA, defaults to 2.\n    •       scaling (str, optional): Scaling method ('pareto'), defaults to 'pareto'.\n    •       estimator (str, optional): Model estimator, defaults to 'opls'.\n    •       kfold (int, optional): Number of folds in cross-validation, defaults to 3.\n    •       random_state (int, optional): Random seed, defaults to 94.\n    •       auto_ncomp (bool, optional): Automatically choose the optimal number of components, defaults to True.\n    •       permutation (bool, optional): Conduct permutation tests, defaults to True.\n    •       VIP (bool, optional): Calculate VIP scores, defaults to True.\n    •       linear_regression (bool, optional): Conduct linear regression analysis, defaults to True.\n\nReturns:\n--------\n    •       A printout of the model summary, including the project name, dataset information, configuration, and directory paths.\n\nfit Method\n\nFits the OPLS-DA model to the dataset, generates plots, and saves them to the output directory.\n\nParameters:\n-----------\n    •       marker_color (dict, optional): Dictionary mapping groups to colors.\n    •       custom_color (list, optional): Custom color grouping.\n    •       custom_shape (list, optional): Custom shape grouping.\n    •       symbol_dict (dict, optional): Dictionary mapping groups to marker symbols.\n    •       custom_legend_name (list, optional): Custom names for the legend, defaults to ['Group', 'Sub-group'].\n    •       marker_label (str or None, optional): Specifies marker labels ('class', 'group', or 'sub-group').\n    •       marker_size (int or None, optional): Size of markers in plots.\n    •       marker_opacity (float or None, optional): Opacity level of markers in plots.\n    •       individual_ellipse (bool, optional): Option to display individual ellipses for each group.\n\nReturns:\n--------\n    •       A message indicating the model fitting was successful.\n\nDirectory and Project Setup\n===========================\nCreates necessary folders in the working directory based on project needs (e.g., for VIP score plots, permutation scores, etc.). Paths are stored in a dictionary (self.path).\n\nDirectories Created:\n--------------------\n    •       working_dir/project_name/element/plots/... for different plots.\n    •       working_dir/project_name/element/data/... for data outputs.\n\nPlotting and Saving Data\n------------------------\n    1.      Score Plot: Generates OPLS-DA score plots for each group.\n    2.      Loading Plot: Generates and saves loading plots.\n    3.      S Plot: Generates and saves S-score plots.\n    4.      VIP Score Plot: Generates VIP score plots and saves VIP scores as CSV if VIP=True.\n    5.      Permutation Test Plot: Conducts permutation tests and saves permutation scores as CSV if permutation=True.\n    6.      Volcano Plot (Linear Regression): Generates volcano plot and saves data if linear_regression=True.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data: pd.DataFrame, groups: list, working_dir: str, feature_names: list=None, n_components: int=2, scaling: str='pareto', estimator: str='opls', kfold: int=3, random_state: int=94, auto_ncomp: bool=True, permutation: bool=True, VIP: bool=True, linear_regression: bool=True)",
+              "doc": ""
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self, marker_color: dict=None, custom_color: list=None, custom_shape: list=None, symbol_dict: dict=None, custom_legend_name=['Group', 'Sub-group'], marker_label=None, marker_size=None, marker_opacity=None, individual_ellipse=False)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.metbit",
+      "path": "metbit/metbit.py",
+      "category": "Analysis and models",
+      "doc": "",
+      "classes": [
+        {
+          "name": "opls_da",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, X, y, features_name=None, n_components=2, scaling_method='pareto', kfold=3, estimator='opls', random_state=42, auto_ncomp=True)",
+              "doc": "Purpose:\nInitializes the model, validates the inputs, and preprocesses the data for further analysis.\n\nParameters:\n\n    •   X: array-like (Data matrix)\nThe input features for the model (must be a 2D array-like structure, such as pandas.DataFrame or numpy.ndarray).\n    •   y: array-like (Target vector)\nThe target variable or class labels associated with the rows of X (can be a pandas.Series, numpy.ndarray, or list).\n    •   features_name: array-like, optional (default=None)\nList of feature names corresponding to the columns of X. If not provided, column names will be generated or inferred.\n    •   n_components: int, optional (default=2)\nThe number of components to use for OPLS-DA analysis. Must be a positive integer.\n    •   scaling_method: str, optional (default=‘pareto’)\nThe method used for scaling the data. Options include:\n    •   'pareto': Pareto scaling (power 0.5)\n    •   'mean': Mean-centered data\n    •   'uv': Unit variance scaling (standardization)\n    •   'minmax': Min-max scaling\n    •   kfold: int, optional (default=3)\nThe number of folds for cross-validation.\n    •   estimator: str, optional (default=‘opls’)\nThe estimator method used for modeling. Default is 'opls' (Orthogonal Projections to Latent Structures).\n    •   random_state: int, optional (default=42)\nThe random seed used for reproducibility.\n    •   auto_ncomp: bool, optional (default=True)\nIf True, automatically selects the optimal number of components for the model. If False, the number of components is set manually.\n\nRaises:\n\n        •       ValueError: If any input is invalid, such as mismatched dimensions or incorrect data types."
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self)",
+              "doc": "Purpose:\nFits the OPLS-DA model to the data and computes model performance metrics.\n\nParameters:\nNone\n\nReturns:\n\n    •   Prints a summary of the model fit, including:\n    •   Sample size and class distributions\n    •   Number of features and components\n    •   Scaling method used\n    •   R² and Q² metrics"
+            },
+            {
+              "name": "get_oplsda_scores",
+              "signature": "get_oplsda_scores(self)",
+              "doc": "Get OPLS-DA scores"
+            },
+            {
+              "name": "get_s_scores",
+              "signature": "get_s_scores(self)",
+              "doc": "Get S scores"
+            },
+            {
+              "name": "get_oplsda_model",
+              "signature": "get_oplsda_model(self)",
+              "doc": "Get OPLS-DA model"
+            },
+            {
+              "name": "get_cv_model",
+              "signature": "get_cv_model(self)",
+              "doc": "Get cross-validation model"
+            },
+            {
+              "name": "permutation_test",
+              "signature": "permutation_test(self, n_permutations=500, cv=3, n_jobs=-1, verbose=10)",
+              "doc": ""
+            },
+            {
+              "name": "get_permutation_scores",
+              "signature": "get_permutation_scores(self)",
+              "doc": "Get permutation scores"
+            },
+            {
+              "name": "vip_scores",
+              "signature": "vip_scores(self, model=None, features_name=None)",
+              "doc": "Get VIP score\n\nParameters\n----------\nmodel : object, default=None\n    OPLS-DA model.\nfeatures_name : array-like, shape (n_features,), default=None\n    Name of features."
+            },
+            {
+              "name": "get_vip_scores",
+              "signature": "get_vip_scores(self, filter_=False, threshold=1)",
+              "doc": "Get VIP score\n\nParameters\n----------\nfilter_ : bool, default=False\n    If True, filter VIP score based on threshold.\nthreshold : int, default=1\n    Threshold of VIP score."
+            },
+            {
+              "name": "vip_plot",
+              "signature": "vip_plot(self, x_range=9, threshold=2, marker_size=12, fig_width=1000, fig_height=500, filter_=False, vip_transform=True, font_size=20, title_font_size=20, xaxis_direction='reversed')",
+              "doc": "Purpose:\nPlots the VIP scores for the features, allowing for customization and thresholding.\n\nParameters:\n\n    •   x_range: int, optional (default=9)\nThe range of the x-axis in the plot.\n    •   threshold: int, optional (default=2)\nThe threshold used to categorize VIP scores into “High” or “Low” importance.\n    •   marker_size: int, optional (default=12)\nThe size of the markers in the scatter plot.\n    •   fig_width: int, optional (default=1000)\nThe width of the plot.\n    •   fig_height: int, optional (default=500)\nThe height of the plot.\n    •   filter_: bool, optional (default=False)\nIf True, only features with VIP scores above the threshold are plotted.\n    •   vip_transform: bool, optional (default=True)\nIf True, the VIP scores are transformed to reflect their contribution to the model.\n    •   font_size: int, optional (default=20)\nThe font size for labels.\n    •   title_font_size: int, optional (default=20)\nThe font size for the plot title.\n    •   xaxis_direction: str, optional (default=‘reversed’)\nThe direction of the x-axis (‘reversed’ or ‘normal’).\n\nReturns:\n\n    •   fig: Plotly figure\nA Plotly scatter plot visualizing the VIP scores for the features."
+            },
+            {
+              "name": "plot_oplsda_scores",
+              "signature": "plot_oplsda_scores(self, x_='t_scores', y_='t_ortho', color_=None, color_dict=None, symbol_=None, symbol_dict=None, fig_height=900, fig_width=1300, marker_size=35, marker_opacity=0.7, marker_label=None, font_size=20, title_font_size=21, legend_name=['Group', 'Time point'], individual_ellipse=True)",
+              "doc": "Plot OPLS-DA scores plot\n\nParameters\n----------\ncolor_ : array-like, shape (n_samples,), default=None\n    color_ of the group. If None, color_ will be based on the group in y.\ncolor_dict : dict, default=None\n    Dictionary of color_ for the group. If None, color_ will be based on the group in y.\nsymbol_ : array-like, shape (n_samples,), default=None\n    symbol_ of the group. If None, symbol_ will be based on the group in y.\nsymbol_dict : dict, default=None\n    Dictionary of symbol_ for the group. If None, symbol_ will be based on the group in y.\nfig_height : int, default=900\n    Height of the figure.\nfig_width : int, default=1300\n    Width of the figure.\nmarker_size : int, default=35\n    Size of the marker.\nmarker_opacity : float, default=0.7\n    Opacity of the marker.\n\n•       Purpose: This function generates an OPLS-DA (Orthogonal Partial Least Squares Discriminant Analysis) scores plot, showing how samples are positioned based on their scores in two principal components (t_scores and t_ortho).\n•       Parameters:\n    •   x_, y_: The names of the columns in the DataFrame (df_opls_scores) that contain the scores for the x and y axes (default to 't_scores' and 't_ortho').\n    •   color_: An array that assigns a color to each sample (optional).\n    •   color_dict: A dictionary of color mappings for the groups (optional).\n    •   symbol_: An array of symbols for the samples (optional).\n    •   fig_height, fig_width: Dimensions for the plot.\n    •   marker_size, marker_opacity: Control the appearance of the markers.\n    •   legend_name: Custom labels for the legend.\n    •   individual_ellipse: Whether to add ellipses to individual groups (default True).\n•       Plot Details:\n    •   Uses Plotly (px.scatter) to create an interactive scatter plot.\n    •   Can display confidence ellipses around each group.\n    •   Adds annotations for R²X, R²Y, and Q² statistics.\n    •   The plot is highly customizable (marker size, opacity, labels, colors, etc.)."
+            },
+            {
+              "name": "plot_hist",
+              "signature": "plot_hist(self, nbins_=50, fig_height=500, fig_width=1000, font_size=14, title_font_size=20)",
+              "doc": "Plot histogram of permutation scores\n\nParameters\n----------\nnbins_ : int, default=50\n    Number of bins for histogram.\nfig_height : int, default=500\n    Height of the figure.\nfig_width : int, default=1000\n    Width of the figure.\n\n    •   Purpose: This function creates a histogram of permutation scores from a permutation test, commonly used to evaluate model stability and significance.\n    •   Parameters:\n    •   nbins_: Number of bins in the histogram.\n    •   fig_height, fig_width: Dimensions of the plot.\n    •   font_size, title_font_size: Font size for labels and title.\n    •   Plot Details:\n    •   Plots the permutation scores as a histogram with Plotly.\n    •   Marks the actual model accuracy score with a red dashed line.\n    •   Adds additional annotations for the number of permutations, the accuracy score, and the p-value."
+            },
+            {
+              "name": "plot_s_scores",
+              "signature": "plot_s_scores(self, fig_height=900, fig_width=2000, range_color_=[-0.05, 0.05], color_continuous_scale_='jet', marker_size=14, font_size=20, title_font_size=20)",
+              "doc": "Plot S-plot\n\nParameters\n----------\nfig_height : int, default=900\n    Height of the figure.\nfig_width : int, default=2000\n    Width of the figure.\nrange_color: list, default=[-0.05,0.05]\n    Range of color_ for the plot.\ncolor_continuous_scale_ : str, default='jet'\n    color_ scale for the plot.\n\n•       Purpose: This function generates a scatter plot (S-plot), which visualizes the covariance and correlation between the scores of the model.\n    •   Parameters:\n    •   fig_height, fig_width: Dimensions of the plot.\n    •   range_color_: Range of colors to display.\n    •   color_continuous_scale_: Color scale for the plot.\n    •   marker_size, font_size, title_font_size: Customize marker size and font sizes.\n    •   Plot Details:\n    •   The plot visualizes the relationship between covariance and correlation for features.\n    •   Uses Plotly’s scatter plot to create an interactive S-plot.\n    •   The axes are customizable, and the plot is set to be visually clean (e.g., axes lines and tick marks)."
+            },
+            {
+              "name": "plot_loading",
+              "signature": "plot_loading(self, fig_height=900, fig_width=2000, range_color_=[-0.05, 0.05], color_continuous_scale_='jet', marker_size=5, font_size=20, title_font_size=20, xaxis_direction='reversed', xaxis_title='𝛿<sub>H</sub> in ppm')",
+              "doc": "Plot loading plot\n\nParameters\n----------\nfig_height : int, default=900\n    Height of the figure.\nfig_width : int, default=2000\n    Width of the figure.\nrange_color: list, default=[-0.05,0.05]\n    Range of color_ for the plot.\ncolor_continuous_scale_ : str, default='jet'\n    color_ scale for the plot.\n\n    •   Purpose: This function generates a loading plot, typically used in multivariate analysis to visualize the relationship between features and the scores.\n    •   Parameters:\n    •   fig_height, fig_width: Dimensions of the plot.\n    •   range_color_: Color range to represent the covariance values.\n    •   color_continuous_scale_: Color scale used for continuous color mapping.\n    •   marker_size, font_size, title_font_size: Customize the appearance of the markers and fonts.\n    •   xaxis_direction: Set the direction for the x-axis (e.g., reversed or not).\n    •   xaxis_title: Title for the x-axis.\n    •   Plot Details:\n    •   The loading plot shows the relationship between features (usually a set of variables or compounds) and the model scores.\n    •   The correlation for each feature is displayed alongside its covariance, with colors representing the covariance values.\n    •   The plot is interactive and customizable (e.g., marker size, color scale, axis settings)."
+            }
+          ]
+        },
+        {
+          "name": "pca",
+          "doc": "PCA model\n\nParameters\n----------\nX : array-like, shape (n_samples, n_features)\n    Training data, where n_samples is the number of samples and n_features is the number of features.\nlabel : array-like, shape (n_samples,)\n    Target data, where n_samples is the number of samples.\nfeatures_name : array-like, shape (n_features,), default=None\n    Name of features.\nn_components : int, default=2\n    Number of components to keep.\nscale : str, default='pareto'\n    Method of scaling. 'pareto' for pareto scaling, 'mean' for mean centering, 'uv' for unitvarian scaling.\nrandom_state : int, default=42\n    Random state for permutation test.\ntest_size : float, default=0.3\n    Size of test set.\n\nExamples:\n----------\nimport pandas as pd\nimport numpy as np\nfrom metbit import pca\n\n# Create a dataset\ndata = pd.DataFrame(np.random.rand(500, 50000))\nclass_ = pd.Series(np.random.choice(['A', 'B', 'C'], 500), name='Group')\ntime = pd.Series(np.random.choice(['1-wk', '2-wk', '3-wk', '4-wk'], 500), name='Time point')\n\n# Assign X and target\nX = datasets.iloc[:, 2:]\ny = datasets['Group']\ntime = datasets['Time point']\nfeatures_name = list(X.columns.astype(float))\n\n## Perform PCA model\n\npca_mod = pca(X = X, label = y, features_name=features_name, n_components=2, scaling_method='pareto', random_state=42, test_size=0.3)\npca_mod.fit()\n\n# Visualisation of PCA model\npca_mod.plot_observe_variance()\n\npca_mod.plot_cumulative_observed()\n\nshape_ = {'1-wk': 'circle', '2-wk': 'square', '3-wk': 'diamond', '4-wk': 'cross'}\n\npca_mod.plot_pca_scores(symbol=time, symbol_dict=shape_)\n\npca_mod.plot_loading_()\n\npca_mod.plot_pca_trajectory(time_=time, time_order={'1-wk': 0, '2-wk': 1, '3-wk': 2, '4-wk': 3}, color_dict={'A': '#636EFA', 'B': '#EF553B', 'C': '#00CC96'}, symbol_dict=shape_)",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, X: pd.DataFrame, label: list=None, features_name: list=None, n_components=2, scaling_method='pareto', random_state=42, test_size=0.3)",
+              "doc": ""
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_explained_variance",
+              "signature": "get_explained_variance(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_scores",
+              "signature": "get_scores(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_loadings",
+              "signature": "get_loadings(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_q2_test",
+              "signature": "get_q2_test(self)",
+              "doc": ""
+            },
+            {
+              "name": "plot_observe_variance",
+              "signature": "plot_observe_variance(self, fig_height=600, fig_width=800, font_size=15)",
+              "doc": "Visualise explained variance plot\n\nReturns\n-------\nfig : plotly.graph_objects.Figure\n    Explained variance plot."
+            },
+            {
+              "name": "plot_cumulative_observed",
+              "signature": "plot_cumulative_observed(self, fig_height=600, fig_width=800, font_size=15, marker_size=10)",
+              "doc": "Visualise cumulative variance plot\n\nReturns\n-------\nfig : plotly.graph_objects.Figure\n    Cumulative variance plot."
+            },
+            {
+              "name": "plot_pca_scores",
+              "signature": "plot_pca_scores(self, pc=['PC1', 'PC2'], color_=None, color_dict=None, symbol_=None, symbol_dict=None, marker_label=None, fig_height=900, fig_width=1300, marker_size=35, marker_opacity=0.7, font_size=20, title_font_size=21, individual_ellipse=True, legend_name=['Group', 'Time point'])",
+              "doc": "Visualise PCA scores plot\n\nParameters\n----------\npc : list, default=['PC1', 'PC2']\n    List of principal components to plot.\ncolor: array-like, shape (n_samples,), default=None\n    Target data, where n_samples is the number of samples.\ncolor_dict : dict, default=None\n    Dictionary of color_ mapping.\nsymbol_ : array-like, shape (n_samples,), default=None\n    Target data, where n_samples is the number of samples.\nsymbol_dict : dict, default=None\n    Dictionary of symbol_ mapping.\nfig_height : int, default=900\n    Height of figure.\nfig_width : int, default=1300\n    Width of figure.\nmarker_size : int, default=35\n    Size of marker.\nmarker_opacity : float, default=0.7\n    Opacity of marker.\ntext_ : array-like, shape (n_samples,), default=None\n    Text to display on each point.\n\nReturns\n-------\nfig : plotly.graph_objects.Figure\n    PCA scores plot."
+            },
+            {
+              "name": "plot_loading_",
+              "signature": "plot_loading_(self, pc=['PC1', 'PC2'], fig_height=600, fig_width=1800, font_size=20, title_font_size=20, marker_size=1, x_axis_title='𝛿<sub>H</sub> in ppm', xaxis_direction='reversed')",
+              "doc": "Visualise PCA loadings\n\nParameters\n----------\npc : list, default=['PC1', 'PC2']\n    Principle component to plot.\nfig_height : int, default=600\n    Height of figure.\nfig_width : int, default=1800\n    Width of figure.\n\nReturns\n-------\nfig : plotly.graph_objects.Figure\n    Plotly figure.\n\n----------"
+            },
+            {
+              "name": "plot_pca_trajectory",
+              "signature": "plot_pca_trajectory(self, time_, time_order, stat_=['mean', 'sem'], pc=['PC1', 'PC2'], color_dict=None, symbol_dict=None, fig_height=900, fig_width=1300, marker_size=35, marker_opacity=0.7, title_font_size=20, font_size=20, legend_name=['Group', 'Time point'])",
+              "doc": "Visualise PCA trajectory\n\nParameters\n----------\ntime_ : array-like, shape (n_samples,)\n    Time point of samples.\ntime_order : dictionary\n    Order of time point.\nstat_ : list, default=['mean', 'sem']  \n    Statistic to calculate. First element is mean or median, second element is sem or std.\npc : list, default=['PC1', 'PC2']\n    Principle component to plot.\ncolor_dict : dictionary, default=None\n    Dictionary of color_ for each group.\nsymbol_dict : dictionary, default=None\n    Dictionary of symbol_ for each time point.\nfig_height : int, default=900\n    Height of figure.\nfig_width : int, default=1300\n    Width of figure.\nmarker_size : int, default=35\n    Size of marker.\nmarker_opacity : float, default=0.7\n    Opacity of marker.\n\nReturns\n-------\nfig : plotly.graph_objects.Figure\n    Plotly figure."
+            },
+            {
+              "name": "plot_3d_pca",
+              "signature": "plot_3d_pca(self, pc=['PC1', 'PC2', 'PC3'], color_=None, color_dict=None, symbol_=None, symbol_dict=None, fig_height=900, fig_width=1300, marker_size=35, marker_opacity=0.7, marker_label=None, font_size=20, title_font_size=20, legend_name=['Group', 'Time point'])",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.opls",
+      "path": "metbit/opls.py",
+      "category": "Analysis and models",
+      "doc": "",
+      "classes": [
+        {
+          "name": "OPLS",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self)",
+              "doc": "TODO:\n    1. add arg for specifying the method for performing PLS"
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self, x, y, n_comp=None, dot=np.dot)",
+              "doc": "Fit PLS model.\n\nParameters\n----------\nx: np.ndarray\n    Variable matrix with size n samples by p variables.\ny: np.ndarray\n    Dependent matrix with size n samples by 1, or a vector\nn_comp: int\n    Number of components, default is None, which indicates that\n    largest dimension which is smaller value between n and p\n    will be used.\n\nReturns\n-------\nOPLS object\n\nReference\n---------\n[1] Trygg J, Wold S. Projection on Latent Structure (OPLS).\n    J Chemometrics. 2002, 16, 119-128.\n[2] Trygg J, Wold S. O2-PLS, a two-block (X-Y) latent variable\n    regression (LVR) method with a integral OSC filter.\n    J Chemometrics. 2003, 17, 53-64."
+            },
+            {
+              "name": "predict",
+              "signature": "predict(self, X, n_component=None, return_scores=False)",
+              "doc": "Predict the new coming data matrx."
+            },
+            {
+              "name": "correct",
+              "signature": "correct(self, x, n_component=None, return_scores=False, dot=np.dot)",
+              "doc": "Correction of X\n\nParameters\n----------\nx: np.ndarray\n    Data matrix with size n by c, where n is number of\n    samples, and c is number of variables\nn_component: int | None\n    Number of components. If is None, the number of components\n    used in fitting the model is used. Default is None.\nreturn_scores: bool\n    Return orthogonal scores. Default is False.\n\nReturns\n-------\nxc: np.ndarray\n    Corrected data, with same matrix size with input X.\nt: np.ndarray\n    Orthogonal score, n by n_component."
+            },
+            {
+              "name": "predictive_score",
+              "signature": "predictive_score(self, n_component=None)",
+              "doc": "Parameters\n----------\nn_component: int\n    The component number.\n\nReturns\n-------\nnp.ndarray\n    The first predictive score."
+            },
+            {
+              "name": "ortho_score",
+              "signature": "ortho_score(self, n_component=None)",
+              "doc": "Parameters\n----------\nn_component: int\n    The component number.\n\nReturns\n-------\nnp.ndarray\n    The first orthogonal score."
+            },
+            {
+              "name": "predictive_scores",
+              "signature": "predictive_scores(self)",
+              "doc": "Orthogonal loadings."
+            },
+            {
+              "name": "predictive_loadings",
+              "signature": "predictive_loadings(self)",
+              "doc": "Predictive loadings."
+            },
+            {
+              "name": "weights_y",
+              "signature": "weights_y(self)",
+              "doc": "y scores."
+            },
+            {
+              "name": "orthogonal_loadings",
+              "signature": "orthogonal_loadings(self)",
+              "doc": "Orthogonal loadings."
+            },
+            {
+              "name": "orthogonal_scores",
+              "signature": "orthogonal_scores(self)",
+              "doc": "Orthogonal scores."
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.pca_ellipse",
+      "path": "metbit/pca_ellipse.py",
+      "category": "Visualization and apps",
+      "doc": "",
+      "classes": [],
+      "functions": [
+        {
+          "name": "confidence_ellipse",
+          "signature": "confidence_ellipse(x, y, n_std=1.96, size=100)",
+          "doc": ""
+        }
+      ],
+      "parseError": null
+    },
+    {
+      "name": "metbit.peak_processe",
+      "path": "metbit/peak_processe.py",
+      "category": "NMR and preprocessing",
+      "doc": "",
+      "classes": [
+        {
+          "name": "peak_chops",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data: pd.DataFrame, ppm: list=None)",
+              "doc": ""
+            },
+            {
+              "name": "cut_peak",
+              "signature": "cut_peak(self, first_ppm: float, second_ppm: float)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.plotting",
+      "path": "metbit/plotting.py",
+      "category": "Visualization and apps",
+      "doc": "",
+      "classes": [
+        {
+          "name": "Plots",
+          "doc": "Plot cross validation results\n\nParameters\n----------\ncvmodel: CrossValidation object\n    Cross validation model constructed in cross_validation module.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, cvmodel)",
+              "doc": ""
+            },
+            {
+              "name": "plot_scores",
+              "signature": "plot_scores(self, save_plot: bool=False, file_name: str=None)",
+              "doc": "Plot scores. If OPLS/OPLS-DA is specified, the score plot for\nOPLS/OPLS-DA is used, i.e., the first component of orthogonal\nversus predictive scores are used for the plot, otherwise, the\nfirst two components of score plots are used.\n\nParameters\n----------\nsave_plot: bool\n    Whether the plot should be saved. Default is False.\nfile_name: str | None\n    File name for saving the plot. They should be compatible\n    in Matplotlib. The figure format supported by Matplotlib\n    can be found at\n    https://matplotlib.org/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.get_supported_filetypes\n    Default is \"png\". If the file_name doesn't have dot, an\n    extension of \"png\" will be added, but if the string after\n    the dot is not supported by Matplotlib, an error will be\n    raised. Thus if the extension is not intended to be\n    specified, dot shouldn't be present in file_name.\n\nReturns\n-------\nNone"
+            },
+            {
+              "name": "splot",
+              "signature": "splot(self, save_plot: bool=False, file_name: bool=None)",
+              "doc": "S-plot\n\nParameters\n----------\nsave_plot: bool\n    Whether the plot should be saved. Default is False.\nfile_name: str | None\n    File name for saving the plot. They should be compatible\n    in Matplotlib. The figure format supported by Matplotlib\n    can be found at\n    https://matplotlib.org/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.get_supported_filetypes\n    Default is \"png\". If the file_name doesn't have dot, an\n    extension of \"png\" will be added, but if the string after\n    the dot is not supported by Matplotlib, an error will be\n    raised. Thus if the extension is not intended to be\n    specified, dot shouldn't be present in file_name.\n\nReturns\n-------\nNone\n\nReferences\n----------\n[1] Wiklund S, et al. Visualization of GC/TOF-MS-Based\nMetabolomics Data for Identification of Biochemically\nInteresting Compounds Using OPLS Class Models. Anal Chem.\n2008, 80, 115-122."
+            },
+            {
+              "name": "jackknife_loading_plot",
+              "signature": "jackknife_loading_plot(self, alpha: float=0.05, save_plot: bool=False, file_name: str=None)",
+              "doc": "Loading plot with Jack-knife intervals.\n\nParameters\n----------\nalpha: float\n    Significance level for calculating the intervals.\n    Default is 0.05.\nsave_plot: bool\n    Whether the plot should be saved. Default is False.\nfile_name: str | None\n    File name for saving the plot. They should be compatible\n    in Matplotlib. The figure format supported by Matplotlib\n    can be found at\n    https://matplotlib.org/api/backend_bases_api.html#matplotlib.backend_bases.FigureCanvasBase.get_supported_filetypes\n    Default is \"png\". If the file_name doesn't have dot, an\n    extension of \"png\" will be added, but if the string after\n    the dot is not supported by Matplotlib, an error will be\n    raised. Thus if the extension is not intended to be\n    specified, dot shouldn't be present in file_name.\n\nReturns\n-------\nloading_mean: np.ndarray\n    Mean of cross validated loadings.\nloading_interval: np.ndarray\n    Jack-knife confidence intervals"
+            },
+            {
+              "name": "plot_cv_errors",
+              "signature": "plot_cv_errors(self, save_plot: bool=False, file_name: str=None)",
+              "doc": "Plot cross validation classification errors.\n\nReturns\n-------\nNone"
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.pls",
+      "path": "metbit/pls.py",
+      "category": "Analysis and models",
+      "doc": "",
+      "classes": [
+        {
+          "name": "PLS",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self)",
+              "doc": ""
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self, x: np.ndarray, y: np.ndarray, n_comp: int=None, dot=np.dot)",
+              "doc": "Fit PLS model\n\nParameters\n----------\nx: np.ndarray\n    Variable matrix with size n by p, where n number\n    of samples/instances, p number of variables\ny: np.ndarray\n    Dependent variable with size n by 1\nn_comp: int\n    Number of components. Default is None, which indicates that\n    smaller number between n and p will be used.\n\nReturns\n-------\nPLS object"
+            },
+            {
+              "name": "predict",
+              "signature": "predict(self, X, n_component=None)",
+              "doc": "Do prediction."
+            },
+            {
+              "name": "scores_x",
+              "signature": "scores_x(self)",
+              "doc": "Scores.\n\nReturns\n-------\nnp.ndarray\n    Scores"
+            },
+            {
+              "name": "loadings_x",
+              "signature": "loadings_x(self)",
+              "doc": "Returns\n-------\nnp.ndarray\n    loadings"
+            },
+            {
+              "name": "weights_y",
+              "signature": "weights_y(self)",
+              "doc": "Returns\n-------\nnp.ndarray\n    y scores"
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.pretreatment",
+      "path": "metbit/pretreatment.py",
+      "category": "NMR and preprocessing",
+      "doc": "",
+      "classes": [
+        {
+          "name": "Scaler",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, scaler: str='pareto')",
+              "doc": ""
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self, x: np.ndarray)",
+              "doc": "Fit scaler model.\n:param x: variable matrix for scaling and parameter setup\n:return: Scaler object and scaled X"
+            },
+            {
+              "name": "scale",
+              "signature": "scale(self, x: np.ndarray)",
+              "doc": "Scale the x based on the parameters obtained in fit\n:param x: variable matrix with size n samples by p variables\n:return: scaled x"
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.scaler",
+      "path": "metbit/scaler.py",
+      "category": "NMR and preprocessing",
+      "doc": "",
+      "classes": [
+        {
+          "name": "Scaler",
+          "doc": "Extension of Scikit-learn's StandardScaler which allows scaling by different powers of the standard deviation.\n\n:param scale_power: To which power should the standard deviation of each variable be raised for scaling. 0: Mean centering; 0.5: Pareto; 1:Unit Variance.\n:type scale_power: Float\n:param bool copy: Copy the array containing the data.\n:param bool with_mean: Perform mean centering.\n:param bool with_std: Scale the data.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, scale_power=1, copy=True, with_mean=True, with_std=True)",
+              "doc": ""
+            },
+            {
+              "name": "fit",
+              "signature": "fit(self, X, y=None)",
+              "doc": "Compute the mean and standard deviation from a dataset to use in future scaling operations.\n\n:param X: Data matrix to scale.\n:type X: numpy.ndarray, shape [n_samples, n_features]\n:param y: Passthrough for Scikit-learn ``Pipeline`` compatibility.\n:type y: None\n:return: Fitted object.\n:rtype: py.Scaler"
+            },
+            {
+              "name": "partial_fit",
+              "signature": "partial_fit(self, X, y=None)",
+              "doc": "Performs online computation of mean and standard deviation on X for later scaling.\nAll of X is processed as a single batch.\nThis is intended for cases when `fit` is\nnot feasible due to very large number of `n_samples`\nor because X is read from a continuous stream.\n\nThe algorithm for incremental mean\nand std is given in Equation 1.5a,b in Chan, Tony F., Gene H. Golub, and Randall J. LeVeque. \"Algorithms\nfor computing the sample variance: Analysis and recommendations.\"\nThe American Statistician 37.3 (1983): 242-247\n\n:param X: Data matrix to scale.\n:type X: numpy.ndarray, shape [n_samples, n_features]\n:param y: Passthrough for Scikit-learn ``Pipeline`` compatibility.\n:type y: None\n:return: Fitted object.\n:rtype: py.Scaler"
+            },
+            {
+              "name": "transform",
+              "signature": "transform(self, X, y=None, copy=None)",
+              "doc": "Perform standardization by centering and scaling using the parameters.\n\n:param X: Data matrix to scale.\n:type X: numpy.ndarray, shape [n_samples, n_features]\n:param y: Passthrough for scikit-learn ``Pipeline`` compatibility.\n:type y: None\n:param bool copy: Copy the X matrix.\n:return: Scaled version of the X data matrix.\n:rtype: numpy.ndarray, shape [n_samples, n_features]"
+            },
+            {
+              "name": "inverse_transform",
+              "signature": "inverse_transform(self, X, copy=None)",
+              "doc": "Scale back the data to the original representation.\n\n:param X: Scaled data matrix.\n:type X: numpy.ndarray, shape [n_samples, n_features]\n:param bool copy: Copy the X data matrix.\n:return: X data matrix with the scaling operation reverted.\n:rtype: numpy.ndarray, shape [n_samples, n_features]"
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.spec_norm",
+      "path": "metbit/spec_norm.py",
+      "category": "NMR and preprocessing",
+      "doc": "",
+      "classes": [
+        {
+          "name": "Normalization",
+          "doc": "A class for performing various normalization methods, including \nProbabilistic Quotient Normalization (PQN), Standard Normal Variate \n(SNV), Multiplicative Scatter Correction (MSC), and their combinations.\n\nMethods:\n--------\npqn_normalization(df):\n    Applies Probabilistic Quotient Normalization (PQN) to the input dataframe.\n\nsnv_normalization(df):\n    Applies Standard Normal Variate (SNV) normalization to the input dataframe.\n\nmsc_normalization(df):\n    Applies Multiplicative Scatter Correction (MSC) normalization to the input dataframe.\n\nsnv_msc_normalization(df):\n    Applies SNV followed by MSC normalization to the input dataframe.\n\nsnv_pqn_normalization(df):\n    Applies SNV followed by PQN normalization to the input dataframe.\n\nsnv_msc_pqn_normalization(df):\n    Applies SNV followed by MSC and then PQN normalization to the input dataframe.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self)",
+              "doc": "Initializes the Normalization class."
+            },
+            {
+              "name": "pqn_normalization",
+              "signature": "pqn_normalization(df)",
+              "doc": "Perform Probabilistic Quotient Normalization (PQN) on a dataframe.\n\nParameters:\n-----------\ndf : pandas.DataFrame or numpy.ndarray\n    The input data to normalize. Each column represents a feature.\n\nReturns:\n--------\ndf_norm : pandas.DataFrame\n    The PQN normalized dataframe.\n\nRaises:\n-------\nTypeError: \n    If input is not a pandas DataFrame or cannot be converted to one."
+            },
+            {
+              "name": "snv_normalization",
+              "signature": "snv_normalization(df)",
+              "doc": "Apply Standard Normal Variate (SNV) normalization to a dataframe.\n\nParameters:\n-----------\ndf : pandas.DataFrame or numpy.ndarray\n    The input data to normalize. Each column represents a feature.\n\nReturns:\n--------\ndf_norm : pandas.DataFrame\n    The SNV normalized dataframe.\n\nRaises:\n-------\nTypeError:\n    If input is not a pandas DataFrame or cannot be converted to one."
+            },
+            {
+              "name": "msc_normalization",
+              "signature": "msc_normalization(df)",
+              "doc": "Apply Multiplicative Scatter Correction (MSC) normalization to a dataframe.\n\nParameters:\n-----------\ndf : pandas.DataFrame or numpy.ndarray\n    The input data to normalize. Each column represents a feature.\n\nReturns:\n--------\ndf_norm : pandas.DataFrame\n    The MSC normalized dataframe.\n\nRaises:\n-------\nTypeError:\n    If input is not a pandas DataFrame or cannot be converted to one."
+            },
+            {
+              "name": "snv_msc_normalization",
+              "signature": "snv_msc_normalization(df)",
+              "doc": "Apply SNV followed by MSC normalization to a dataframe.\n\nParameters:\n-----------\ndf : pandas.DataFrame or numpy.ndarray\n    The input data to normalize. Each column represents a feature.\n\nReturns:\n--------\ndf_norm : pandas.DataFrame\n    The SNV-MSC normalized dataframe.\n\nRaises:\n-------\nTypeError:\n    If input is not a pandas DataFrame or cannot be converted to one."
+            },
+            {
+              "name": "snv_pqn_normalization",
+              "signature": "snv_pqn_normalization(df)",
+              "doc": "Apply SNV followed by PQN normalization to a dataframe.\n\nParameters:\n-----------\ndf : pandas.DataFrame or numpy.ndarray\n    The input data to normalize. Each column represents a feature.\n\nReturns:\n--------\ndf_norm : pandas.DataFrame\n    The SNV-PQN normalized dataframe.\n\nRaises:\n-------\nTypeError:\n    If input is not a pandas DataFrame or cannot be converted to one."
+            },
+            {
+              "name": "snv_msc_pqn_normalization",
+              "signature": "snv_msc_pqn_normalization(df)",
+              "doc": "Apply SNV followed by MSC and then PQN normalization to a dataframe.\n\nParameters:\n-----------\ndf : pandas.DataFrame or numpy.ndarray\n    The input data to normalize. Each column represents a feature.\n\nReturns:\n--------\ndf_norm : pandas.DataFrame\n    The SNV-MSC-PQN normalized dataframe.\n\nRaises:\n-------\nTypeError:\n    If input is not a pandas DataFrame or cannot be converted to one.\nValueError:\n    If an error occurs during the normalization process."
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.STOCSY",
+      "path": "metbit/STOCSY.py",
+      "category": "Other",
+      "doc": "",
+      "classes": [],
+      "functions": [
+        {
+          "name": "STOCSY",
+          "signature": "STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001)",
+          "doc": "Performs a STOCSY (Statistic Total Correlation Spectroscopy) analysis on NMR spectra data.\n\nThis function calculates the Pearson correlation between a specified anchor signal \n(identified by its PPM value) and all other signals in the NMR spectra. It identifies \nsignificant correlations based on the specified p-value threshold and visualizes \nthe results in a scatter plot.\n\nParameters:\n-----------\nspectra : pd.DataFrame\n    A DataFrame containing the NMR spectra data, where each column represents a \n    chemical shift in ppm and each row represents a sample.\n\nanchor_ppm_value : float\n    The PPM value of the anchor signal used for correlation analysis.\n\np_value_threshold : float, optional\n    The threshold for determining significance. Correlations with a p-value less than \n    this threshold will be marked as significant. Default is 0.0001.\n\nReturns:\n--------\nfig : go.Figure\n    A Plotly figure object containing the scatter plot of the correlation results.\n\nExample:\n---------\n>>> fig = STOCSY(spectra=spectra, anchor_ppm_value=1.29275, p_value_threshold=0.0000001)\n>>> fig.show()"
+        }
+      ],
+      "parseError": null
+    },
+    {
+      "name": "metbit.ui_picky_peak",
+      "path": "metbit/ui_picky_peak.py",
+      "category": "Visualization and apps",
+      "doc": "",
+      "classes": [
+        {
+          "name": "pickie_peak",
+          "doc": "A class to display and interact with NMR spectral data, enabling users to pick peaks from an interactive plot.\n\nParameters:\n- spectra (pd.DataFrame): A DataFrame containing NMR spectral data with rows representing different spectra and columns representing intensity values at each chemical shift (ppm).\n- ppm (list): A list of ppm values corresponding to the columns in the `spectra` DataFrame.\n\nMethods:\n- run_ui: Launches a Dash web application with a user interface to visualize NMR spectra, select peaks interactively, and export peak positions.\n\nExample:\n```python\nimport pandas as pd\nspectra = pd.DataFrame(...)  # Load or generate spectral data\nppm = [...]  # Define corresponding ppm values\npicker = pickie_peak(spectra, ppm)\npicker.run_ui()\n```\n\nUsage:\n1. **Plot Visualization**: Displays the spectra using an interactive Plotly graph.\n2. **Peak Selection**: Allows users to click on the plot to select peaks, storing their positions.\n3. **Export Functionality**: Offers options to export selected peak positions as a CSV file.",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, spectra: pd.DataFrame, ppm: list, label: list)",
+              "doc": ""
+            },
+            {
+              "name": "run_ui",
+              "signature": "run_ui(self)",
+              "doc": "Launches the Dash application for visualizing and selecting NMR spectral peaks.\n\nComponents:\n- Interactive Plot: Displays NMR spectra with options to click on peaks.\n- Peak Selection: Allows users to store selected peak positions.\n- Export Data: Provides an option to download selected peak positions as a CSV file.\n\nReturns:\n- Dash app: An interactive web application with plot, data selection, and export features."
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.ui_stocsy",
+      "path": "metbit/ui_stocsy.py",
+      "category": "Visualization and apps",
+      "doc": "",
+      "classes": [
+        {
+          "name": "STOCSY_app",
+          "doc": "A Dash application for visualizing NMR spectra and performing STOCSY analysis.\n\nParameters:\n-----------\nspectra : pd.DataFrame\n    DataFrame containing the NMR spectra data.\nppm : list\n    List of PPM (parts per million) values corresponding to the spectra.\n\nMethods:\n--------\nrun_ui() -> dash.Dash:\n    Sets up the Dash UI layout, initializes the application callbacks, and returns the app instance.\n\nExample:\n-------\n# Load your NMR spectra data\ndf = pd.read_csv(\"https://raw.githubusercontent.com/aeiwz/example_data/main/dataset/Example_NMR_data.csv\")\nspectra = df.iloc[:,1:]\nppm = spectra.columns.astype(float).to_list()\n\n# Create instance of the class with spectra and ppm data\nstocsy_app = STOCSY_app(spectra, ppm)\n\n# Get the app instance\napp = stocsy_app.run_ui()\n\n# Run the app\napp.run_server(debug=True, port=8051)",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, spectra: pd.DataFrame, ppm: list)",
+              "doc": "Initializes the STOCSY_app with NMR spectra and corresponding PPM values.\n\nParameters:\n-----------\nspectra : pd.DataFrame\n    A DataFrame containing the NMR spectra data, where each row represents a sample.\nppm : list\n    A list of PPM values corresponding to the spectral data columns."
+            },
+            {
+              "name": "cached_stocsy",
+              "signature": "cached_stocsy(self, x_peak, pvalue_threshold)",
+              "doc": "Cache the STOCSY analysis results to avoid redundant computation."
+            },
+            {
+              "name": "run_ui",
+              "signature": "run_ui(self)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    },
+    {
+      "name": "metbit.utility",
+      "path": "metbit/utility.py",
+      "category": "Statistics and utilities",
+      "doc": "",
+      "classes": [
+        {
+          "name": "lazypair",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, dataset, column_name)",
+              "doc": ""
+            },
+            {
+              "name": "get_index",
+              "signature": "get_index(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_name",
+              "signature": "get_name(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_meta",
+              "signature": "get_meta(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_column_name",
+              "signature": "get_column_name(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_dataset",
+              "signature": "get_dataset(self)",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "gen_page",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data_path)",
+              "doc": "This function takes in the path to the data folder and returns the HTML files for the OPLS-DA plots.\nParameters\n----------\ndata_path: str\n    The path to the data folder.\ngen_page(data_path).get_files()"
+            },
+            {
+              "name": "get_files",
+              "signature": "get_files(self)",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "oplsda_path",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data_path)",
+              "doc": ""
+            },
+            {
+              "name": "make_path",
+              "signature": "make_path(self)",
+              "doc": ""
+            },
+            {
+              "name": "get_path",
+              "signature": "get_path(self)",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "Normality_distribution",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data: pd.DataFrame)",
+              "doc": ""
+            },
+            {
+              "name": "plot_distribution",
+              "signature": "plot_distribution(self, feature)",
+              "doc": ""
+            },
+            {
+              "name": "pca_distributions",
+              "signature": "pca_distributions(self)",
+              "doc": ""
+            }
+          ]
+        },
+        {
+          "name": "Normalise",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, data: pd.DataFrame, compute_missing: bool=True)",
+              "doc": "This function takes in a dataframe and returns the normalised dataframe.\nParameters\n----------\ndata: pandas dataframe\n    The dataframe to be used.\nNormalise(data).normalise()"
+            },
+            {
+              "name": "pqn_normalise",
+              "signature": "pqn_normalise(self, plot: bool=True)",
+              "doc": ""
+            },
+            {
+              "name": "decimal_place_normalisation",
+              "signature": "decimal_place_normalisation(self, decimals: int=2)",
+              "doc": "This function returns the dataframe with values rounded to a specified number of decimal places.\nParameters\n----------\ndecimals: int\n    The number of decimal places to round to."
+            },
+            {
+              "name": "z_score_normalisation",
+              "signature": "z_score_normalisation(self)",
+              "doc": "This function returns the dataframe normalized using Z-Score."
+            },
+            {
+              "name": "linear_normalisation",
+              "signature": "linear_normalisation(self)",
+              "doc": "This function returns the dataframe normalized using Min-Max (linear normalization)."
+            },
+            {
+              "name": "normalize_to_100",
+              "signature": "normalize_to_100(self)",
+              "doc": "This function returns the dataframe with values normalized to 100."
+            },
+            {
+              "name": "clipping_normalisation",
+              "signature": "clipping_normalisation(self, lower: float, upper: float)",
+              "doc": "This function returns the dataframe with values clipped to the specified range.\nParameters\n----------\nlower: float\n    The lower bound for clipping.\nupper: float\n    The upper bound for clipping."
+            },
+            {
+              "name": "standard_deviation_normalisation",
+              "signature": "standard_deviation_normalisation(self)",
+              "doc": "This function returns the dataframe normalized using Standard Deviation."
+            }
+          ]
+        }
+      ],
+      "functions": [
+        {
+          "name": "project_name_generator",
+          "signature": "project_name_generator()",
+          "doc": ""
+        },
+        {
+          "name": "boxplot_stats",
+          "signature": "boxplot_stats(df, x_col, y_col, group_order=None, custom_colors=None, p_value_threshold=0.05, annotate_style='value', figure_size=(800, 600), y_offset_factor=0.05, show_non_significant=True, title_=None, y_label=None, x_label=None, fig_height=800, fig_width=600)",
+          "doc": "Creates a box plot with tiered p-value annotations with improved y-axis positioning.\n\nParameters:\n- df (DataFrame): The input data.\n- x_col (str): Column name for categorical grouping.\n- y_col (str): Column name for numerical values.\n- group_order (list, optional): Order of groups for visualization.\n- custom_colors (dict, optional): Custom colors for each group.\n- p_value_threshold (float, optional): Threshold for significance annotations.\n- annotate_style (str, optional): 'value' for p-value text, 'symbol' for stars ('*').\n- figure_size (tuple, optional): Width and height of the figure.\n- y_offset_factor (float, optional): Scaling factor for vertical spacing based on y-axis range.\n\n# Example usage\ndata = {\n    \"treatment\": [\"A\"] * 10 + [\"B\"] * 10 + [\"C\"] * 10 + [\"D\"] * 10,\n    \"score\": [0.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.6, 0.7, 0.8, 0.5, 0.7, 0.6, 0.5, 0.6, 0.8, 0.5, 0.6, 0.7, 0.8,\n            0.40, 0.45, 0.50, 0.48, 0.41, 0.42, 0.47, 0.44, 0.45, 0.43, 0.5, 0.6, 0.5, 0.4, 0.5, 0.6, 0.4, 0.5, 0.6, 0.4],\n}\n\ndf = pd.DataFrame(data)\ncustom_colors = {\"A\": \"red\", \"B\": \"blue\", \"C\": \"green\", \"D\": \"purple\"}\nfig = boxplot_stats(\n    df, \n    x_col=\"treatment\", \n    y_col=\"score\", \n    group_order=[\"A\", \"B\", \"C\", \"D\"], \n    custom_colors=custom_colors, \n    p_value_threshold=0.05, \n    annotate_style=\"symbol\", \n    fig_height=800,\n    fig_width=600,\n    show_non_significant=True\n)\nfig.show()\n\nReturns:\n- fig (Figure): The Plotly figure object."
+        }
+      ],
+      "parseError": null
+    },
+    {
+      "name": "metbit.vip",
+      "path": "metbit/vip.py",
+      "category": "Analysis and models",
+      "doc": "",
+      "classes": [
+        {
+          "name": "vip_scores",
+          "doc": "",
+          "methods": [
+            {
+              "name": "__init__",
+              "signature": "__init__(self, model, features_name=None)",
+              "doc": ""
+            },
+            {
+              "name": "get_scores",
+              "signature": "get_scores(self)",
+              "doc": ""
+            },
+            {
+              "name": "vip_plot",
+              "signature": "vip_plot(self, threshold=2)",
+              "doc": ""
+            }
+          ]
+        }
+      ],
+      "functions": [],
+      "parseError": null
+    }
+  ]
+}

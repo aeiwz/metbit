@@ -8,6 +8,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint .",
+    "docs:sync": "python3 scripts/sync_version_docs.py",
     "deploy": "next build --webpack && vercel --prod"
   },
   "dependencies": {

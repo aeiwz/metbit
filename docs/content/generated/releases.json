@@ -1,0 +1,1961 @@
+{
+  "generatedAt": "2026-06-20T06:16:59Z",
+  "latest": "v9.0.0",
+  "releaseCount": 217,
+  "snapshotCount": 88,
+  "releases": [
+    {
+      "tag": "v9.0.0",
+      "version": "9.0.0",
+      "name": "metbit v9.0.0",
+      "publishedAt": "2026-06-20T05:30:08Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v9.0.0",
+      "body": "### Summary\n\nv9.0.0 is a major performance and correctness release focused on large-scale\nmetabolomics cohorts (>10,000 samples, >100,000 features). The compute backend\nhas been rewritten with a four-tier dispatch hierarchy: GPU (CuPy/PyTorch) ->\nC+OpenMP -> multiprocessing -> chunked NumPy. Memory peak allocations for core\nkernels are reduced by 50-250x at large cohort sizes.\n\n### Added\n\n**Large-scale compute backend (`metbit/_native.py`, `metbit/_native_backend.c`)**\n- `pearson_columns_par`: OpenMP row-parallel Pearson correlation; thread-local\n  accumulators avoid data races. Falls back transparently when OpenMP is absent.\n- `pearson_columns_f32`: float32 input variant; reads half the memory bandwidth\n  of the float64 path while accumulating in float64 for numerical stability.\n- `column_variances` / `column_variances_f32`: two-pass numerically stable\n  per-column sample variance in C with optional OpenMP parallelism.\n- `vip_scores`: closed-form VIP kernel in C; OpenMP parallel over features.\n  Replaces the O(p) Python loop over features entirely.\n- `openmp_threads()`: reports available OpenMP threads to Python dispatch layer.\n\n**Auto-dispatch layer (`metbit/_native.py`)**\n- Four-tier hierarchy: GPU (CuPy/PyTorch) -> C+OpenMP -> multiprocessing+NumPy\n  -> chunked NumPy. Backend selected automatically based on `n*p` element count.\n- `pearson_columns()`: unified entry point; auto-selects best backend.\n- `column_variances()`: unified entry point with same dispatch logic.\n- `vip_scores()`: dispatches to GPU / C / NumPy vectorised as available.\n- `backend_info()`: returns dict of active backends for user inspection.\n- Environment overrides: `METBIT_DISABLE_NATIVE`, `METBIT_DISABLE_GPU`,\n  `METBIT_N_JOBS`, `METBIT_CHUNK`.\n\n**Memory-efficient large-scale module (`metbit/analysis/large_scale.py`)**\n- `MemoryEstimator`: estimates peak RAM before loading large datasets and\n  recommends dtype.\n- `feature_preselection()`: variance/IQR based feature reduction; data-driven\n  percentile threshold; dispatches to the C/GPU variance kernel.\n- `ChunkedSTOCSY`: STOCSY with bounded O(n * chunk_size) peak memory.\n  `active_backend()` classmethod reports the compute path.\n- `LargeScaleAlignment`: alignment wrapper that warns when peak memory > 8 GB.\n- `memory_report()`: convenience function for quick dataset size assessment.\n\n**OPLS-DA improvements (`metbit/analysis/opls_da.py`)**\n- `dtype` parameter: accepts `numpy.float32` to halve peak memory. Auto-selects\n  float32 when `n * p > 5,000,000` if `dtype=None` (default).\n- `__init__` now replaces NaN in-place (single allocation) rather than creating\n  a second full-matrix copy.\n- `vip_scores()` is now vectorised via the dispatch layer; the O(p) Python loop\n  is eliminated (1000-2700x speedup at p=5,000-20,000).\n\n**NMR alignment (`metbit/nmr/alignment.py`)**\n- `icoshift_align()` now allocates a single output array instead of two full\n  matrix copies (`spectra.copy()` then `.values.copy()`). Saves one full matrix\n  copy (~80 GB at 10,000 x 1,000,000 float64).\n\n**Test suite**\n- `tests/test_e2e_pipeline.py`: 44 full-pipeline tests (OPLS-DA, STOCSY,\n  ChunkedSTOCSY, alignment, feature preselection, MemoryEstimator).\n- `tests/test_ab_aa.py`: 22 statistical validity tests: AB (must discriminate),\n  AA (must not discriminate on noise), scaling robustness, reproducibility.\n- `tests/test_large_scale.py`: 23 backend dispatch tests including memory\n  efficiency assertions via `tracemalloc`.\n- `tests/test_performance.py`: 24 performance regression tests marked\n  `@pytest.mark.perf`; assert speedup ratios, not absolute times.\n\n**Build and tooling**\n- `setup.py` now detects OpenMP at install time and compiles with `-fopenmp`\n  when available. Falls back gracefully via `OptionalBuildExt`.\n- Compile flags: `-O3 -march=native -ffast-math` for the C extension.\n- `scripts/perf_report.py`: standalone benchmark runner producing\n  `reports/benchmark_results.json` and `reports/PERFORMANCE.md` with timing,\n  peak-memory, and trend-vs-previous-run columns.\n- `scripts/run_tests.sh`: `--perf` / `--perf-quick` flags run benchmarks and\n  update the performance report.\n\n### Changed\n\n- **VIP computation** in `opls_da.vip_scores()`: replaced Python loop with\n  single BLAS matrix multiply `sqrt(p * (w_norm^2 @ S) / total_s)`. Numerically\n  identical to the loop; verified at `atol=1e-16`.\n- **Pearson fallback** in `_native.py`: chunked over features (bounded memory)\n  instead of full-matrix centred copy.\n- Minimum required: `scipy==1.14.1` (pinned; relaxation planned for v9.1).\n- `pytest.ini`: added `perf` marker; `--strict-markers` enforces registration.\n\n### Fixed\n\n- `icoshift_align`: second redundant full-matrix copy removed.\n- `opls_da.__init__`: `np.nan_to_num(X.to_numpy(), ...)` created an O(n*p)\n  intermediate; now uses `to_numpy(dtype=...) + nan_to_num(copy=False)`.\n- `test_native_backend.py::test_pearson_columns_fallback_matches_native`:\n  monkeypatching `_native_backend` now also patches `_NATIVE_OK` flag.\n\n### Performance (measured on Apple M-series, single-threaded C, no GPU)\n\n| Kernel | Dataset | Speedup | Memory reduction |\n|---|---|---|---|\n| VIP scores (C vs Python loop) | 80 x 5,000 | 2680x | - |\n| VIP scores (NumPy vec. vs loop) | 80 x 5,000 | 817x | - |\n| Pearson (C vs full-copy NumPy) | 500 x 30,000 | 1.2x speed | 126x less RAM |\n| Column variance (C f32 vs NumPy) | 500 x 100,000 | 2.0x | 251x less RAM |\n| ChunkedSTOCSY overhead | 100 x 5,000 | 46x faster than std | bounded memory |\n\n---\n\n## What's Changed\n* Update paper.md by @aeiwz in https://github.com/aeiwz/metbit/pull/14\n* Add GitHub Actions workflow for drafting PDF by @aeiwz in https://github.com/aeiwz/metbit/pull/15\n* Potential fix for code scanning alert no. 1: Workflow does not contain permissions by @aeiwz in https://github.com/aeiwz/metbit/pull/16\n* Add tests and coverage report, update modules by @aeiwz in https://github.com/aeiwz/metbit/pull/18\n* Bump next from 16.2.2 to 16.2.6 in /docs in the npm_and_yarn group across 1 directory by @dependabot[bot] in https://github.com/aeiwz/metbit/pull/17\n* Origin/dev/refactor code by @aeiwz in https://github.com/aeiwz/metbit/pull/19\n* Origin/dev/refactor code by @aeiwz in https://github.com/aeiwz/metbit/pull/20\n* Create CODE_OF_CONDUCT.md by @aeiwz in https://github.com/aeiwz/metbit/pull/22\n* Create CONTRIBUTING.md by @aeiwz in https://github.com/aeiwz/metbit/pull/23\n* Origin/dev/refactor code by @aeiwz in https://github.com/aeiwz/metbit/pull/21\n\n\n**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.7.7...v9.0.0",
+      "snapshot": "121478f7036f75e7"
+    },
+    {
+      "tag": "v8.7.7",
+      "version": "8.7.7",
+      "name": "v8.7.7",
+      "publishedAt": "2026-04-08T06:24:21Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.7.7",
+      "body": "## What's Changed\r\n* Bump glob and eslint-config-next in /docs by @dependabot[bot] in https://github.com/aeiwz/metbit/pull/3\r\n* Bump mdast-util-to-hast from 13.2.0 to 13.2.1 in /docs by @dependabot[bot] in https://github.com/aeiwz/metbit/pull/2\r\n* Bump js-yaml from 4.1.0 to 4.1.1 in /docs by @dependabot[bot] in https://github.com/aeiwz/metbit/pull/1\r\n* Create SECURITY.md by @aeiwz in https://github.com/aeiwz/metbit/pull/4\r\n* Create dependabot.yml by @aeiwz in https://github.com/aeiwz/metbit/pull/5\r\n* Add CodeQL analysis workflow configuration by @aeiwz in https://github.com/aeiwz/metbit/pull/6\r\n* Fix formatting in dependabot.yml by @aeiwz in https://github.com/aeiwz/metbit/pull/7\r\n* Harden annotation exports and upgrade docs dependencies by @aeiwz in https://github.com/aeiwz/metbit/pull/8\r\n\r\n## New Contributors\r\n* @dependabot[bot] made their first contribution in https://github.com/aeiwz/metbit/pull/3\r\n* @aeiwz made their first contribution in https://github.com/aeiwz/metbit/pull/4\r\n\r\n**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.7.5...v8.7.7",
+      "snapshot": "db75f7397f0c9b84"
+    },
+    {
+      "tag": "v8.7.5",
+      "version": "8.7.5",
+      "name": "v8.7.5",
+      "publishedAt": "2025-09-22T10:02:23Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.7.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.7.4...v8.7.5",
+      "snapshot": "40f8692f5637888f"
+    },
+    {
+      "tag": "v8.7.4",
+      "version": "8.7.4",
+      "name": "v8.7.4",
+      "publishedAt": "2025-09-22T09:58:08Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.7.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.7.3...v8.7.4",
+      "snapshot": "40f8692f5637888f"
+    },
+    {
+      "tag": "v8.7.3",
+      "version": "8.7.3",
+      "name": "v8.7.3",
+      "publishedAt": "2025-09-19T10:07:16Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.7.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.7.2...v8.7.3",
+      "snapshot": "40f8692f5637888f"
+    },
+    {
+      "tag": "v8.7.2",
+      "version": "8.7.2",
+      "name": "v8.7.2",
+      "publishedAt": "2025-09-19T09:55:55Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.7.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.7.1...v8.7.2",
+      "snapshot": "40f8692f5637888f"
+    },
+    {
+      "tag": "v8.7.1",
+      "version": "8.7.1",
+      "name": "v8.7.1",
+      "publishedAt": "2025-09-19T09:50:11Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.7.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.7.0...v8.7.1",
+      "snapshot": "40f8692f5637888f"
+    },
+    {
+      "tag": "v8.7.0",
+      "version": "8.7.0",
+      "name": "v8.7.0",
+      "publishedAt": "2025-09-18T08:52:49Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.7.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.6.2...v8.7.0",
+      "snapshot": "5f480d64c0bf5710"
+    },
+    {
+      "tag": "v8.6.2",
+      "version": "8.6.2",
+      "name": "v8.6.2",
+      "publishedAt": "2025-09-18T08:37:16Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.6.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.6.1...v8.6.2",
+      "snapshot": "5f480d64c0bf5710"
+    },
+    {
+      "tag": "v8.6.1",
+      "version": "8.6.1",
+      "name": "v8.6.1",
+      "publishedAt": "2025-09-18T08:32:42Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.6.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.6.0...v8.6.1",
+      "snapshot": "5f480d64c0bf5710"
+    },
+    {
+      "tag": "v8.6.0",
+      "version": "8.6.0",
+      "name": "v8.6.0",
+      "publishedAt": "2025-09-18T08:14:48Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.6.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.5.0...v8.6.0",
+      "snapshot": "9751313bbd7534e0"
+    },
+    {
+      "tag": "v8.5.0",
+      "version": "8.5.0",
+      "name": "v8.5.0",
+      "publishedAt": "2025-09-16T09:48:31Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.5.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.4.5...v8.5.0",
+      "snapshot": "5fa1b2ad33b98309"
+    },
+    {
+      "tag": "v8.4.5",
+      "version": "8.4.5",
+      "name": "v8.4.5",
+      "publishedAt": "2025-09-16T05:00:11Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.4.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.4.4...v8.4.5",
+      "snapshot": "5fa1b2ad33b98309"
+    },
+    {
+      "tag": "v8.4.4",
+      "version": "8.4.4",
+      "name": "v8.4.4",
+      "publishedAt": "2025-08-08T11:18:19Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.4.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.4.3...v8.4.4",
+      "snapshot": "1a7b05ca76474943"
+    },
+    {
+      "tag": "v8.4.3",
+      "version": "8.4.3",
+      "name": "v8.4.3",
+      "publishedAt": "2025-08-08T11:11:09Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.4.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.4.2...v8.4.3",
+      "snapshot": "1a7b05ca76474943"
+    },
+    {
+      "tag": "v8.4.2",
+      "version": "8.4.2",
+      "name": "v8.4.2",
+      "publishedAt": "2025-08-08T10:59:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.4.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/8.4.1...v8.4.2",
+      "snapshot": "1e8b7d7dc12f5184"
+    },
+    {
+      "tag": "8.4.1",
+      "version": "8.4.1",
+      "name": "8.4.1",
+      "publishedAt": "2025-08-01T05:05:15Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/8.4.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.4.0...8.4.1",
+      "snapshot": "1e8b7d7dc12f5184"
+    },
+    {
+      "tag": "v8.3.0",
+      "version": "8.3.0",
+      "name": "v8.3.0",
+      "publishedAt": "2025-07-18T11:00:24Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.3.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.2.0...v8.3.0",
+      "snapshot": "a515b2bdd1339526"
+    },
+    {
+      "tag": "v8.2.0",
+      "version": "8.2.0",
+      "name": "v8.2.0",
+      "publishedAt": "2025-07-15T09:01:22Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.2.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.1.0...v8.2.0",
+      "snapshot": "a515b2bdd1339526"
+    },
+    {
+      "tag": "v8.1.0",
+      "version": "8.1.0",
+      "name": "v8.1.1",
+      "publishedAt": "2025-07-15T06:21:08Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.1.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v8.0.0...v8.1.0",
+      "snapshot": "58cc1b2e581ba834"
+    },
+    {
+      "tag": "v8.0.0",
+      "version": "8.0.0",
+      "name": "v8.0.0",
+      "publishedAt": "2025-07-02T12:11:40Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v8.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.21...v8.0.0",
+      "snapshot": "916d71bdbd8e1776"
+    },
+    {
+      "tag": "v7.3.21",
+      "version": "7.3.21",
+      "name": "v7.3.21",
+      "publishedAt": "2025-06-10T03:15:59Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.21",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.20...v7.3.21",
+      "snapshot": "fa63d96cf94b7549"
+    },
+    {
+      "tag": "v7.3.20",
+      "version": "7.3.20",
+      "name": "v7.3.20",
+      "publishedAt": "2025-06-10T03:00:45Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.20",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.19...v7.3.20",
+      "snapshot": "22c0641b959db7c3"
+    },
+    {
+      "tag": "v7.3.19",
+      "version": "7.3.19",
+      "name": "v7.3.19",
+      "publishedAt": "2025-06-10T02:44:49Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.19",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.18...v7.3.19",
+      "snapshot": "0314f730222b1087"
+    },
+    {
+      "tag": "v7.3.18",
+      "version": "7.3.18",
+      "name": "v7.3.18",
+      "publishedAt": "2025-06-02T07:16:49Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.18",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.17...v7.3.18",
+      "snapshot": "d34d7a4ff5859691"
+    },
+    {
+      "tag": "v7.3.17",
+      "version": "7.3.17",
+      "name": "v7.3.17",
+      "publishedAt": "2025-06-02T06:31:24Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.17",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.16...v7.3.17",
+      "snapshot": "d34d7a4ff5859691"
+    },
+    {
+      "tag": "v7.3.16",
+      "version": "7.3.16",
+      "name": "v7.3.16",
+      "publishedAt": "2025-06-02T06:27:01Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.16",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.15...v7.3.16",
+      "snapshot": "d34d7a4ff5859691"
+    },
+    {
+      "tag": "v7.3.15",
+      "version": "7.3.15",
+      "name": "v7.3.15",
+      "publishedAt": "2025-05-21T03:25:33Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.15",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.14...v7.3.15",
+      "snapshot": "5f7f14acd839f989"
+    },
+    {
+      "tag": "v7.3.14",
+      "version": "7.3.14",
+      "name": "v7.3.14",
+      "publishedAt": "2025-05-21T03:22:37Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.14",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.13...v7.3.14",
+      "snapshot": "9ff2365fb034249e"
+    },
+    {
+      "tag": "v7.3.13",
+      "version": "7.3.13",
+      "name": "v7.3.13",
+      "publishedAt": "2025-05-21T03:17:36Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.13",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.12...v7.3.13",
+      "snapshot": "5f7f14acd839f989"
+    },
+    {
+      "tag": "v7.3.12",
+      "version": "7.3.12",
+      "name": "v7.3.12",
+      "publishedAt": "2025-05-21T03:07:55Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.12",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.11...v7.3.12",
+      "snapshot": "5f7f14acd839f989"
+    },
+    {
+      "tag": "v7.3.11",
+      "version": "7.3.11",
+      "name": "v7.3.11",
+      "publishedAt": "2025-05-20T09:49:36Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.11",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.10...v7.3.11",
+      "snapshot": "5f7f14acd839f989"
+    },
+    {
+      "tag": "v7.3.10",
+      "version": "7.3.10",
+      "name": "v7.3.10",
+      "publishedAt": "2025-04-09T03:41:52Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.10",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.7.9...v7.3.10",
+      "snapshot": "5bcb82913460fb19"
+    },
+    {
+      "tag": "v7.3.3",
+      "version": "7.3.3",
+      "name": "v7.3.3",
+      "publishedAt": "2025-04-01T08:23:55Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.2...v7.3.3",
+      "snapshot": "bffa0882015fc5b3"
+    },
+    {
+      "tag": "v7.3.2",
+      "version": "7.3.2",
+      "name": "v7.3.2",
+      "publishedAt": "2025-04-01T08:14:14Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.1...v7.3.2",
+      "snapshot": "bffa0882015fc5b3"
+    },
+    {
+      "tag": "v7.3.1",
+      "version": "7.3.1",
+      "name": "v7.3.1",
+      "publishedAt": "2025-04-01T07:54:50Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.3.0...v7.3.1",
+      "snapshot": "91fa40ca7ab9ae38"
+    },
+    {
+      "tag": "v7.3.0",
+      "version": "7.3.0",
+      "name": "v7.3.0",
+      "publishedAt": "2025-04-01T07:43:23Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.3.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.2.0...v7.3.0",
+      "snapshot": "7dd61ab01820ab5a"
+    },
+    {
+      "tag": "v3.6.7",
+      "version": "3.6.7",
+      "name": "v3.6.7",
+      "publishedAt": "2025-04-01T10:26:59Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.6.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.7.5...v3.6.7",
+      "snapshot": "bffa0882015fc5b3"
+    },
+    {
+      "tag": "v7.2.0",
+      "version": "7.2.0",
+      "name": "v7.2.0",
+      "publishedAt": "2025-03-25T10:39:52Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.2.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.1.1...v7.2.0\r\n\r\n**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.1.1...v7.2.0",
+      "snapshot": "965587223366d2b6"
+    },
+    {
+      "tag": "v7.1.1",
+      "version": "7.1.1",
+      "name": "v7.1.1",
+      "publishedAt": "2025-03-24T04:45:22Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.1.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.1.0...v7.1.1",
+      "snapshot": "840dd1e7095d94da"
+    },
+    {
+      "tag": "v7.1.0",
+      "version": "7.1.0",
+      "name": "v7.1.0",
+      "publishedAt": "2025-03-24T04:23:28Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.1.0",
+      "body": "",
+      "snapshot": "840dd1e7095d94da"
+    },
+    {
+      "tag": "v7.0.8",
+      "version": "7.0.8",
+      "name": "v7.0.8",
+      "publishedAt": "2025-03-19T10:57:44Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.0.7...v7.0.8",
+      "snapshot": "6facb62e5ae2fd83"
+    },
+    {
+      "tag": "v7.0.7",
+      "version": "7.0.7",
+      "name": "v7.0.7",
+      "publishedAt": "2025-03-11T04:54:53Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.0.6...v7.0.7",
+      "snapshot": "6facb62e5ae2fd83"
+    },
+    {
+      "tag": "v7.0.6",
+      "version": "7.0.6",
+      "name": "v7.0.6",
+      "publishedAt": "2025-03-11T04:48:50Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.0.5...v7.0.6",
+      "snapshot": "6facb62e5ae2fd83"
+    },
+    {
+      "tag": "v7.0.5",
+      "version": "7.0.5",
+      "name": "v7.0.5",
+      "publishedAt": "2025-03-11T04:45:07Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.0.4...v7.0.5",
+      "snapshot": "4bed64174aaef6e1"
+    },
+    {
+      "tag": "v7.0.4",
+      "version": "7.0.4",
+      "name": "v7.0.4",
+      "publishedAt": "2025-02-03T07:25:54Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.0.2...v7.0.4",
+      "snapshot": "4bed64174aaef6e1"
+    },
+    {
+      "tag": "v7.0.2",
+      "version": "7.0.2",
+      "name": "v7.0.2",
+      "publishedAt": "2025-01-21T08:58:35Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.0.1...v7.0.2",
+      "snapshot": "4bed64174aaef6e1"
+    },
+    {
+      "tag": "v7.0.1",
+      "version": "7.0.1",
+      "name": "v7.0.1",
+      "publishedAt": "2025-01-20T11:43:34Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v7.0.0...v7.0.1",
+      "snapshot": "4bed64174aaef6e1"
+    },
+    {
+      "tag": "v7.0.0",
+      "version": "7.0.0",
+      "name": "v7.0.0",
+      "publishedAt": "2025-01-15T10:17:13Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v7.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.7.2...v7.0.0",
+      "snapshot": "76b85c3d66002492"
+    },
+    {
+      "tag": "v6.7.2",
+      "version": "6.7.2",
+      "name": "v6.7.2",
+      "publishedAt": "2024-12-12T10:42:22Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.7.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.7.1...v6.7.2",
+      "snapshot": "1a4f74a4866b1eee"
+    },
+    {
+      "tag": "v6.7.1",
+      "version": "6.7.1",
+      "name": "v6.7.1",
+      "publishedAt": "2024-12-12T10:27:12Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.7.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.7.0...v6.7.1",
+      "snapshot": "1a4f74a4866b1eee"
+    },
+    {
+      "tag": "v6.7.0",
+      "version": "6.7.0",
+      "name": "v6.7.0",
+      "publishedAt": "2024-12-12T08:25:19Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.7.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.8...v6.7.0",
+      "snapshot": "c59b396907542aa6"
+    },
+    {
+      "tag": "v6.6.8",
+      "version": "6.6.8",
+      "name": "v6.6.8",
+      "publishedAt": "2024-12-12T03:22:17Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.7...v6.6.8",
+      "snapshot": "ad542def1123d132"
+    },
+    {
+      "tag": "v6.6.7",
+      "version": "6.6.7",
+      "name": "v6.6.7",
+      "publishedAt": "2024-11-29T09:29:33Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.6...v6.6.7",
+      "snapshot": "ad542def1123d132"
+    },
+    {
+      "tag": "v6.6.6",
+      "version": "6.6.6",
+      "name": "v6.6.6",
+      "publishedAt": "2024-11-28T05:07:13Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.5...v6.6.6",
+      "snapshot": "ad542def1123d132"
+    },
+    {
+      "tag": "v6.6.5",
+      "version": "6.6.5",
+      "name": "v6.6.5",
+      "publishedAt": "2024-11-27T04:38:21Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.4...v6.6.5",
+      "snapshot": "ad542def1123d132"
+    },
+    {
+      "tag": "v6.6.4",
+      "version": "6.6.4",
+      "name": "v6.6.4",
+      "publishedAt": "2024-11-26T04:35:43Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.3...v6.6.4",
+      "snapshot": "fa94a8b12b2a20bc"
+    },
+    {
+      "tag": "v6.6.3",
+      "version": "6.6.3",
+      "name": "v6.6.3",
+      "publishedAt": "2024-11-26T04:25:56Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.2...v6.6.3",
+      "snapshot": "835cec2a8d53631f"
+    },
+    {
+      "tag": "v6.6.2",
+      "version": "6.6.2",
+      "name": "v6.6.2",
+      "publishedAt": "2024-11-26T03:36:21Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.1...v6.6.2",
+      "snapshot": "425f7dc69ca8184e"
+    },
+    {
+      "tag": "v6.6.1",
+      "version": "6.6.1",
+      "name": "v6.6.1",
+      "publishedAt": "2024-11-26T03:30:47Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.6.0...v6.6.1",
+      "snapshot": "19fb99cd2c19b8fa"
+    },
+    {
+      "tag": "v6.6.0",
+      "version": "6.6.0",
+      "name": "v6.6.0",
+      "publishedAt": "2024-11-26T03:27:59Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.6.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.9...v6.6.0",
+      "snapshot": "19fb99cd2c19b8fa"
+    },
+    {
+      "tag": "v6.5.9",
+      "version": "6.5.9",
+      "name": "v6.5.9",
+      "publishedAt": "2024-11-14T11:05:36Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.9",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.8...v6.5.9",
+      "snapshot": "e6452d653115d240"
+    },
+    {
+      "tag": "v6.5.8",
+      "version": "6.5.8",
+      "name": "v6.5.8",
+      "publishedAt": "2024-11-14T09:01:37Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.7...v6.5.8",
+      "snapshot": "61607a55de1e9b41"
+    },
+    {
+      "tag": "v6.5.7",
+      "version": "6.5.7",
+      "name": "v6.5.7",
+      "publishedAt": "2024-11-13T09:54:57Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.6...v6.5.7",
+      "snapshot": "61607a55de1e9b41"
+    },
+    {
+      "tag": "v6.5.6",
+      "version": "6.5.6",
+      "name": "v6.5.6",
+      "publishedAt": "2024-11-13T09:39:55Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.5...v6.5.6",
+      "snapshot": "61607a55de1e9b41"
+    },
+    {
+      "tag": "v6.5.5",
+      "version": "6.5.5",
+      "name": "v6.5.5",
+      "publishedAt": "2024-11-13T09:00:24Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.4...v6.5.5",
+      "snapshot": "44045179b832729a"
+    },
+    {
+      "tag": "v6.5.4",
+      "version": "6.5.4",
+      "name": "v6.5.4",
+      "publishedAt": "2024-11-13T08:28:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.3...v6.5.4",
+      "snapshot": "f366499c372b5e6a"
+    },
+    {
+      "tag": "v6.5.3",
+      "version": "6.5.3",
+      "name": "v6.5.3",
+      "publishedAt": "2024-11-13T08:19:59Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.6.2...v6.5.3",
+      "snapshot": "b1036772bbab34ae"
+    },
+    {
+      "tag": "v6.5.2",
+      "version": "6.5.2",
+      "name": "v6.5.2",
+      "publishedAt": "2024-11-13T04:40:52Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.1...v6.5.2",
+      "snapshot": "b1036772bbab34ae"
+    },
+    {
+      "tag": "v6.5.1",
+      "version": "6.5.1",
+      "name": "v6.5.1",
+      "publishedAt": "2024-11-12T10:09:05Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.5.0...v6.5.1",
+      "snapshot": "b1036772bbab34ae"
+    },
+    {
+      "tag": "v6.5.0",
+      "version": "6.5.0",
+      "name": "v6.5.0",
+      "publishedAt": "2024-11-12T10:00:28Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.5.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.4.4...v6.5.0",
+      "snapshot": "b1036772bbab34ae"
+    },
+    {
+      "tag": "v6.4.4",
+      "version": "6.4.4",
+      "name": "v6.4.4",
+      "publishedAt": "2024-11-05T06:22:16Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.4.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.4.3...v6.4.4",
+      "snapshot": "b1036772bbab34ae"
+    },
+    {
+      "tag": "v6.4.3",
+      "version": "6.4.3",
+      "name": "v6.4.3",
+      "publishedAt": "2024-11-05T06:08:54Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.4.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.4.2...v6.4.3",
+      "snapshot": "b1036772bbab34ae"
+    },
+    {
+      "tag": "v6.4.2",
+      "version": "6.4.2",
+      "name": "v6.4.2",
+      "publishedAt": "2024-10-28T07:39:58Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.4.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.4.1...v6.4.2",
+      "snapshot": "6141370076f0b049"
+    },
+    {
+      "tag": "v6.4.1",
+      "version": "6.4.1",
+      "name": "v6.4.1",
+      "publishedAt": "2024-10-28T07:35:52Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.4.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.4.0...v6.4.1",
+      "snapshot": "6141370076f0b049"
+    },
+    {
+      "tag": "v6.4.0",
+      "version": "6.4.0",
+      "name": "v6.4.0",
+      "publishedAt": "2024-10-26T16:48:11Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.4.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.3.0...v6.4.0",
+      "snapshot": "5e200f10a927320f"
+    },
+    {
+      "tag": "v6.3.0",
+      "version": "6.3.0",
+      "name": "v6.3.0",
+      "publishedAt": "2024-10-26T09:46:38Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.3.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.2.0...v6.3.0",
+      "snapshot": "7fe931ae1abe0726"
+    },
+    {
+      "tag": "v6.2.0",
+      "version": "6.2.0",
+      "name": "v6.2.0",
+      "publishedAt": "2024-10-26T08:43:17Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.2.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.1.1...v6.2.0",
+      "snapshot": "472aa72aceffd905"
+    },
+    {
+      "tag": "v6.1.1",
+      "version": "6.1.1",
+      "name": "v6.1.1",
+      "publishedAt": "2024-10-26T07:30:05Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.1.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.1.0...v6.1.1",
+      "snapshot": "b91995e1d872e5ff"
+    },
+    {
+      "tag": "v6.1.0",
+      "version": "6.1.0",
+      "name": "v6.1.0",
+      "publishedAt": "2024-10-26T07:16:51Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.1.0",
+      "body": "",
+      "snapshot": "b91995e1d872e5ff"
+    },
+    {
+      "tag": "v6.0.3",
+      "version": "6.0.3",
+      "name": "v6.0.3",
+      "publishedAt": "2024-10-26T07:03:21Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.0.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.0.2...v6.0.3",
+      "snapshot": "b91995e1d872e5ff"
+    },
+    {
+      "tag": "v6.0.2",
+      "version": "6.0.2",
+      "name": "v6.0.2",
+      "publishedAt": "2024-10-26T06:51:46Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.0.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.0.1...v6.0.2",
+      "snapshot": "b91995e1d872e5ff"
+    },
+    {
+      "tag": "v6.0.1",
+      "version": "6.0.1",
+      "name": "v6.0.1",
+      "publishedAt": "2024-10-26T06:25:42Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.0.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v6.0.0...v6.0.1",
+      "snapshot": "b91995e1d872e5ff"
+    },
+    {
+      "tag": "v6.0.0",
+      "version": "6.0.0",
+      "name": "v6.0.0",
+      "publishedAt": "2024-10-26T06:23:56Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v6.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.15...v6.0.0",
+      "snapshot": "b91995e1d872e5ff"
+    },
+    {
+      "tag": "v5.3.15",
+      "version": "5.3.15",
+      "name": "v5.3.15",
+      "publishedAt": "2024-10-25T11:07:50Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.15",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.14...v5.3.15",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.14",
+      "version": "5.3.14",
+      "name": "v5.3.14",
+      "publishedAt": "2024-10-25T11:04:17Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.14",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.13...v5.3.14",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.13",
+      "version": "5.3.13",
+      "name": "v5.3.13",
+      "publishedAt": "2024-10-25T10:01:41Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.13",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.12...v5.3.13",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.12",
+      "version": "5.3.12",
+      "name": "v5.3.12",
+      "publishedAt": "2024-10-25T09:22:06Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.12",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.11...v5.3.12",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.11",
+      "version": "5.3.11",
+      "name": "v5.3.11",
+      "publishedAt": "2024-10-11T08:52:38Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.11",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.10...v5.3.11",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.10",
+      "version": "5.3.10",
+      "name": "v5.3.10",
+      "publishedAt": "2024-10-11T08:38:02Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.10",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.8...v5.3.10",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.8",
+      "version": "5.3.8",
+      "name": "v5.3.8",
+      "publishedAt": "2024-10-11T08:24:04Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.7...v5.3.8",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.7",
+      "version": "5.3.7",
+      "name": "v5.3.7",
+      "publishedAt": "2024-10-11T07:53:39Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.6...v5.3.7",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.6",
+      "version": "5.3.6",
+      "name": "v5.3.6",
+      "publishedAt": "2024-10-11T07:37:26Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.5...v5.3.6",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.5",
+      "version": "5.3.5",
+      "name": "v5.3.5",
+      "publishedAt": "2024-10-11T07:33:53Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.4...v5.3.5",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.3.4",
+      "version": "5.3.4",
+      "name": "v5.3.4",
+      "publishedAt": "2024-10-11T07:28:25Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.3...v5.3.4",
+      "snapshot": "466e1978a580536b"
+    },
+    {
+      "tag": "v5.3.3",
+      "version": "5.3.3",
+      "name": "v5.3.3",
+      "publishedAt": "2024-10-11T07:20:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.2...v5.3.3",
+      "snapshot": "466e1978a580536b"
+    },
+    {
+      "tag": "v5.3.2",
+      "version": "5.3.2",
+      "name": "v5.3.2",
+      "publishedAt": "2024-10-11T07:10:23Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.3.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/5.3.1...v5.3.2",
+      "snapshot": "466e1978a580536b"
+    },
+    {
+      "tag": "5.3.1",
+      "version": "5.3.1",
+      "name": "5.3.1",
+      "publishedAt": "2024-10-11T04:22:43Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/5.3.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.3.0...5.3.1",
+      "snapshot": "466e1978a580536b"
+    },
+    {
+      "tag": "v3.5.9",
+      "version": "3.5.9",
+      "name": "v3.5.9",
+      "publishedAt": "2024-10-11T08:33:49Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.5.9",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.3.8...v3.5.9",
+      "snapshot": "9c344db38442117a"
+    },
+    {
+      "tag": "v5.2.4",
+      "version": "5.2.4",
+      "name": "v5.2.4",
+      "publishedAt": "2024-10-10T10:45:03Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.2.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.2.3...v5.2.4",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.2.3",
+      "version": "5.2.3",
+      "name": "v5.2.3",
+      "publishedAt": "2024-10-10T10:39:41Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.2.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.2.2...v5.2.3",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.2.2",
+      "version": "5.2.2",
+      "name": "v5.2.2",
+      "publishedAt": "2024-10-10T10:27:12Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.2.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.2.1...v5.2.2",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.2.1",
+      "version": "5.2.1",
+      "name": "v5.2.1",
+      "publishedAt": "2024-10-10T10:21:57Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.2.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.2.0...v5.2.1",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.2.0",
+      "version": "5.2.0",
+      "name": "v5.2.0",
+      "publishedAt": "2024-10-10T10:15:40Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.2.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.1.4...v5.2.0",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.1.4",
+      "version": "5.1.4",
+      "name": "v5.1.4",
+      "publishedAt": "2024-10-10T08:18:32Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.1.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.1.3...v5.1.4",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.1.3",
+      "version": "5.1.3",
+      "name": "v5.1.3",
+      "publishedAt": "2024-10-10T08:12:56Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.1.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.1.2...v5.1.3",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.1.2",
+      "version": "5.1.2",
+      "name": "v5.1.2",
+      "publishedAt": "2024-10-10T08:03:02Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.1.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.1.1...v5.1.2",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.1.1",
+      "version": "5.1.1",
+      "name": "v5.1.1",
+      "publishedAt": "2024-10-10T07:59:07Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.1.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.1.0...v5.1.1",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.1.0",
+      "version": "5.1.0",
+      "name": "v5.1.0",
+      "publishedAt": "2024-10-10T07:52:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.1.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.9...v5.1.0",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v5.0.9",
+      "version": "5.0.9",
+      "name": "v5.0.9",
+      "publishedAt": "2024-10-10T07:04:30Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.9",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.8...v5.0.9",
+      "snapshot": "972d49edc705e235"
+    },
+    {
+      "tag": "v5.0.8",
+      "version": "5.0.8",
+      "name": "v5.0.8",
+      "publishedAt": "2024-10-10T06:52:31Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.7...v5.0.8",
+      "snapshot": "972d49edc705e235"
+    },
+    {
+      "tag": "v5.0.7",
+      "version": "5.0.7",
+      "name": "v5.0.7",
+      "publishedAt": "2024-10-10T06:36:32Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.6...v5.0.7",
+      "snapshot": "972d49edc705e235"
+    },
+    {
+      "tag": "v5.0.6",
+      "version": "5.0.6",
+      "name": "v5.0.6",
+      "publishedAt": "2024-10-10T06:17:47Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.5...v5.0.6",
+      "snapshot": "972d49edc705e235"
+    },
+    {
+      "tag": "v5.0.5",
+      "version": "5.0.5",
+      "name": "v5.0.5",
+      "publishedAt": "2024-10-10T06:10:49Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.4...v5.0.5",
+      "snapshot": "ea90655b6c4b2e63"
+    },
+    {
+      "tag": "v5.0.4",
+      "version": "5.0.4",
+      "name": "v5.0.4",
+      "publishedAt": "2024-10-10T05:27:41Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.3...v5.0.4",
+      "snapshot": "0bc1c82574149130"
+    },
+    {
+      "tag": "v5.0.3",
+      "version": "5.0.3",
+      "name": "v5.0.3",
+      "publishedAt": "2024-10-10T05:24:42Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.2...v5.0.3",
+      "snapshot": "0bc1c82574149130"
+    },
+    {
+      "tag": "v5.0.2",
+      "version": "5.0.2",
+      "name": "v5.0.2",
+      "publishedAt": "2024-10-10T05:12:22Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.1...v5.0.2",
+      "snapshot": "0bc1c82574149130"
+    },
+    {
+      "tag": "v5.0.1",
+      "version": "5.0.1",
+      "name": "v5.0.1",
+      "publishedAt": "2024-10-10T05:03:35Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.0.0...v5.0.1",
+      "snapshot": "0bc1c82574149130"
+    },
+    {
+      "tag": "v5.0.0",
+      "version": "5.0.0",
+      "name": "v5.0.0",
+      "publishedAt": "2024-10-10T04:27:13Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v5.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.4.11...v5.0.0",
+      "snapshot": "0bc1c82574149130"
+    },
+    {
+      "tag": "v2.3.0",
+      "version": "2.3.0",
+      "name": "v2.3.0",
+      "publishedAt": "2024-10-10T10:59:39Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.3.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v5.2.4...v2.3.0",
+      "snapshot": "4e7a927be4e370a8"
+    },
+    {
+      "tag": "v4.4.11",
+      "version": "4.4.11",
+      "name": "v4.4.11",
+      "publishedAt": "2024-07-11T08:39:53Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.4.11",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.4.8...v4.4.11",
+      "snapshot": "0b1893b2e2572dc3"
+    },
+    {
+      "tag": "v4.4.8",
+      "version": "4.4.8",
+      "name": "v4.4.8",
+      "publishedAt": "2024-07-03T07:46:51Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.4.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.4.4...v4.4.8",
+      "snapshot": "7e48ab14eb3503a4"
+    },
+    {
+      "tag": "v4.4.4",
+      "version": "4.4.4",
+      "name": "v4.4.4",
+      "publishedAt": "2024-07-03T04:39:17Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.4.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.4.2...v4.4.4",
+      "snapshot": "0a99c886dd9ff5d0"
+    },
+    {
+      "tag": "v4.4.2",
+      "version": "4.4.2",
+      "name": "v4.4.2",
+      "publishedAt": "2024-07-03T04:14:32Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.4.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.4.1...v4.4.2",
+      "snapshot": "0a99c886dd9ff5d0"
+    },
+    {
+      "tag": "v4.4.1",
+      "version": "4.4.1",
+      "name": "v4.4.1",
+      "publishedAt": "2024-07-03T04:11:26Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.4.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.3.0...v4.4.1",
+      "snapshot": "0a99c886dd9ff5d0"
+    },
+    {
+      "tag": "v4.3.0",
+      "version": "4.3.0",
+      "name": "v4.3.0",
+      "publishedAt": "2024-07-03T03:46:13Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.3.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.2.1...v4.3.0",
+      "snapshot": "0a99c886dd9ff5d0"
+    },
+    {
+      "tag": "v4.2.1",
+      "version": "4.2.1",
+      "name": "v4.2.1",
+      "publishedAt": "2024-06-27T06:44:33Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.2.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.2.0...v4.2.1",
+      "snapshot": "bc281f2be329fb6a"
+    },
+    {
+      "tag": "v4.2.0",
+      "version": "4.2.0",
+      "name": "v4.2.0",
+      "publishedAt": "2024-06-27T04:20:01Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.2.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.1.4...v4.2.0",
+      "snapshot": "bc281f2be329fb6a"
+    },
+    {
+      "tag": "v4.1.4",
+      "version": "4.1.4",
+      "name": "v4.1.4",
+      "publishedAt": "2024-06-27T03:24:27Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.1.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.1.3...v4.1.4",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.1.3",
+      "version": "4.1.3",
+      "name": "v4.1.3",
+      "publishedAt": "2024-06-27T03:18:05Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.1.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.1.2...v4.1.3",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.1.2",
+      "version": "4.1.2",
+      "name": "v4.1.2",
+      "publishedAt": "2024-06-26T11:23:50Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.1.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.1.1...v4.1.2",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.1.1",
+      "version": "4.1.1",
+      "name": "v4.1.1",
+      "publishedAt": "2024-06-26T10:30:48Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.1.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.1.0...v4.1.1",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.1.0",
+      "version": "4.1.0",
+      "name": "v4.1.0",
+      "publishedAt": "2024-06-26T10:07:40Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.1.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.7...v4.1.0",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.0.7",
+      "version": "4.0.7",
+      "name": "v4.0.7",
+      "publishedAt": "2024-06-25T11:12:42Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.5...v4.0.7",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.0.6",
+      "version": "4.0.6",
+      "name": "v4.0.6",
+      "publishedAt": "2024-06-25T10:28:41Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.4...v4.0.6",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.0.5",
+      "version": "4.0.5",
+      "name": "v4.0.5",
+      "publishedAt": "2024-06-25T10:28:15Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.4...v4.0.5",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.0.4",
+      "version": "4.0.4",
+      "name": "v4.0.4",
+      "publishedAt": "2024-06-25T10:23:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.3...v4.0.4",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.0.3",
+      "version": "4.0.3",
+      "name": "v4.0.3",
+      "publishedAt": "2024-06-25T10:19:20Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.2...v4.0.3",
+      "snapshot": "948d945676f0e16f"
+    },
+    {
+      "tag": "v4.0.2",
+      "version": "4.0.2",
+      "name": "v4.0.2",
+      "publishedAt": "2024-06-25T10:15:00Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.1...v4.0.2",
+      "snapshot": "4afb953071bd05c8"
+    },
+    {
+      "tag": "v4.0.1",
+      "version": "4.0.1",
+      "name": "v4.0.1",
+      "publishedAt": "2024-06-25T10:08:07Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v4.0.0...v4.0.1",
+      "snapshot": "ecd1c73e980d7bb7"
+    },
+    {
+      "tag": "v4.0.0",
+      "version": "4.0.0",
+      "name": "v4.0.0",
+      "publishedAt": "2024-06-25T10:00:30Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v4.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.2.0...v4.0.0",
+      "snapshot": "567c521a1630daff"
+    },
+    {
+      "tag": "v3.5.6",
+      "version": "3.5.6",
+      "name": "v3.5.6",
+      "publishedAt": "2024-10-11T07:36:59Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.5.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.1.5...v3.5.6",
+      "snapshot": "679e9b05c682c82f"
+    },
+    {
+      "tag": "v3.2.0",
+      "version": "3.2.0",
+      "name": "v3.2.0",
+      "publishedAt": "2024-06-25T08:27:58Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.2.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.5.6...v3.2.0",
+      "snapshot": "8dda9220871d3318"
+    },
+    {
+      "tag": "v3.1.5",
+      "version": "3.1.5",
+      "name": "v3.1.5",
+      "publishedAt": "2024-06-24T09:06:07Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.1.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.1.4...v3.1.5",
+      "snapshot": "679e9b05c682c82f"
+    },
+    {
+      "tag": "v3.1.4",
+      "version": "3.1.4",
+      "name": "v3.1.4",
+      "publishedAt": "2024-06-24T09:04:01Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.1.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.1.3...v3.1.4",
+      "snapshot": "679e9b05c682c82f"
+    },
+    {
+      "tag": "v3.1.3",
+      "version": "3.1.3",
+      "name": "v3.1.3",
+      "publishedAt": "2024-06-24T07:52:59Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.1.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.1.2...v3.1.3",
+      "snapshot": "679e9b05c682c82f"
+    },
+    {
+      "tag": "v3.1.2",
+      "version": "3.1.2",
+      "name": "v3.1.2",
+      "publishedAt": "2024-06-24T07:46:27Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.1.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.1.1...v3.1.2",
+      "snapshot": "97aa69491c88b22f"
+    },
+    {
+      "tag": "v3.1.1",
+      "version": "3.1.1",
+      "name": "v3.1.1",
+      "publishedAt": "2024-06-24T07:41:32Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.1.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.1.0...v3.1.1",
+      "snapshot": "97aa69491c88b22f"
+    },
+    {
+      "tag": "v3.1.0",
+      "version": "3.1.0",
+      "name": "v3.1.0",
+      "publishedAt": "2024-06-24T07:35:49Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.1.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.0.1...v3.1.0",
+      "snapshot": "f4019c954065653d"
+    },
+    {
+      "tag": "v3.0.1",
+      "version": "3.0.1",
+      "name": "v3.0.1",
+      "publishedAt": "2024-06-24T06:06:26Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.0.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v3.0.0...v3.0.1",
+      "snapshot": "79c8f9adaf2186ba"
+    },
+    {
+      "tag": "v3.0.0",
+      "version": "3.0.0",
+      "name": "v3.0.0",
+      "publishedAt": "2024-06-24T05:58:42Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v3.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.10...v3.0.0",
+      "snapshot": "79c8f9adaf2186ba"
+    },
+    {
+      "tag": "v2.0.10",
+      "version": "2.0.10",
+      "name": "v2.0.10",
+      "publishedAt": "2024-03-19T11:48:24Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.10",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.9...v2.0.10",
+      "snapshot": "dee868606a8b4c36"
+    },
+    {
+      "tag": "v2.0.9",
+      "version": "2.0.9",
+      "name": "v2.0.9",
+      "publishedAt": "2024-03-19T11:16:46Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.9",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.8...v2.0.9",
+      "snapshot": "dee868606a8b4c36"
+    },
+    {
+      "tag": "v2.0.8",
+      "version": "2.0.8",
+      "name": "v2.0.8",
+      "publishedAt": "2024-03-19T11:16:27Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.7...v2.0.8",
+      "snapshot": "dee868606a8b4c36"
+    },
+    {
+      "tag": "v2.0.7",
+      "version": "2.0.7",
+      "name": "v2.0.7",
+      "publishedAt": "2024-03-19T11:04:55Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.6...v2.0.7",
+      "snapshot": "dee868606a8b4c36"
+    },
+    {
+      "tag": "v2.0.6",
+      "version": "2.0.6",
+      "name": "v2.0.6",
+      "publishedAt": "2024-03-19T10:56:16Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.5...v2.0.6",
+      "snapshot": "dee868606a8b4c36"
+    },
+    {
+      "tag": "v2.0.5",
+      "version": "2.0.5",
+      "name": "v2.0.5",
+      "publishedAt": "2024-03-19T10:46:39Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.4...v2.0.5",
+      "snapshot": "e528995225f6c976"
+    },
+    {
+      "tag": "v2.0.4",
+      "version": "2.0.4",
+      "name": "v2.0.4",
+      "publishedAt": "2024-03-19T10:35:00Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.3...v2.0.4",
+      "snapshot": "e528995225f6c976"
+    },
+    {
+      "tag": "v2.0.3",
+      "version": "2.0.3",
+      "name": "v2.0.3",
+      "publishedAt": "2024-03-19T10:25:56Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.2...v2.0.3",
+      "snapshot": "e528995225f6c976"
+    },
+    {
+      "tag": "v2.0.2",
+      "version": "2.0.2",
+      "name": "v2.0.2",
+      "publishedAt": "2024-03-18T10:45:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.1...v2.0.2",
+      "snapshot": "e528995225f6c976"
+    },
+    {
+      "tag": "v2.0.1",
+      "version": "2.0.1",
+      "name": "v2.0.1",
+      "publishedAt": "2024-03-18T10:39:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v2.0.0...v2.0.1",
+      "snapshot": "e528995225f6c976"
+    },
+    {
+      "tag": "v2.0.0",
+      "version": "2.0.0",
+      "name": "v2.0.0",
+      "publishedAt": "2024-03-18T10:16:05Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v2.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.8.5...v2.0.0",
+      "snapshot": "e528995225f6c976"
+    },
+    {
+      "tag": "v1.8.5",
+      "version": "1.8.5",
+      "name": "v1.8.5",
+      "publishedAt": "2024-03-18T08:04:56Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.8.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.8.4...v1.8.5",
+      "snapshot": "3b23655631d6861c"
+    },
+    {
+      "tag": "v1.8.4",
+      "version": "1.8.4",
+      "name": "v1.8.4",
+      "publishedAt": "2024-03-18T07:56:34Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.8.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.8.2...v1.8.3",
+      "snapshot": "3b23655631d6861c"
+    },
+    {
+      "tag": "v1.8.2",
+      "version": "1.8.2",
+      "name": "v1.8.2",
+      "publishedAt": "2024-03-17T17:11:16Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.8.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.8.1...v1.8.2",
+      "snapshot": "3b23655631d6861c"
+    },
+    {
+      "tag": "v1.8.1",
+      "version": "1.8.1",
+      "name": "v1.8.1",
+      "publishedAt": "2024-03-17T14:21:36Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.8.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.8.0...v1.8.1",
+      "snapshot": "d3dc7d9b7371f382"
+    },
+    {
+      "tag": "v1.8.0",
+      "version": "1.8.0",
+      "name": "v1.8.0",
+      "publishedAt": "2024-03-17T11:11:12Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.8.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.7.3...v1.8.0",
+      "snapshot": "6c48796da6af8fb5"
+    },
+    {
+      "tag": "v1.7.3",
+      "version": "1.7.3",
+      "name": "v1.7.3",
+      "publishedAt": "2024-03-16T10:24:45Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.7.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.7.2...v1.7.3",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "1.7.2",
+      "version": "1.7.2",
+      "name": "1.7.2",
+      "publishedAt": "2024-03-16T10:18:07Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.7.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.7.1...1.7.2",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.7.1",
+      "version": "1.7.1",
+      "name": "v1.7.1",
+      "publishedAt": "2024-03-16T09:52:43Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.7.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.7.0...v1.7.1",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.7.0",
+      "version": "1.7.0",
+      "name": "v1.7.0",
+      "publishedAt": "2024-03-16T06:48:30Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.7.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.10...v1.7.0",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.10",
+      "version": "1.6.10",
+      "name": "v1.6.10",
+      "publishedAt": "2024-03-15T11:23:46Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.10",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.6.9...v1.6.10",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "1.6.9",
+      "version": "1.6.9",
+      "name": "1.6.9",
+      "publishedAt": "2024-03-14T13:41:05Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.6.9",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.7...1.6.9",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.7",
+      "version": "1.6.7",
+      "name": "v1.6.7",
+      "publishedAt": "2024-03-14T12:56:11Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.6...v1.6.7",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.6",
+      "version": "1.6.6",
+      "name": "v1.6.6",
+      "publishedAt": "2024-03-14T12:43:02Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.5...v1.6.6",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.5",
+      "version": "1.6.5",
+      "name": "v1.6.5",
+      "publishedAt": "2024-03-14T12:22:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.4...v1.6.5",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.4",
+      "version": "1.6.4",
+      "name": "v1.6.4",
+      "publishedAt": "2024-03-14T12:18:50Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.3...v1.6.4",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.3",
+      "version": "1.6.3",
+      "name": "v1.6.3",
+      "publishedAt": "2024-03-14T12:15:32Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.2...v1.6.3",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.2",
+      "version": "1.6.2",
+      "name": "v1.6.2",
+      "publishedAt": "2024-03-14T12:11:50Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.1...v1.6.2",
+      "snapshot": "ecdffac01014189b"
+    },
+    {
+      "tag": "v1.6.1",
+      "version": "1.6.1",
+      "name": "v1.6.1",
+      "publishedAt": "2024-03-14T12:06:04Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.6.0...v1.6.1",
+      "snapshot": "291d8f04e4739a90"
+    },
+    {
+      "tag": "v1.6.0",
+      "version": "1.6.0",
+      "name": "v1.6.0",
+      "publishedAt": "2024-03-14T12:00:09Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.6.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.5.2...v1.6.0",
+      "snapshot": "7b3a0a1fad55023c"
+    },
+    {
+      "tag": "v1.5.2",
+      "version": "1.5.2",
+      "name": "v1.5.2",
+      "publishedAt": "2024-03-12T05:13:28Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.5.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.5.1...v1.5.2",
+      "snapshot": "4a1e3a577000d237"
+    },
+    {
+      "tag": "v1.5.1",
+      "version": "1.5.1",
+      "name": "v1.5.1",
+      "publishedAt": "2024-03-12T04:49:35Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.5.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.5.0...v1.5.1",
+      "snapshot": "4a1e3a577000d237"
+    },
+    {
+      "tag": "v1.5.0",
+      "version": "1.5.0",
+      "name": "v1.5.0",
+      "publishedAt": "2024-03-12T04:37:54Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.5.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.4.9...v1.5.0",
+      "snapshot": "4a1e3a577000d237"
+    },
+    {
+      "tag": "v1.4.9",
+      "version": "1.4.9",
+      "name": "v1.4.9",
+      "publishedAt": "2024-03-12T03:53:46Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.4.9",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.4.8...v1.4.9",
+      "snapshot": "a53cdb4594844d43"
+    },
+    {
+      "tag": "v1.4.8",
+      "version": "1.4.8",
+      "name": "v1.4.8",
+      "publishedAt": "2024-03-07T04:08:46Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.4.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.4.7...v1.4.8",
+      "snapshot": "9c5697a0ba2d22ff"
+    },
+    {
+      "tag": "v1.4.7",
+      "version": "1.4.7",
+      "name": "v1.4.7",
+      "publishedAt": "2024-03-07T04:04:24Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.4.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.4.6...v1.4.7",
+      "snapshot": "9c5697a0ba2d22ff"
+    },
+    {
+      "tag": "v1.4.6",
+      "version": "1.4.6",
+      "name": "v1.4.6",
+      "publishedAt": "2024-03-07T03:52:32Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.4.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.4.5...v1.4.6",
+      "snapshot": "9c5697a0ba2d22ff"
+    },
+    {
+      "tag": "v1.4.5",
+      "version": "1.4.5",
+      "name": "v1.4.5",
+      "publishedAt": "2024-03-07T03:43:09Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.4.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.4.4...v1.4.5",
+      "snapshot": "9c5697a0ba2d22ff"
+    },
+    {
+      "tag": "v1.4.4",
+      "version": "1.4.4",
+      "name": "v1.4.4",
+      "publishedAt": "2024-03-07T03:36:56Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.4.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.4.3...v1.4.4",
+      "snapshot": "9c5697a0ba2d22ff"
+    },
+    {
+      "tag": "v1.4.3",
+      "version": "1.4.3",
+      "name": "v1.4.3",
+      "publishedAt": "2024-03-07T03:25:20Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.4.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.4.2...v1.4.3",
+      "snapshot": "9c5697a0ba2d22ff"
+    },
+    {
+      "tag": "1.4.2",
+      "version": "1.4.2",
+      "name": "1.4.2",
+      "publishedAt": "2024-03-07T03:04:09Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.4.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.4.0...1.4.2",
+      "snapshot": "9c5697a0ba2d22ff"
+    },
+    {
+      "tag": "1.4.0",
+      "version": "1.4.0",
+      "name": "1.4.0",
+      "publishedAt": "2024-03-06T06:02:46Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.4.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.3.0...1.4.0",
+      "snapshot": "784fdcab23601119"
+    },
+    {
+      "tag": "v1.3.0",
+      "version": "1.3.0",
+      "name": "v1.3.0",
+      "publishedAt": "2024-03-06T05:17:45Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.3.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.15...v1.3.0",
+      "snapshot": "cf883d8a70c4c43a"
+    },
+    {
+      "tag": "v1.2.15",
+      "version": "1.2.15",
+      "name": "v1.2.15",
+      "publishedAt": "2024-03-04T17:52:05Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.15",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.14...v1.2.15",
+      "snapshot": "b46b06d6a41002a6"
+    },
+    {
+      "tag": "v1.2.14",
+      "version": "1.2.14",
+      "name": "v1.2.14",
+      "publishedAt": "2024-03-04T17:46:18Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.14",
+      "body": "",
+      "snapshot": "b4b33f1bd9ec9a70"
+    },
+    {
+      "tag": "v1.2.12",
+      "version": "1.2.12",
+      "name": "v1.2.12",
+      "publishedAt": "2024-03-04T15:49:30Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.12",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.11...v1.2.12",
+      "snapshot": "138385a4a2e246f4"
+    },
+    {
+      "tag": "v1.2.11",
+      "version": "1.2.11",
+      "name": "v1.2.11",
+      "publishedAt": "2024-03-04T15:42:29Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.11",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.10...v1.2.11",
+      "snapshot": "138385a4a2e246f4"
+    },
+    {
+      "tag": "v1.2.10",
+      "version": "1.2.10",
+      "name": "v1.2.10",
+      "publishedAt": "2024-03-04T15:38:07Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.10",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.9...v1.2.10",
+      "snapshot": "138385a4a2e246f4"
+    },
+    {
+      "tag": "v1.2.9",
+      "version": "1.2.9",
+      "name": "v1.2.9",
+      "publishedAt": "2024-03-04T12:59:34Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.9",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.2.8...v1.2.9",
+      "snapshot": "fe559f7c13c9d9a3"
+    },
+    {
+      "tag": "1.2.8",
+      "version": "1.2.8",
+      "name": "1.2.8",
+      "publishedAt": "2024-03-04T10:16:02Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.2.8",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.2.7...1.2.8",
+      "snapshot": "5b52b06f65633814"
+    },
+    {
+      "tag": "1.2.7",
+      "version": "1.2.7",
+      "name": "1.2.7",
+      "publishedAt": "2024-03-04T10:11:32Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.2.7",
+      "body": "",
+      "snapshot": "5b52b06f65633814"
+    },
+    {
+      "tag": "v1.2.5",
+      "version": "1.2.5",
+      "name": "v1.2.5",
+      "publishedAt": "2024-03-04T04:02:17Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.2.4...v1.2.5",
+      "snapshot": "5b52b06f65633814"
+    },
+    {
+      "tag": "1.2.4",
+      "version": "1.2.4",
+      "name": "1.2.4",
+      "publishedAt": "2024-03-04T03:56:51Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.2.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.3...1.2.4",
+      "snapshot": "5b52b06f65633814"
+    },
+    {
+      "tag": "v1.2.3",
+      "version": "1.2.3",
+      "name": "v1.2.3",
+      "publishedAt": "2024-03-04T03:55:02Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.2...v1.2.3",
+      "snapshot": "5b52b06f65633814"
+    },
+    {
+      "tag": "v1.2.2",
+      "version": "1.2.2",
+      "name": "v1.2.2",
+      "publishedAt": "2024-03-04T03:41:53Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.1...v1.2.2",
+      "snapshot": "5b52b06f65633814"
+    },
+    {
+      "tag": "v1.2.1",
+      "version": "1.2.1",
+      "name": "v1.2.1",
+      "publishedAt": "2024-03-03T15:28:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.2.0...v1.2.1",
+      "snapshot": "a5801408a7a051fd"
+    },
+    {
+      "tag": "v1.2.0",
+      "version": "1.2.0",
+      "name": "v1.2.0",
+      "publishedAt": "2024-03-03T14:46:56Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.2.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.1.0...v1.2.0",
+      "snapshot": "5b52b06f65633814"
+    },
+    {
+      "tag": "v1.1.0",
+      "version": "1.1.0",
+      "name": "v1.1.0",
+      "publishedAt": "2024-03-01T15:18:31Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.1.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.0.7...v1.1.0",
+      "snapshot": "3aa1668886121653"
+    },
+    {
+      "tag": "v1.0.7",
+      "version": "1.0.7",
+      "name": "v1.0.7",
+      "publishedAt": "2024-02-25T12:19:07Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.0.7",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.0.6...v1.0.7",
+      "snapshot": "9532d127b5978dca"
+    },
+    {
+      "tag": "v1.0.6",
+      "version": "1.0.6",
+      "name": "v1.0.6",
+      "publishedAt": "2024-02-25T12:14:27Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.0.6",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.0.5...v1.0.6",
+      "snapshot": "eaadfdebb7f0dc20"
+    },
+    {
+      "tag": "v1.0.5",
+      "version": "1.0.5",
+      "name": "v1.0.5",
+      "publishedAt": "2024-02-25T11:38:13Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.0.5",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/1.0.4...v1.0.5",
+      "snapshot": "779d92f99d1eefbe"
+    },
+    {
+      "tag": "1.0.4",
+      "version": "1.0.4",
+      "name": "1.0.4",
+      "publishedAt": "2024-02-25T11:20:11Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/1.0.4",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.0.3...1.0.4",
+      "snapshot": "779d92f99d1eefbe"
+    },
+    {
+      "tag": "v1.0.3",
+      "version": "1.0.3",
+      "name": "v1.0.3",
+      "publishedAt": "2024-02-25T11:10:12Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.0.3",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/V1.0.2...v1.0.3",
+      "snapshot": "74c6b623342ac018"
+    },
+    {
+      "tag": "v1.0.1",
+      "version": "1.0.1",
+      "name": "v1.0.1",
+      "publishedAt": "2024-02-25T10:25:38Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.0.1",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.0.0...v1.0.1",
+      "snapshot": "dce3dd763ebae915"
+    },
+    {
+      "tag": "v1.0.0",
+      "version": "1.0.0",
+      "name": "v1.0.0",
+      "publishedAt": "2024-02-25T09:41:10Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/v1.0.0",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/commits/v1.0.0",
+      "snapshot": "e6d75e37e0855fd2"
+    },
+    {
+      "tag": "V1.0.2",
+      "version": "1.0.2",
+      "name": "V1.0.2",
+      "publishedAt": "2024-02-25T10:33:33Z",
+      "url": "https://github.com/aeiwz/metbit/releases/tag/V1.0.2",
+      "body": "**Full Changelog**: https://github.com/aeiwz/metbit/compare/v1.0.1...V1.0.2",
+      "snapshot": "dce3dd763ebae915"
+    }
+  ]
+}
