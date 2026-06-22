@@ -4,6 +4,13 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'metbit documentation',
   description: 'Documentation for the metbit NMR metabolomics Python package',
+  icons: {
+    icon: [
+      { url: '/logo/Metbit-logo-only.svg', type: 'image/svg+xml' },
+      { url: '/logo/Metbit-logo-only.png', type: 'image/png' },
+    ],
+    apple: '/logo/Metbit-logo-only.png',
+  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
