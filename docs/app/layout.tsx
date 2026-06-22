@@ -6,10 +6,11 @@ export const metadata: Metadata = {
   description: 'Documentation for the metbit NMR metabolomics Python package',
   icons: {
     icon: [
+      { url: '/favicon.png', type: 'image/png', sizes: '32x32' },
       { url: '/logo/Metbit-logo-only.svg', type: 'image/svg+xml' },
       { url: '/logo/Metbit-logo-only.png', type: 'image/png' },
     ],
-    apple: '/logo/Metbit-logo-only.png',
+    apple: '/apple-touch-icon.png',
   },
 }
 
