@@ -58,11 +58,6 @@ jobs:
       - name: Build and install (including C extension)
         run: pip install -e . --no-build-isolation
 
-      - name: Install optional dependencies (best-effort)
-        run: |
-          pip install xgboost || echo "xgboost unavailable for this Python — xgb tests will be skipped"
-          pip install "torch>=2.0" --index-url https://download.pytorch.org/whl/cpu || echo "torch unavailable for this Python — DL tests will be skipped"
-
       - name: Run test suite (excluding slow/perf)
         run: |
           pytest \

@@ -3,3 +3,11 @@ pytest-cov
 pytest-html
 pytest-metadata
 coverage
+
+# Optional deps required for full test coverage
+# XGBoost: ML classifier tests
+xgboost
+
+# PyTorch CPU-only wheel (smaller, sufficient for tests)
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
