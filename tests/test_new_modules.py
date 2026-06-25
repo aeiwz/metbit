@@ -1,10 +1,41 @@
 """Tests for the new stats, multivariate, ML, DL, and validation modules."""
 # ruff: noqa: E501
+import sys
 import numpy as np
 import pandas as pd
 import pytest
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
+
+
+# ── Optional dependency availability (evaluated at collection time) ───────────
+
+# torch
+try:
+    import torch as _torch_check  # noqa: F401
+    _TORCH_AVAILABLE = True
+except ImportError:
+    _TORCH_AVAILABLE = False
+
+_skip_no_torch = pytest.mark.skipif(not _TORCH_AVAILABLE, reason="torch not installed")
+
+# xgboost — instantiate XGBClassifier to force libxgboost.dylib load.
+# This catches the macOS libomp.dylib missing error at collection time
+# rather than letting the test crash at runtime.
+_XGB_SKIP_REASON: str = ""
+if sys.version_info >= (3, 14):
+    _XGB_AVAILABLE = False
+    _XGB_SKIP_REASON = "xgboost 3.x segfaults under CPython 3.14 (upstream C-API incompatibility)"
+else:
+    try:
+        from xgboost import XGBClassifier as _XGBCheck
+        _XGBCheck()  # forces dylib load → catches missing libomp on macOS
+        _XGB_AVAILABLE = True
+    except Exception as _e:
+        _XGB_AVAILABLE = False
+        _XGB_SKIP_REASON = f"xgboost not available: {_e}"
+
+_skip_no_xgb = pytest.mark.skipif(not _XGB_AVAILABLE, reason=_XGB_SKIP_REASON)
 
 
 # ── shared fixtures ──────────────────────────────────────────────────────────
@@ -343,12 +374,8 @@ class TestMLClassifier:
         clf = MLClassifier(X, y, model="svm", random_state=0).fit(cv=3)
         assert len(clf.predict(X)) == len(X)
 
-    @pytest.mark.skipif(
-        __import__("sys").version_info >= (3, 14),
-        reason="xgboost 3.x segfaults under CPython 3.14 (upstream C-API incompatibility)",
-    )
+    @_skip_no_xgb
     def test_xgb_fit(self, X_y_binary):
-        pytest.importorskip("xgboost", reason="xgboost not installed")
         from metbit.ml.classifiers import MLClassifier
         X, y = X_y_binary
         clf = MLClassifier(X, y, model="xgb", random_state=0).fit(cv=3)
@@ -362,15 +389,6 @@ class TestMLClassifier:
 
 
 # ── dl/models ────────────────────────────────────────────────────────────────
-
-try:
-    import torch as _torch_check  # noqa: F401
-    _TORCH_AVAILABLE = True
-except ImportError:
-    _TORCH_AVAILABLE = False
-
-_skip_no_torch = pytest.mark.skipif(not _TORCH_AVAILABLE, reason="torch not installed")
-
 
 @_skip_no_torch
 class TestSpectralAutoencoder:
