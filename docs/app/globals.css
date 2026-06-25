@@ -11,8 +11,8 @@
   --primary: #2563eb;
   --primary-600: #1d4ed8;
   --primary-700: #1e40af;
-  --header-bg: #2d3748;
-  --header-fg: #ffffff;
+  --header-bg: #ffffff;
+  --header-fg: #111827;
   color-scheme: light;
 }
 
@@ -711,8 +711,8 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 
 /* Versioned documentation application */
 .versionedDocs {
-  --docs-navy: #14253d;
-  --docs-navy-2: #1c3554;
+  --docs-navy: #ffffff;
+  --docs-navy-2: #f3f6f8;
   --docs-accent: #0d8d9b;
   --docs-accent-strong: #08727e;
   --docs-sidebar: #f3f6f8;
@@ -738,9 +738,9 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   gap: 14px;
   height: 64px;
   padding: 0 28px;
-  color: #edf7fa;
+  color: var(--text);
   background: var(--docs-navy);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid var(--border);
   text-align: left;
 }
 
@@ -748,7 +748,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   display: inline-flex;
   align-items: center;
   gap: 12px;
-  color: #fff;
+  color: var(--text);
 }
 
 .docsBrand .metbitLogo {
@@ -799,7 +799,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 
 .primaryDocsNav a {
   padding: 9px 10px;
-  color: #d9e6ef;
+  color: var(--muted);
   border-radius: 4px;
   font-size: 0.9rem;
   font-weight: 650;
@@ -807,7 +807,12 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 
 .primaryDocsNav a:hover,
 .primaryDocsNav a:focus-visible {
-  color: #fff;
+  color: var(--text);
+  background: rgba(0, 0, 0, 0.06);
+}
+
+[data-theme="dark"] .primaryDocsNav a:hover,
+[data-theme="dark"] .primaryDocsNav a:focus-visible {
   background: rgba(255, 255, 255, 0.09);
 }
 
@@ -819,15 +824,15 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   width: min(100%, 460px);
   height: 38px;
   padding: 0 11px;
-  color: #b8c8d5;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: var(--muted);
+  background: var(--chip);
+  border: 1px solid var(--border);
   border-radius: 5px;
 }
 
 .docsSearch:focus-within {
-  background: #fff;
-  color: #354153;
+  background: var(--card);
+  color: var(--text);
   border-color: #6ad6dc;
   box-shadow: 0 0 0 3px rgba(72, 200, 207, 0.2);
 }
@@ -843,14 +848,14 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   font-size: 0.91rem;
 }
 
-.docsSearch input::placeholder { color: #c1ced8; }
-.docsSearch:focus-within input::placeholder { color: #6b7280; }
+.docsSearch input::placeholder { color: var(--muted); }
+.docsSearch:focus-within input::placeholder { color: var(--muted); }
 .docsSearch button { display: inline-flex; color: inherit; padding: 4px; }
 .docsSearch kbd {
   padding: 1px 6px;
-  color: #ced9e1;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.2);
+  color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
   border-radius: 3px;
   font: 0.76rem ui-monospace, monospace;
 }
@@ -886,7 +891,7 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   display: flex;
   align-items: center;
   gap: 7px;
-  color: #cbd8e1;
+  color: var(--muted);
   font-size: 0.76rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -896,9 +901,9 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 .versionControl select {
   width: 94px;
   padding: 7px 26px 7px 8px;
-  color: #fff;
-  background: var(--docs-navy-2);
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--text);
+  background: var(--chip);
+  border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 0.86rem;
   text-transform: none;
@@ -906,9 +911,10 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 
 .topbarIcon {
   display: inline-flex;
-  color: #e5edf3;
+  color: var(--muted);
   font-size: 1.25rem;
 }
+.topbarIcon:hover { color: var(--text); }
 
 .docsWorkspace {
   display: grid;
