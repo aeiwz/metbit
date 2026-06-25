@@ -1,20 +1,36 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
-title: ''
-labels: ''
+about: Suggest a new capability for metbit
+title: '[Feature] '
+labels: enhancement
 assignees: ''
 
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+**Which part of the metbit workflow does this relate to?**
+<!-- Check all that apply -->
+- [ ] Data loading / file format support
+- [ ] Preprocessing (new method or option)
+- [ ] Multivariate analysis (new model or output)
+- [ ] Statistics (new test or metric)
+- [ ] Visualisation / Dash app
+- [ ] API / usability improvement
+- [ ] Other (describe below)
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+**Describe the feature**
+A clear and concise description of what you want metbit to be able to do.
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+**Why is this useful for NMR metabolomics workflows?**
+Explain the scientific or practical motivation.
+
+**Suggested API** *(optional)*
+```python
+# How you imagine using it
+result = metbit.SomeNewFunction(data, param=value)
+```
+
+**References** *(optional)*
+Links to papers, existing tools, or similar implementations that could inform the design.
 
 **Additional context**
-Add any other context or screenshots about the feature request here.
+Any other information or screenshots.

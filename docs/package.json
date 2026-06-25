@@ -12,6 +12,7 @@
     "deploy": "next build --webpack && vercel --prod"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "next": "^16.2.6",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

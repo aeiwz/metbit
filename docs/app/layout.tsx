@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import ReportIssueButton from './components/ReportIssueButton'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -24,7 +25,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <ReportIssueButton />
+      </body>
     </html>
   )
 }

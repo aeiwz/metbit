@@ -111,9 +111,156 @@ header p { margin-top: 10px; font-size: 1.1rem; }
 .ctaBtn:active { transform: translateY(1px) scale(.98); }
 footer { text-align: center; padding: 24px 0; color: var(--muted); font-size: 0.95rem; }
 
+/* Report issue floating button */
+.reportIssueBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--card, #fff);
+  color: var(--text);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+  transition: box-shadow .15s ease, transform .1s ease, color .1s ease;
+}
+.reportIssueBtn:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+  transform: translateY(-1px);
+  color: var(--primary, #2563eb);
+}
+.reportIssueBtn:active { transform: translateY(0); }
+[data-theme="dark"] .reportIssueBtn {
+  background: var(--card, #1e293b);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+
 /* Icon helpers */
 .icon { vertical-align: -2px; margin-right: 8px; }
 .icon-right { vertical-align: -2px; margin-left: 8px; }
+.srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; }
+
+/* Feedback page */
+.feedbackPage { min-height: 100vh; background: var(--bg); color: var(--text); }
+.feedbackHeader {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 32px; border-bottom: 1px solid var(--border);
+  background: var(--card); position: sticky; top: 0; z-index: 10;
+}
+.feedbackBrand { display: flex; align-items: center; text-decoration: none; }
+.feedbackMain { max-width: 720px; margin: 0 auto; padding: 48px 24px 80px; }
+.feedbackHero { margin-bottom: 36px; }
+.feedbackHero h1 { font-size: 2rem; font-weight: 700; margin: 0 0 8px; }
+.feedbackHero p { color: var(--muted); margin: 0; line-height: 1.6; }
+
+.feedbackForm { display: flex; flex-direction: column; gap: 24px; }
+
+.feedbackTypeGroup { border: none; padding: 0; margin: 0; }
+.feedbackTypeCards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; }
+.feedbackTypeCard {
+  display: flex; flex-direction: column; gap: 4px;
+  padding: 16px; border-radius: 10px; cursor: pointer;
+  border: 2px solid var(--border); background: var(--card);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.feedbackTypeCard:hover { border-color: var(--primary); }
+.feedbackTypeCard.active { border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent); }
+.feedbackTypeIcon { font-size: 1.3rem; color: var(--primary); margin-bottom: 4px; }
+.feedbackTypeLabel { font-weight: 600; font-size: 0.92rem; }
+.feedbackTypeDesc { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+
+.feedbackField { display: flex; flex-direction: column; gap: 6px; }
+.feedbackLabel { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+.feedbackRequired { color: #e53e3e; }
+.feedbackInput, .feedbackTextarea {
+  padding: 9px 12px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--card); color: var(--text);
+  font-size: 0.9rem; font-family: inherit; width: 100%; box-sizing: border-box;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.feedbackInput:focus, .feedbackTextarea:focus {
+  outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+.feedbackTextarea { resize: vertical; line-height: 1.5; }
+.feedbackCode { font-family: ui-monospace, 'Cascadia Code', monospace; font-size: 0.82rem; }
+
+.feedbackCheckGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+.feedbackCheck { display: flex; align-items: flex-start; gap: 8px; font-size: 0.85rem; cursor: pointer; }
+.feedbackCheck input[type="checkbox"] { margin-top: 2px; accent-color: var(--primary); flex-shrink: 0; }
+.feedbackOtherInput { margin-top: 6px; margin-left: 24px; width: calc(100% - 24px); }
+
+.feedbackRow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.feedbackRow2 { grid-template-columns: repeat(2, 1fr); }
+.feedbackSelect { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 28px; cursor: pointer; }
+.feedbackArchGrid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.feedbackArchChip {
+  padding: 6px 14px; border-radius: 999px; font-size: 0.82rem; font-weight: 500; cursor: pointer;
+  border: 1px solid var(--border); background: var(--card); color: var(--text);
+  transition: border-color .12s ease, background .12s ease, color .12s ease;
+  user-select: none;
+}
+.feedbackArchChip:hover { border-color: var(--primary); color: var(--primary); }
+.feedbackArchChip.active { border-color: var(--primary); background: color-mix(in srgb, var(--primary) 12%, transparent); color: var(--primary); }
+
+.feedbackSubmit {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 12px 24px; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--primary); color: #fff; font-size: 0.95rem; font-weight: 600;
+  transition: filter .15s ease, transform .1s ease;
+  align-self: flex-start;
+}
+.feedbackSubmit:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.feedbackSubmit:active { transform: translateY(0); }
+
+.feedbackNote { font-size: 0.8rem; color: var(--muted); margin: -12px 0 0; }
+.feedbackAutoDetect {
+  font-size: 0.8rem; margin: 0;
+  padding: 7px 12px; border-radius: 8px;
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+  color: var(--primary);
+}
+
+.feedbackInputError { border-color: #ef4444 !important; }
+.feedbackFieldError { font-size: 0.78rem; color: #b91c1c; margin-top: 2px; }
+[data-theme="dark"] .feedbackFieldError { color: #fca5a5; }
+.feedbackOtherError { margin-left: 24px; }
+
+/* Discussion category cards */
+.discussionCategories { display: flex; flex-direction: column; gap: 10px; }
+.discussionCategoryCard {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--card);
+  text-decoration: none; color: var(--text);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.discussionCategoryCard:hover {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+}
+.discussionCategoryIcon { font-size: 1.2rem; color: var(--primary); flex-shrink: 0; }
+.discussionCategoryText { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+.discussionCategoryLabel { font-weight: 600; font-size: 0.92rem; }
+.discussionCategoryDesc { font-size: 0.8rem; color: var(--muted); }
+.discussionCategoryArrow { flex-shrink: 0; color: var(--muted); transition: transform .15s ease; }
+.discussionCategoryCard:hover .discussionCategoryArrow { transform: translateX(3px); color: var(--primary); }
+
+@media (max-width: 600px) {
+  .feedbackTypeCards { grid-template-columns: 1fr; }
+  .feedbackCheckGrid { grid-template-columns: 1fr; }
+  .feedbackRow { grid-template-columns: 1fr; }
+  .feedbackHeader { padding: 12px 16px; }
+  .feedbackMain { padding: 32px 16px 60px; }
+}
 
 /* Docs layout */
 .docsLayout { display: grid; grid-template-columns: 260px 1fr; min-height: 100vh; }
