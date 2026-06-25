@@ -6,7 +6,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Open Documentation](https://img.shields.io/badge/Docs-metbit--docs.vercel.app-2563EB?style=for-the-badge&logo=readthedocs&logoColor=white)](https://metbit-docs.vercel.app)
 
-An open-source Python package for reproducible 1H NMR metabolomics - from raw FID preprocessing through normalization, chemometrics, and interactive visualization, in a single scriptable workflow.
+An open-source Python package for reproducible <sup>1</sup>H NMR metabolomics - from raw FID preprocessing through normalization, chemometrics, and interactive visualization, in a single scriptable workflow.
 
 metbit v9.0.0 adds a four-tier auto-dispatch compute backend (GPU - C+OpenMP - multiprocessing - chunked NumPy), a native C extension with optional OpenMP parallelism, memory-bounded algorithms for biobank-scale cohorts, and a 305-test validation suite.
 
