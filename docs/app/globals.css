@@ -162,6 +162,7 @@ footer { text-align: center; padding: 24px 0; color: var(--muted); font-size: 0.
 
 .feedbackForm { display: flex; flex-direction: column; gap: 24px; }
 
+.feedbackFormWrap { display: flex; flex-direction: column; gap: 24px; }
 .feedbackTypeGroup { border: none; padding: 0; margin: 0; }
 .feedbackTypeCards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 8px; }
 .feedbackTypeCard {
@@ -319,6 +320,24 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
 .pill { background: var(--chip); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 999px; font-size: 0.9rem; }
 
 @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+/* Skeleton loader */
+@keyframes skShimmer {
+  from { background-position: -400px 0; }
+  to   { background-position:  400px 0; }
+}
+.skEl {
+  display: inline-block;
+  border-radius: 6px;
+  background: linear-gradient(90deg, var(--border) 25%, var(--chip) 50%, var(--border) 75%);
+  background-size: 800px 100%;
+  animation: skShimmer 1.4s ease-in-out infinite;
+}
+.homeSkeleton .homeActions { gap: 10px; }
+.homeSkeleton .homeHeroMeta { display: flex; flex-direction: column; gap: 8px; }
+.homeSkeleton .homeHeroCopy { display: flex; flex-direction: column; gap: 10px; }
+.homeSkeleton .homeCard { display: flex; flex-direction: column; gap: 8px; }
+.homeSkeleton .homeOverviewCopy { display: flex; flex-direction: column; }
 
 /* Home landing page */
 .homePage {
@@ -513,6 +532,30 @@ main { max-width: 980px; margin: 24px auto; padding: 0 16px; }
   font-size: 0.94rem;
   line-height: 1.62;
 }
+
+.homeStats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  overflow: hidden;
+  width: min(100%, 1160px);
+  margin: 48px auto 0;
+}
+.homeStatItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 28px 16px;
+  background: var(--card);
+  text-align: center;
+}
+.homeStatItem svg { color: var(--primary); font-size: 1.1rem; margin-bottom: 4px; }
+.homeStatItem strong { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--text); }
+.homeStatItem span { font-size: 0.82rem; color: var(--muted); }
 
 .homeOverview {
   width: min(100%, 1160px);

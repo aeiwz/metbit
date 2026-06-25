@@ -1,9 +1,17 @@
 import Link from 'next/link'
-import { FiArrowRight, FiBookOpen, FiLayers, FiPackage, FiRefreshCw, FiTool } from 'react-icons/fi'
+import { FiArrowRight, FiBookOpen, FiDownload, FiLayers, FiPackage, FiRefreshCw, FiTool } from 'react-icons/fi'
 
 import MetbitMark from './components/MetbitMark'
 import ThemeToggle from './components/ThemeToggle'
 import { formatDate, latestRelease, manifest, releaseHref } from '@/lib/versioned-docs'
+import { getDownloadMetrics } from '@/lib/download-metrics'
+
+function fmt(n: number | null): string {
+  if (n === null) return '—'
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}K`
+  return n.toLocaleString()
+}
 
 export const metadata = {
   title: 'metbit documentation',
@@ -33,7 +41,8 @@ const highlights = [
   },
 ]
 
-export default function HomePage() {
+export default async function HomePage() {
+  const metrics = await getDownloadMetrics(latestRelease.tag)
   return (
     <div className="homePage">
       <div className="homeThemeControl" aria-label="Landing page theme control">
@@ -145,6 +154,24 @@ export default function HomePage() {
           <Link className="homePanelLink" href={releaseHref(latestRelease.tag)}>
             Browse the latest release <FiArrowRight aria-hidden />
           </Link>
+        </div>
+      </section>
+
+      <section className="homeStats" aria-label="Download statistics">
+        <div className="homeStatItem">
+          <FiDownload aria-hidden />
+          <strong>{fmt(metrics?.pypiAllTime ?? null)}</strong>
+          <span>Total PyPI downloads</span>
+        </div>
+        <div className="homeStatItem">
+          <FiDownload aria-hidden />
+          <strong>{fmt(metrics?.pypiLastMonth ?? null)}</strong>
+          <span>Downloads last month</span>
+        </div>
+        <div className="homeStatItem">
+          <FiDownload aria-hidden />
+          <strong>{fmt(metrics?.githubTotal ?? null)}</strong>
+          <span>GitHub release downloads</span>
         </div>
       </section>
     </div>
