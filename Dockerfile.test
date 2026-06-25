@@ -1,0 +1,39 @@
+# Dockerfile.test — mirrors the GitHub Actions CI test job exactly.
+#
+# Build:
+#   docker build -f Dockerfile.test -t metbit-test .                 # default Python 3.12
+#   docker build -f Dockerfile.test --build-arg PYTHON_VERSION=3.11 -t metbit-test-311 .
+#
+# Run:
+#   docker run --rm metbit-test                      # full suite
+#   docker run --rm metbit-test pytest -k pca        # filter
+#   docker run --rm -it metbit-test bash             # shell
+
+ARG PYTHON_VERSION=3.12
+FROM python:${PYTHON_VERSION}-slim
+
+WORKDIR /src
+
+# System build deps for the C extension
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        gcc g++ make \
+    && rm -rf /var/lib/apt/lists/*
+
+# -- Layer 1: dev tools (cached when requirements-dev.txt unchanged)
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir -r requirements-dev.txt
+
+# -- Layer 2: optional deps (best-effort — same as CI)
+RUN pip install --no-cache-dir xgboost \
+    || echo "WARNING: xgboost unavailable on this Python — xgb tests will be skipped"
+RUN pip install --no-cache-dir "torch>=2.0" \
+        --index-url https://download.pytorch.org/whl/cpu \
+    || echo "WARNING: torch unavailable on this Python — DL tests will be skipped"
+
+# -- Layer 3: package source + C extension
+COPY . .
+RUN pip install --no-cache-dir -e . --no-build-isolation
+
+# Default command matches the CI release gate exactly
+CMD ["pytest", "-m", "not slow and not perf", "--tb=short", "-q"]

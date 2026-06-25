@@ -343,8 +343,12 @@ class TestMLClassifier:
         clf = MLClassifier(X, y, model="svm", random_state=0).fit(cv=3)
         assert len(clf.predict(X)) == len(X)
 
-    @pytest.mark.skip(reason="XGBoost segfaults on Python 3.14 — runtime incompatibility")
+    @pytest.mark.skipif(
+        __import__("sys").version_info >= (3, 14),
+        reason="xgboost 3.x segfaults under CPython 3.14 (upstream C-API incompatibility)",
+    )
     def test_xgb_fit(self, X_y_binary):
+        pytest.importorskip("xgboost", reason="xgboost not installed")
         from metbit.ml.classifiers import MLClassifier
         X, y = X_y_binary
         clf = MLClassifier(X, y, model="xgb", random_state=0).fit(cv=3)
@@ -359,6 +363,16 @@ class TestMLClassifier:
 
 # ── dl/models ────────────────────────────────────────────────────────────────
 
+try:
+    import torch as _torch_check  # noqa: F401
+    _TORCH_AVAILABLE = True
+except ImportError:
+    _TORCH_AVAILABLE = False
+
+_skip_no_torch = pytest.mark.skipif(not _TORCH_AVAILABLE, reason="torch not installed")
+
+
+@_skip_no_torch
 class TestSpectralAutoencoder:
     def test_fit_encode(self, X_y_binary):
         from metbit.dl.models import SpectralAutoencoder
@@ -399,6 +413,7 @@ class TestSpectralAutoencoder:
         assert isinstance(fig, go.Figure)
 
 
+@_skip_no_torch
 class TestSpectralMLP:
     def test_fit_predict(self, X_y_binary):
         from metbit.dl.models import SpectralMLP
@@ -448,6 +463,7 @@ class TestSpectralMLP:
         assert 0.0 <= acc <= 1.0
 
 
+@_skip_no_torch
 class TestSpectralCNN:
     def test_fit_predict(self, X_y_binary):
         from metbit.dl.models import SpectralCNN
@@ -947,6 +963,7 @@ class TestFinalCoverageGaps:
             val.bootstrap_ci(metric="invalid_metric")
 
 
+@_skip_no_torch
 class TestDLEdgeCases:
     def test_autoencoder_ndarray(self):
         from metbit.dl.models import SpectralAutoencoder

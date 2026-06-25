@@ -451,7 +451,9 @@ class MLClassifier:
 
         classes = self.classes_
         n_classes = len(classes)
-        y_bin = label_binarize(self._y, classes=classes)
+        # self._y holds integer-encoded labels (0..n_classes-1); binarize against those
+        int_classes = np.arange(n_classes)
+        y_bin = label_binarize(self._y, classes=int_classes)
         if n_classes == 2:
             y_bin = np.hstack([1 - y_bin, y_bin])
 
