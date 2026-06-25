@@ -10,6 +10,7 @@ __status__ = "Development"
 
 
 import numpy as np
+from metbit._native import scale_transform as _scale_transform
 
 
 class Scaler:
@@ -49,8 +50,11 @@ class Scaler:
         :param x: variable matrix with size n samples by p variables
         :return: scaled x
         """
-        x = x - self._center
-        return x if self._normalizer is None else x / self._normalizer
+        if self._normalizer is not None:
+            if np.ndim(x) >= 2:
+                return _scale_transform(x, self._center, self._normalizer)
+            return (np.asarray(x, dtype=np.float64) - self._center) / self._normalizer
+        return np.asarray(x, dtype=np.float64) - self._center
 
     def _autoscaling(self, x: np.ndarray) -> tuple:
         """
@@ -60,7 +64,8 @@ class Scaler:
         """
         center = x.mean(axis=0)
         normalizer = x.std(axis=0)
-        return center, normalizer, (x - center) / normalizer
+        scaled = _scale_transform(x, center, normalizer) if np.ndim(x) >= 2 else (x - center) / normalizer
+        return center, normalizer, scaled
 
     def _paretoscaling(self, x: np.ndarray) -> tuple:
         """
@@ -70,7 +75,8 @@ class Scaler:
         """
         center = x.mean(axis=0)
         normalizer = np.sqrt(x.std(axis=0))
-        return center, normalizer, (x - center) / normalizer
+        scaled = _scale_transform(x, center, normalizer) if np.ndim(x) >= 2 else (x - center) / normalizer
+        return center, normalizer, scaled
 
     def _meancentering(self, x: np.ndarray) -> tuple:
         """

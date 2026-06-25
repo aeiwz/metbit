@@ -142,6 +142,16 @@ def baseline_correct(
         Baseline-corrected spectra.
     baseline_df : pd.DataFrame (optional)
         Estimated baselines (returned if return_baseline=True).
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> ppm = np.linspace(0, 10, 500)
+        >>> spectra = pd.DataFrame(np.random.rand(5, 500), columns=ppm)
+        >>> corrected = baseline_correct(spectra, method='asls', lam=1e6)
+        >>> corrected_df, baseline_df = baseline_correct(
+        ...     spectra, method='rubberband', return_baseline=True
+        ... )
     """
     if not isinstance(X, pd.DataFrame):
         raise ValueError("X must be a pandas DataFrame with spectra as rows.")
@@ -183,5 +193,12 @@ def bline(X: pd.DataFrame, lam: float = 1e7, max_iter: int = 30) -> pd.DataFrame
         Smoothing parameter for ASLS.
     max_iter : int
         Max iterations for ASLS.
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> ppm = np.linspace(0, 10, 500)
+        >>> spectra = pd.DataFrame(np.random.rand(10, 500), columns=ppm)
+        >>> corrected = bline(spectra, lam=1e7, max_iter=30)
     """
     return baseline_correct(X, method='asls', lam=lam, max_iter=max_iter)

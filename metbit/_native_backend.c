@@ -782,6 +782,441 @@ openmp_threads(PyObject *self, PyObject *args)
 
 
 /* =========================================================================
+ * nipals_full  –  Complete NIPALS-PLS1 loop in C.
+ *
+ * Signature (Python): nipals_full(x, y, rows, cols, tol, max_iter)
+ *   x         : C-contiguous float64 (rows x cols)
+ *   y         : C-contiguous float64 (rows,)
+ *   rows, cols: Py_ssize_t
+ *   tol       : double convergence tolerance
+ *   max_iter  : int
+ *
+ * Returns: (bytes_w, bytes_u, c_double, bytes_t, n_iter_int)
+ *   bytes_w   : float64 (cols,)  weights
+ *   bytes_u   : float64 (rows,)  y-scores
+ *   c_double  : float64          y-weight scalar
+ *   bytes_t   : float64 (rows,)  x-scores
+ *   n_iter_int: int               iterations used
+ *
+ * Memory: O(rows + cols) temporaries – no copy of X.
+ * ========================================================================= */
+static PyObject *
+nipals_full(PyObject *self, PyObject *args)
+{
+    PyObject *x_obj, *y_obj;
+    Py_ssize_t rows, cols;
+    double tol;
+    int max_iter;
+
+    (void)self;
+    if (!PyArg_ParseTuple(args, "OOnndi:nipals_full",
+                          &x_obj, &y_obj, &rows, &cols, &tol, &max_iter))
+        return NULL;
+
+    Py_buffer x_buf, y_buf;
+
+    if (!_validate_f64_buffer(x_obj, &x_buf, rows, cols, "nipals_full"))
+        return NULL;
+    /* validate y: 1-D float64 length rows */
+    if (PyObject_GetBuffer(y_obj, &y_buf, PyBUF_C_CONTIGUOUS) < 0) {
+        PyBuffer_Release(&x_buf); return NULL;
+    }
+    if (y_buf.itemsize != (Py_ssize_t)sizeof(double)
+            || y_buf.len != rows * (Py_ssize_t)sizeof(double)) {
+        PyBuffer_Release(&x_buf); PyBuffer_Release(&y_buf);
+        PyErr_Format(PyExc_ValueError,
+            "nipals_full: y must be float64 length %zd", rows);
+        return NULL;
+    }
+
+    /* allocate outputs */
+    PyObject *w_bytes = PyBytes_FromStringAndSize(NULL, cols * (Py_ssize_t)sizeof(double));
+    PyObject *u_bytes = PyBytes_FromStringAndSize(NULL, rows * (Py_ssize_t)sizeof(double));
+    PyObject *t_bytes = PyBytes_FromStringAndSize(NULL, rows * (Py_ssize_t)sizeof(double));
+    if (!w_bytes || !u_bytes || !t_bytes) {
+        Py_XDECREF(w_bytes); Py_XDECREF(u_bytes); Py_XDECREF(t_bytes);
+        PyBuffer_Release(&x_buf); PyBuffer_Release(&y_buf);
+        return PyErr_NoMemory();
+    }
+
+    const double *x = (const double *)x_buf.buf;
+    const double *y = (const double *)y_buf.buf;
+    double *w = (double *)PyBytes_AS_STRING(w_bytes);
+    double *u = (double *)PyBytes_AS_STRING(u_bytes);
+    double *t = (double *)PyBytes_AS_STRING(t_bytes);
+    double c = 0.0;
+    int n_iter = 0;
+
+    Py_BEGIN_ALLOW_THREADS
+
+    /* initialise u = y */
+    for (Py_ssize_t i = 0; i < rows; ++i) u[i] = y[i];
+    /* initialise w, t to zero */
+    for (Py_ssize_t j = 0; j < cols; ++j) w[j] = 0.0;
+    for (Py_ssize_t i = 0; i < rows; ++i) t[i] = 0.0;
+
+    double d = tol * 10.0 + 1.0;
+
+    while (d > tol && n_iter < max_iter) {
+
+        /* w = X.T @ u / (u.u) */
+        double utu = 0.0;
+        for (Py_ssize_t i = 0; i < rows; ++i) utu += u[i] * u[i];
+        if (utu < 1e-300) break;
+        for (Py_ssize_t j = 0; j < cols; ++j) w[j] = 0.0;
+        for (Py_ssize_t i = 0; i < rows; ++i) {
+            const double *row = x + i * cols;
+            double ui = u[i];
+            Py_ssize_t j = 0;
+            for (; j + INNER_BLOCK <= cols; j += INNER_BLOCK) {
+                w[j   ] += ui * row[j   ]; w[j+1 ] += ui * row[j+1 ];
+                w[j+2 ] += ui * row[j+2 ]; w[j+3 ] += ui * row[j+3 ];
+                w[j+4 ] += ui * row[j+4 ]; w[j+5 ] += ui * row[j+5 ];
+                w[j+6 ] += ui * row[j+6 ]; w[j+7 ] += ui * row[j+7 ];
+                w[j+8 ] += ui * row[j+8 ]; w[j+9 ] += ui * row[j+9 ];
+                w[j+10] += ui * row[j+10]; w[j+11] += ui * row[j+11];
+                w[j+12] += ui * row[j+12]; w[j+13] += ui * row[j+13];
+                w[j+14] += ui * row[j+14]; w[j+15] += ui * row[j+15];
+            }
+            for (; j < cols; ++j) w[j] += ui * row[j];
+        }
+        double inv_utu = 1.0 / utu;
+        for (Py_ssize_t j = 0; j < cols; ++j) w[j] *= inv_utu;
+
+        /* w /= ||w|| */
+        double wtw = 0.0;
+        for (Py_ssize_t j = 0; j < cols; ++j) wtw += w[j] * w[j];
+        if (wtw < 1e-300) break;
+        double inv_wnorm = 1.0 / sqrt(wtw);
+        for (Py_ssize_t j = 0; j < cols; ++j) w[j] *= inv_wnorm;
+
+        /* t = X @ w */
+        for (Py_ssize_t i = 0; i < rows; ++i) {
+            const double *row = x + i * cols;
+            double acc = 0.0;
+            Py_ssize_t j = 0;
+            for (; j + INNER_BLOCK <= cols; j += INNER_BLOCK) {
+                acc += row[j   ]*w[j   ] + row[j+1 ]*w[j+1 ]
+                     + row[j+2 ]*w[j+2 ] + row[j+3 ]*w[j+3 ]
+                     + row[j+4 ]*w[j+4 ] + row[j+5 ]*w[j+5 ]
+                     + row[j+6 ]*w[j+6 ] + row[j+7 ]*w[j+7 ]
+                     + row[j+8 ]*w[j+8 ] + row[j+9 ]*w[j+9 ]
+                     + row[j+10]*w[j+10] + row[j+11]*w[j+11]
+                     + row[j+12]*w[j+12] + row[j+13]*w[j+13]
+                     + row[j+14]*w[j+14] + row[j+15]*w[j+15];
+            }
+            for (; j < cols; ++j) acc += row[j] * w[j];
+            t[i] = acc;
+        }
+
+        /* c = t.y / (t.t) */
+        double tty = 0.0, ttt = 0.0;
+        for (Py_ssize_t i = 0; i < rows; ++i) { tty += t[i]*y[i]; ttt += t[i]*t[i]; }
+        if (ttt < 1e-300) break;
+        c = tty / ttt;
+
+        /* convergence: d = ||u_new - u|| / ||u_new||   where u_new = y/c */
+        if (fabs(c) < 1e-300) break;
+        double inv_c = 1.0 / c;
+        double diff2 = 0.0, unew2 = 0.0;
+        for (Py_ssize_t i = 0; i < rows; ++i) {
+            double un = y[i] * inv_c;
+            double diff = un - u[i];
+            diff2 += diff * diff;
+            unew2 += un * un;
+            u[i] = un;
+        }
+        d = (unew2 > 1e-300) ? sqrt(diff2 / unew2) : 0.0;
+        ++n_iter;
+    }
+
+    Py_END_ALLOW_THREADS
+
+    PyBuffer_Release(&x_buf);
+    PyBuffer_Release(&y_buf);
+
+    /* N steals the reference (no Py_INCREF), so the tuple owns the only
+     * reference to each bytes object. Using O here would leak one ref per call. */
+    return Py_BuildValue("(NNdNi)", w_bytes, u_bytes, c, t_bytes, n_iter);
+}
+
+
+/* =========================================================================
+ * scale_transform  –  Scaler transform: out[i,j] = (X[i,j] - mean[j]) / s[j]
+ *
+ * Signature (Python): scale_transform(x, mean, s, rows, cols) -> bytes
+ *   x, mean, s: float64 C-contiguous buffers
+ *   rows, cols: Py_ssize_t
+ *
+ * Returns bytes (rows*cols float64) – a scaled copy of X.
+ * s[j] is typically std[j] (standard scaling) or sqrt(std[j]) (pareto).
+ * Zero entries in s are treated as 1.0 to avoid division by zero.
+ * ========================================================================= */
+static PyObject *
+scale_transform(PyObject *self, PyObject *args)
+{
+    PyObject *x_obj, *mean_obj, *s_obj;
+    Py_ssize_t rows, cols;
+
+    (void)self;
+    if (!PyArg_ParseTuple(args, "OOOnn:scale_transform",
+                          &x_obj, &mean_obj, &s_obj, &rows, &cols))
+        return NULL;
+
+    Py_buffer x_buf, mean_buf, s_buf;
+    if (!_validate_f64_buffer(x_obj,    &x_buf,    rows, cols, "scale_transform"))
+        return NULL;
+    if (PyObject_GetBuffer(mean_obj, &mean_buf, PyBUF_C_CONTIGUOUS) < 0) {
+        PyBuffer_Release(&x_buf); return NULL;
+    }
+    if (PyObject_GetBuffer(s_obj, &s_buf, PyBUF_C_CONTIGUOUS) < 0) {
+        PyBuffer_Release(&x_buf); PyBuffer_Release(&mean_buf); return NULL;
+    }
+    if (mean_buf.len != cols * (Py_ssize_t)sizeof(double)
+            || s_buf.len != cols * (Py_ssize_t)sizeof(double)) {
+        PyBuffer_Release(&x_buf); PyBuffer_Release(&mean_buf); PyBuffer_Release(&s_buf);
+        PyErr_Format(PyExc_ValueError,
+            "scale_transform: mean and s must be float64 length %zd", cols);
+        return NULL;
+    }
+
+    PyObject *output = PyBytes_FromStringAndSize(
+        NULL, rows * cols * (Py_ssize_t)sizeof(double));
+    if (!output) {
+        PyBuffer_Release(&x_buf); PyBuffer_Release(&mean_buf); PyBuffer_Release(&s_buf);
+        return PyErr_NoMemory();
+    }
+
+    const double *x    = (const double *)x_buf.buf;
+    const double *mean = (const double *)mean_buf.buf;
+    const double *s    = (const double *)s_buf.buf;
+    double       *out  = (double *)PyBytes_AS_STRING(output);
+
+    /* Allocate inv_s BEFORE releasing the GIL – PyMem_Malloc requires the GIL. */
+    double *inv_s = (double *)PyMem_Malloc((size_t)cols * sizeof(double));
+    if (!inv_s) {
+        PyBuffer_Release(&x_buf); PyBuffer_Release(&mean_buf); PyBuffer_Release(&s_buf);
+        Py_DECREF(output);
+        return PyErr_NoMemory();
+    }
+    for (Py_ssize_t j = 0; j < cols; ++j)
+        inv_s[j] = (s[j] != 0.0) ? 1.0 / s[j] : 1.0;
+
+    Py_BEGIN_ALLOW_THREADS
+
+    for (Py_ssize_t i = 0; i < rows; ++i) {
+        const double *xrow = x + i * cols;
+        double       *orow = out + i * cols;
+        Py_ssize_t j = 0;
+        for (; j + INNER_BLOCK <= cols; j += INNER_BLOCK) {
+            orow[j   ] = (xrow[j   ] - mean[j   ]) * inv_s[j   ];
+            orow[j+1 ] = (xrow[j+1 ] - mean[j+1 ]) * inv_s[j+1 ];
+            orow[j+2 ] = (xrow[j+2 ] - mean[j+2 ]) * inv_s[j+2 ];
+            orow[j+3 ] = (xrow[j+3 ] - mean[j+3 ]) * inv_s[j+3 ];
+            orow[j+4 ] = (xrow[j+4 ] - mean[j+4 ]) * inv_s[j+4 ];
+            orow[j+5 ] = (xrow[j+5 ] - mean[j+5 ]) * inv_s[j+5 ];
+            orow[j+6 ] = (xrow[j+6 ] - mean[j+6 ]) * inv_s[j+6 ];
+            orow[j+7 ] = (xrow[j+7 ] - mean[j+7 ]) * inv_s[j+7 ];
+            orow[j+8 ] = (xrow[j+8 ] - mean[j+8 ]) * inv_s[j+8 ];
+            orow[j+9 ] = (xrow[j+9 ] - mean[j+9 ]) * inv_s[j+9 ];
+            orow[j+10] = (xrow[j+10] - mean[j+10]) * inv_s[j+10];
+            orow[j+11] = (xrow[j+11] - mean[j+11]) * inv_s[j+11];
+            orow[j+12] = (xrow[j+12] - mean[j+12]) * inv_s[j+12];
+            orow[j+13] = (xrow[j+13] - mean[j+13]) * inv_s[j+13];
+            orow[j+14] = (xrow[j+14] - mean[j+14]) * inv_s[j+14];
+            orow[j+15] = (xrow[j+15] - mean[j+15]) * inv_s[j+15];
+        }
+        for (; j < cols; ++j)
+            orow[j] = (xrow[j] - mean[j]) * inv_s[j];
+    }
+
+    Py_END_ALLOW_THREADS
+
+    PyMem_Free(inv_s);
+
+    PyBuffer_Release(&x_buf);
+    PyBuffer_Release(&mean_buf);
+    PyBuffer_Release(&s_buf);
+    return output;
+}
+
+
+/* =========================================================================
+ * xcorr_max_shift  –  Find the integer shift maximising cross-correlation.
+ *
+ * Signature (Python): xcorr_max_shift(template, query, n, max_shift) -> (shift, corr)
+ *   template, query: C-contiguous float64 length n
+ *   n               : Py_ssize_t
+ *   max_shift        : Py_ssize_t  search range [-max_shift, +max_shift]
+ *
+ * Returns (int shift, double best_corr).
+ * Used by icoshift: shift > 0 means query is shifted right to align with template.
+ * ========================================================================= */
+static PyObject *
+xcorr_max_shift(PyObject *self, PyObject *args)
+{
+    PyObject *tmpl_obj, *qry_obj;
+    Py_ssize_t n, max_shift;
+
+    (void)self;
+    if (!PyArg_ParseTuple(args, "OOnn:xcorr_max_shift",
+                          &tmpl_obj, &qry_obj, &n, &max_shift))
+        return NULL;
+
+    Py_buffer t_buf, q_buf;
+    if (PyObject_GetBuffer(tmpl_obj, &t_buf, PyBUF_C_CONTIGUOUS) < 0) return NULL;
+    if (PyObject_GetBuffer(qry_obj,  &q_buf, PyBUF_C_CONTIGUOUS) < 0) {
+        PyBuffer_Release(&t_buf); return NULL;
+    }
+    if (t_buf.itemsize != (Py_ssize_t)sizeof(double)
+            || t_buf.len != n * (Py_ssize_t)sizeof(double)
+            || q_buf.itemsize != (Py_ssize_t)sizeof(double)
+            || q_buf.len != n * (Py_ssize_t)sizeof(double)) {
+        PyBuffer_Release(&t_buf); PyBuffer_Release(&q_buf);
+        PyErr_Format(PyExc_ValueError,
+            "xcorr_max_shift: template and query must be float64 length %zd", n);
+        return NULL;
+    }
+
+    const double *tmpl = (const double *)t_buf.buf;
+    const double *qry  = (const double *)q_buf.buf;
+    Py_ssize_t best_shift = 0;
+    double best_corr = -1e300;
+
+    Py_BEGIN_ALLOW_THREADS
+
+    for (Py_ssize_t sh = -max_shift; sh <= max_shift; ++sh) {
+        double corr = 0.0;
+        Py_ssize_t i_start = (sh >= 0) ? 0       : -sh;
+        Py_ssize_t i_end   = (sh >= 0) ? n - sh  : n;
+        if (i_start >= n || i_end <= 0) continue;
+        if (i_end > n) i_end = n;
+        /* query[i + sh] aligned with template[i] */
+        for (Py_ssize_t i = i_start; i < i_end; ++i)
+            corr += tmpl[i] * qry[i + sh];
+        if (corr > best_corr) { best_corr = corr; best_shift = sh; }
+    }
+
+    Py_END_ALLOW_THREADS
+
+    PyBuffer_Release(&t_buf);
+    PyBuffer_Release(&q_buf);
+    return Py_BuildValue("(nd)", (long long)best_shift, best_corr);
+}
+
+
+/* =========================================================================
+ * pqn_median_quotient  –  One PQN quotient for a single sample.
+ *
+ * Signature (Python): pqn_median_quotient(sample, reference, n) -> double
+ *   sample, reference: C-contiguous float64 length n
+ *   n                : Py_ssize_t
+ *
+ * Returns the median of (sample[i] / reference[i]) over all i where
+ * reference[i] != 0.  Returns 1.0 if no valid quotients exist.
+ *
+ * Uses an in-place partial sort (selection of the median element) to avoid
+ * allocating a second temporary array: O(n log n) via qsort of a malloc'd buf.
+ * ========================================================================= */
+/* Lomuto partition – used by _quickselect. */
+static size_t _qs_partition(double *arr, size_t left, size_t right) {
+    double pivot = arr[right];
+    size_t i = left;
+    for (size_t j = left; j < right; ++j) {
+        if (arr[j] <= pivot) {
+            double tmp = arr[i]; arr[i] = arr[j]; arr[j] = tmp;
+            ++i;
+        }
+    }
+    double tmp = arr[i]; arr[i] = arr[right]; arr[right] = tmp;
+    return i;
+}
+
+/* Hoare quickselect: rearranges arr[0..n-1] so that arr[k] is the k-th
+ * smallest element (0-indexed). Average O(n), worst O(n^2). */
+static double _quickselect(double *arr, size_t n, size_t k) {
+    size_t left = 0, right = n - 1;
+    while (left < right) {
+        /* Median-of-three pivot to reduce degenerate worst case. */
+        size_t mid = left + (right - left) / 2;
+        if (arr[mid] < arr[left])  { double t = arr[mid];  arr[mid]  = arr[left];  arr[left]  = t; }
+        if (arr[right] < arr[left]){ double t = arr[right]; arr[right]= arr[left];  arr[left]  = t; }
+        if (arr[mid] < arr[right]) { double t = arr[mid];  arr[mid]  = arr[right]; arr[right] = t; }
+        /* arr[right] is now the median-of-three pivot. */
+        size_t p = _qs_partition(arr, left, right);
+        if (p == k) break;
+        else if (p < k) left  = p + 1;
+        else            right = p > 0 ? p - 1 : 0;
+    }
+    return arr[k];
+}
+
+static PyObject *
+pqn_median_quotient(PyObject *self, PyObject *args)
+{
+    PyObject *samp_obj, *ref_obj;
+    Py_ssize_t n;
+
+    (void)self;
+    if (!PyArg_ParseTuple(args, "OOn:pqn_median_quotient",
+                          &samp_obj, &ref_obj, &n))
+        return NULL;
+
+    Py_buffer s_buf, r_buf;
+    if (PyObject_GetBuffer(samp_obj, &s_buf, PyBUF_C_CONTIGUOUS) < 0) return NULL;
+    if (PyObject_GetBuffer(ref_obj,  &r_buf, PyBUF_C_CONTIGUOUS) < 0) {
+        PyBuffer_Release(&s_buf); return NULL;
+    }
+    if (s_buf.itemsize != (Py_ssize_t)sizeof(double) || s_buf.len != n * (Py_ssize_t)sizeof(double)
+        || r_buf.itemsize != (Py_ssize_t)sizeof(double) || r_buf.len != n * (Py_ssize_t)sizeof(double)) {
+        PyBuffer_Release(&s_buf); PyBuffer_Release(&r_buf);
+        PyErr_Format(PyExc_ValueError,
+            "pqn_median_quotient: sample and reference must be float64 length %zd", n);
+        return NULL;
+    }
+
+    const double *samp = (const double *)s_buf.buf;
+    const double *ref  = (const double *)r_buf.buf;
+    double result = 1.0;
+
+    double *quotients = (double *)PyMem_Malloc((size_t)n * sizeof(double));
+    if (!quotients) {
+        PyBuffer_Release(&s_buf); PyBuffer_Release(&r_buf);
+        return PyErr_NoMemory();
+    }
+
+    Py_BEGIN_ALLOW_THREADS
+
+    Py_ssize_t cnt = 0;
+    for (Py_ssize_t i = 0; i < n; ++i) {
+        if (ref[i] != 0.0)
+            quotients[cnt++] = samp[i] / ref[i];
+    }
+    if (cnt > 0) {
+        size_t k = (size_t)cnt / 2;
+        if (cnt % 2 == 1) {
+            result = _quickselect(quotients, (size_t)cnt, k);
+        } else {
+            /* Even: median is mean of two middle elements. Need both. */
+            double hi = _quickselect(quotients, (size_t)cnt, k);
+            /* After first selection arr[k] is in place; find max of arr[0..k-1]. */
+            double lo = quotients[0];
+            for (size_t i = 1; i < k; ++i)
+                if (quotients[i] > lo) lo = quotients[i];
+            result = 0.5 * (lo + hi);
+        }
+    }
+
+    Py_END_ALLOW_THREADS
+
+    PyMem_Free(quotients);
+    PyBuffer_Release(&s_buf);
+    PyBuffer_Release(&r_buf);
+    return PyFloat_FromDouble(result);
+}
+
+
+/* =========================================================================
  * Method table and module definition
  * ========================================================================= */
 static PyMethodDef native_methods[] = {
@@ -829,6 +1264,35 @@ static PyMethodDef native_methods[] = {
         PyDoc_STR(
             "openmp_threads() -> int\n"
             "Return omp_get_max_threads(). Returns 0 if OpenMP is not available.")
+    },
+    {
+        "nipals_full", nipals_full, METH_VARARGS,
+        PyDoc_STR(
+            "nipals_full(x, y, rows, cols, tol, max_iter)"
+            " -> (bytes_w, bytes_u, c_float, bytes_t, n_iter)\n"
+            "Complete NIPALS-PLS1 loop. x(rows,cols) float64, y(rows,) float64.\n"
+            "Returns w(cols), u(rows), c scalar, t(rows) as bytes + iteration count.")
+    },
+    {
+        "scale_transform", scale_transform, METH_VARARGS,
+        PyDoc_STR(
+            "scale_transform(x, mean, s, rows, cols) -> bytes\n"
+            "Compute (X - mean) / s element-wise. Returns scaled float64 copy.\n"
+            "s is std (standard scaling) or sqrt(std) (pareto scaling).")
+    },
+    {
+        "xcorr_max_shift", xcorr_max_shift, METH_VARARGS,
+        PyDoc_STR(
+            "xcorr_max_shift(template, query, n, max_shift) -> (int shift, float corr)\n"
+            "Find the integer shift in [-max_shift, max_shift] that maximises\n"
+            "the dot-product cross-correlation of template and query.")
+    },
+    {
+        "pqn_median_quotient", pqn_median_quotient, METH_VARARGS,
+        PyDoc_STR(
+            "pqn_median_quotient(sample, reference, n) -> float\n"
+            "Median of sample[i]/reference[i] over non-zero reference entries.\n"
+            "Used as the per-sample divisor in PQN normalization.")
     },
     {NULL, NULL, 0, NULL}
 };

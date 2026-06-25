@@ -57,7 +57,15 @@ from .._native import (
 # ---------------------------------------------------------------------------
 
 class MemoryEstimator:
-    """Estimate RAM requirements before loading large datasets."""
+    """Estimate RAM requirements before loading large datasets.
+
+    Examples:
+        >>> import numpy as np
+        >>> import metbit
+        >>> info = metbit.analysis.large_scale.MemoryEstimator.estimate(10000, 50000, np.float32)
+        >>> print(info["summary"])
+        >>> metbit.analysis.large_scale.MemoryEstimator.print_estimate(10000, 50000)
+    """
 
     @staticmethod
     def estimate(
@@ -76,6 +84,13 @@ class MemoryEstimator:
             Storage dtype. float64=8 bytes, float32=4 bytes.
         copies: int
             Number of simultaneous matrix copies (e.g., 2 for train/test split).
+
+        Examples:
+            >>> import numpy as np
+            >>> from metbit.analysis.large_scale import MemoryEstimator
+            >>> info = MemoryEstimator.estimate(5000, 20000, np.float32, copies=2)
+            >>> info["single_matrix_gb"]
+            >>> info["recommended_dtype"]
         """
         bpe = np.dtype(dtype).itemsize
         single_gb = n_samples * n_features * bpe / 1024 ** 3
@@ -98,6 +113,20 @@ class MemoryEstimator:
 
     @staticmethod
     def print_estimate(n_samples: int, n_features: int, dtype: type = np.float64, copies: int = 2) -> None:
+        """Print a human-readable memory estimate to stdout.
+
+        Parameters
+        ----------
+        n_samples: int
+        n_features: int
+        dtype: numpy dtype
+        copies: int
+
+        Examples:
+            >>> import numpy as np
+            >>> from metbit.analysis.large_scale import MemoryEstimator
+            >>> MemoryEstimator.print_estimate(10000, 100000, np.float32, copies=2)
+        """
         info = MemoryEstimator.estimate(n_samples, n_features, dtype, copies)
         print(info["summary"])
         if info["recommended_dtype"] != info["dtype"]:
@@ -138,6 +167,16 @@ def feature_preselection(
     -------
     X_reduced: same type as X, shape (n_samples, n_kept)
     mask: bool ndarray, shape (n_features,) - True for kept features
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from metbit.analysis.large_scale import feature_preselection
+        >>> ppm = np.linspace(10, 0, 1000)
+        >>> spectra = pd.DataFrame(np.random.rand(200, 1000), columns=ppm)
+        >>> X_reduced, mask = feature_preselection(spectra, percentile=20, method="variance")
+        >>> X_reduced.shape
+        >>> mask.sum()
     """
     is_df = isinstance(X, pd.DataFrame)
     arr = X.to_numpy(dtype=np.float32) if is_df else np.asarray(X, dtype=np.float32)
@@ -194,6 +233,13 @@ def chunked_pearson(
     anchor_index: int
     chunk_size: int
         Feature chunk size used by the CPU fallback paths.
+
+    Examples:
+        >>> import numpy as np
+        >>> from metbit.analysis.large_scale import chunked_pearson
+        >>> spectra = np.random.rand(100, 500).astype(np.float64)
+        >>> r = chunked_pearson(spectra, anchor_index=250, chunk_size=100)
+        >>> r.shape
     """
     return _pearson_dispatch(
         matrix, anchor_index, chunk_size=chunk_size
@@ -219,6 +265,17 @@ class ChunkedSTOCSY:
         - Reduce if RAM is constrained; increase for throughput.
     p_value_threshold: float
         Significance threshold for highlighting correlations in the plot.
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from metbit.analysis.large_scale import ChunkedSTOCSY
+        >>> ppm = np.linspace(10, 0, 2000)
+        >>> spectra = pd.DataFrame(np.random.rand(50, 2000), columns=ppm)
+        >>> stocsy = ChunkedSTOCSY(chunk_size=500, p_value_threshold=1e-4)
+        >>> ppm_out, r, p = stocsy.compute(spectra, anchor_ppm_value=3.05)
+        >>> fig = stocsy.plot(spectra, anchor_ppm_value=3.05)
+        >>> fig.show()
     """
 
     def __init__(self, chunk_size: int = 50_000, p_value_threshold: float = 1e-4) -> None:
@@ -227,7 +284,14 @@ class ChunkedSTOCSY:
 
     @staticmethod
     def active_backend() -> dict:
-        """Return the current compute backend configuration."""
+        """Return the current compute backend configuration.
+
+        Examples:
+            >>> from metbit.analysis.large_scale import ChunkedSTOCSY
+            >>> info = ChunkedSTOCSY.active_backend()
+            >>> info["gpu"]
+            >>> info["native_c"]
+        """
         info = _backend_info()
         info["gpu"] = _gpu_available()
         info["native_c"] = _native_available()
@@ -245,6 +309,16 @@ class ChunkedSTOCSY:
         ppm: ndarray (n_features,)
         correlations: ndarray (n_features,)
         p_values: ndarray (n_features,)
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.large_scale import ChunkedSTOCSY
+            >>> ppm = np.linspace(10, 0, 1000)
+            >>> spectra = pd.DataFrame(np.random.rand(80, 1000), columns=ppm)
+            >>> stocsy = ChunkedSTOCSY(chunk_size=200)
+            >>> ppm_out, r, p_vals = stocsy.compute(spectra, anchor_ppm_value=5.0)
+            >>> r.shape
         """
         from scipy.special import stdtr
 
@@ -276,6 +350,16 @@ class ChunkedSTOCSY:
 
         Compatible with existing downstream code that calls .show() or saves
         the figure.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.large_scale import ChunkedSTOCSY
+            >>> ppm = np.linspace(10, 0, 1000)
+            >>> spectra = pd.DataFrame(np.random.rand(80, 1000), columns=ppm)
+            >>> stocsy = ChunkedSTOCSY(chunk_size=200)
+            >>> fig = stocsy.plot(spectra, anchor_ppm_value=3.56)
+            >>> fig.show()
         """
         import plotly.graph_objects as go
 
@@ -330,6 +414,16 @@ class LargeScaleAlignment:
         Spectra processed per batch (for very large sample counts). Currently
         all spectra are processed together; chunk_size is reserved for future
         batched support.
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from metbit.analysis.large_scale import LargeScaleAlignment
+        >>> ppm = np.linspace(10, 0, 500)
+        >>> spectra = pd.DataFrame(np.random.rand(30, 500), columns=ppm)
+        >>> aligner = LargeScaleAlignment(chunk_size=500)
+        >>> windows = [(3.0, 3.5), (5.0, 5.5)]
+        >>> aligned, info = aligner.align(spectra, ppm, windows)
     """
 
     def __init__(self, chunk_size: int = 500) -> None:
@@ -343,7 +437,35 @@ class LargeScaleAlignment:
         reference: str = "median",
         max_shift_ppm: float = 0.02,
     ) -> Tuple[pd.DataFrame, dict]:
-        """Align spectra using icoshift with memory-efficient allocation."""
+        """Align spectra using icoshift with memory-efficient allocation.
+
+        Parameters
+        ----------
+        spectra: pd.DataFrame, shape (n_samples, n_features)
+        ppm: ndarray, shape (n_features,)
+        windows: list of (float, float)
+            PPM regions used as alignment targets.
+        reference: str
+            Reference spectrum strategy ('median', 'mean', or integer index).
+        max_shift_ppm: float
+            Maximum allowed shift in ppm units.
+
+        Returns
+        -------
+        aligned_spectra: pd.DataFrame
+        info: dict
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.large_scale import LargeScaleAlignment
+            >>> ppm = np.linspace(10, 0, 500)
+            >>> spectra = pd.DataFrame(np.random.rand(30, 500), columns=ppm)
+            >>> aligner = LargeScaleAlignment(chunk_size=500)
+            >>> windows = [(3.0, 3.5)]
+            >>> aligned, info = aligner.align(spectra, ppm, windows, reference="median")
+            >>> aligned.shape
+        """
         from ..nmr.alignment import icoshift_align
 
         n, p = spectra.shape
@@ -364,7 +486,19 @@ class LargeScaleAlignment:
 # ---------------------------------------------------------------------------
 
 def memory_report(X: Union[pd.DataFrame, np.ndarray]) -> None:
-    """Print a memory usage report for a given dataset."""
+    """Print a memory usage report for a given dataset.
+
+    Parameters
+    ----------
+    X: DataFrame or ndarray, shape (n_samples, n_features)
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from metbit.analysis.large_scale import memory_report
+        >>> X = pd.DataFrame(np.random.rand(500, 10000).astype(np.float32))
+        >>> memory_report(X)
+    """
     n, p = X.shape
     current_dtype = X.dtypes.iloc[0] if isinstance(X, pd.DataFrame) else X.dtype
     MemoryEstimator.print_estimate(n, p, dtype=current_dtype, copies=2)

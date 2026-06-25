@@ -236,6 +236,14 @@ class opls_da:
             Scaling method used
             R2 and Q2 metrics
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y, n_components=2, scaling_method='pareto', kfold=3)
+            >>> model.fit()
         '''
         import time
 
@@ -340,6 +348,16 @@ class opls_da:
 
         '''
         Get OPLS-DA scores
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> scores = model.get_oplsda_scores()
         '''
         df_opls_scores = self.df_opls_scores
         return df_opls_scores
@@ -348,6 +366,16 @@ class opls_da:
 
         '''
         Get S scores
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> s_scores = model.get_s_scores()
         '''
         s_df_scores_ = self.s_df_scores_
         return s_df_scores_
@@ -356,6 +384,16 @@ class opls_da:
 
         '''
         Get OPLS-DA model
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> pls_model = model.get_oplsda_model()
         '''
         oplsda = self.oplsda
         return oplsda
@@ -364,6 +402,16 @@ class opls_da:
 
         '''
         Get cross-validation model
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> cv = model.get_cv_model()
         '''
         cv_model = self.cv_model
         return cv_model
@@ -372,6 +420,30 @@ class opls_da:
 
     def permutation_test(self, n_permutations: int = 500, cv: int = 3, n_jobs: int = -1, verbose: int = 10) -> None:
 
+        '''
+        Run a permutation test to assess model significance.
+
+        Parameters
+        ----------
+        n_permutations : int, default=500
+            Number of permutations to perform.
+        cv : int, default=3
+            Number of cross-validation folds used during permutation.
+        n_jobs : int, default=-1
+            Number of parallel jobs (-1 uses all available CPUs).
+        verbose : int, default=10
+            Verbosity level for progress reporting.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> model.permutation_test(n_permutations=100, cv=3, n_jobs=1, verbose=0)
+        '''
 
         from sklearn.pipeline import Pipeline
         import time
@@ -418,6 +490,17 @@ class opls_da:
 
         '''
         Get permutation scores
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> model.permutation_test(n_permutations=100, cv=3, n_jobs=1, verbose=0)
+            >>> perm_scores = model.get_permutation_scores()
         '''
         permutation_scores = self.permutation_scores
         return permutation_scores
@@ -434,6 +517,15 @@ class opls_da:
         features_name : array-like, shape (n_features,), default=None
             Name of features.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> model.vip_scores()
         '''
 
         if model is None:
@@ -481,6 +573,16 @@ class opls_da:
         threshold : int, default=1
             Threshold of VIP score.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> model.vip_scores()
+            >>> vips = model.get_vip_scores(filter_=True, threshold=1.0)
         '''
 
         vips = self.vips
@@ -532,6 +634,17 @@ class opls_da:
             fig: Plotly figure
         A Plotly scatter plot visualizing the VIP scores for the features.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> model.vip_scores()
+            >>> fig = model.vip_plot(threshold=1.5)
+            >>> fig.show()
         '''
 
         s_df_scores_ = self.s_df_scores_
@@ -665,6 +778,16 @@ class opls_da:
             Adds annotations for R2X, R2Y, and Q2 statistics.
             The plot is highly customizable (marker size, opacity, labels, colors, etc.).
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> fig = model.plot_oplsda_scores()
+            >>> fig.show()
         '''
         if color_ is not None:
             if len(color_) != len(self.y):
@@ -842,6 +965,18 @@ class opls_da:
             Plots the permutation scores as a histogram with Plotly.
             Marks the actual model accuracy score with a red dashed line.
             Adds additional annotations for the number of permutations, the accuracy score, and the p-value.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> model.permutation_test(n_permutations=100, cv=3, n_jobs=1, verbose=0)
+            >>> fig = model.plot_hist(nbins_=30)
+            >>> fig.show()
         '''
 
 
@@ -941,6 +1076,16 @@ class opls_da:
             Uses Plotly's scatter plot to create an interactive S-plot.
             The axes are customizable, and the plot is set to be visually clean (e.g., axes lines and tick marks).
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.rand(40, 100))
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y)
+            >>> model.fit()
+            >>> fig = model.plot_s_scores()
+            >>> fig.show()
         '''
 
 
@@ -1018,7 +1163,17 @@ class opls_da:
             The correlation for each feature is displayed alongside its covariance, with colors representing the covariance values.
             The plot is interactive and customizable (e.g., marker size, color scale, axis settings).
 
-
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> import metbit
+            >>> ppm = np.linspace(9.0, 0.5, 100)
+            >>> X = pd.DataFrame(np.random.rand(40, 100), columns=ppm)
+            >>> y = pd.Series(['A'] * 20 + ['B'] * 20)
+            >>> model = metbit.opls_da(X=X, y=y, features_name=ppm)
+            >>> model.fit()
+            >>> fig = model.plot_loading()
+            >>> fig.show()
         '''
 
         s_df_scores_ = self.s_df_scores_

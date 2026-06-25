@@ -6,27 +6,32 @@ from typing import Any
 
 
 class Normality_distribution:
+    """Compute and visualise normality distributions for NMR metabolomics data.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Feature matrix where rows are samples and columns are spectral features.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> import metbit
+    >>> X = pd.DataFrame(np.random.rand(20, 100))
+    >>> nd = metbit.Normality_distribution(X)
+    >>> fig = nd.plot_distribution(X.columns[0])
+    """
 
     def __init__(self, data: pd.DataFrame):
-        self.data = data
-
         import matplotlib.pyplot as plt
         import seaborn as sns
         import numpy as np
         import scipy.stats as stats
         import pandas as pd
 
-        """
-        This function takes in a dataframe and a feature and returns the histogram and Q-Q plot of the feature.
-        Parameters
-        ----------
-        data: pandas dataframe
-            The dataframe to be used.
-        feature: str
-            The feature to be used.
-        Normality_distribution(data, feature).plot_distribution()
+        self.data = data
 
-        """
         n_features = data.shape[1]
         n_rows = data.shape[0]
         # check memory size for data
@@ -45,7 +50,28 @@ class Normality_distribution:
         print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
     def plot_distribution(self, feature: str) -> Any:
+        """Plot histogram and Q-Q plot for a single spectral feature.
 
+        Parameters
+        ----------
+        feature : str
+            Column name of the feature to visualise.
+
+        Returns
+        -------
+        matplotlib.pyplot
+            The pyplot module after rendering both plots.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(20, 50), columns=[f"f{i}" for i in range(50)])
+        >>> nd = metbit.Normality_distribution(X)
+        >>> fig = nd.plot_distribution("f0")
+        >>> fig.show()
+        """
         import matplotlib.pyplot as plt
         import seaborn as sns
         import numpy as np
@@ -53,18 +79,6 @@ class Normality_distribution:
         import pandas as pd
 
         data = self.data
-
-        """
-        This function takes in a dataframe and a feature and returns the histogram and Q-Q plot of the feature.
-        Parameters
-        ----------
-        data: pandas dataframe
-            The dataframe to be used.
-        feature: str
-
-        Normality_distribution(data).plot_distribution(feature)
-        """
-
 
         plt.figure(figsize=(12, 6))
         plt.subplot(1, 2, 1)
@@ -79,22 +93,29 @@ class Normality_distribution:
         return plt
 
     def pca_distributions(self) -> Any:
+        """Plot histogram and Q-Q plot for the first two PCA score components.
 
+        Returns
+        -------
+        matplotlib.pyplot
+            The pyplot module after rendering both plots.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(30, 100))
+        >>> nd = metbit.Normality_distribution(X)
+        >>> fig = nd.pca_distributions()
+        >>> fig.show()
+        """
         import matplotlib.pyplot as plt
         import seaborn as sns
         import numpy as np
         import scipy.stats as stats
         import pandas as pd
-        """
-        This function takes in a dataframe and a list of features and returns the histogram and Q-Q plot of the features.
-        Parameters
-        ----------
-        data: pandas dataframe
-            The dataframe to be used.
-        features: list
-            The list of features to be used.
-        Normality_distribution.pca_distributions(data, features)
-        """
+
         data = self.data
 
         from metbit import pca
@@ -117,19 +138,28 @@ class Normality_distribution:
 
 
 class Normalise:
+    """Apply various normalisation strategies to a metabolomics feature matrix.
+
+    Parameters
+    ----------
+    data : pd.DataFrame
+        Feature matrix where rows are samples and columns are spectral features.
+    compute_missing : bool, optional
+        If True (default), impute missing values with KNN before normalising.
+
+    Examples
+    --------
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> import metbit
+    >>> X = pd.DataFrame(np.random.rand(20, 100))
+    >>> norm = metbit.Normalise(X, compute_missing=False)
+    >>> norm_df = norm.pqn_normalise(plot=False)
+    """
 
     def __init__(self, data: pd.DataFrame, compute_missing: bool = True):
         import pandas as pd
         import numpy as np
-        """
-        This function takes in a dataframe and returns the normalised dataframe.
-        Parameters
-        ----------
-        data: pandas dataframe
-            The dataframe to be used.
-        Normalise(data).normalise()
-
-        """
 
         if compute_missing:
             # Predict missing values using KNN
@@ -158,19 +188,36 @@ class Normalise:
         print(f"Data has {n_features} features and {n_rows} samples. \n The memory size is {sizes}")
 
     def pqn_normalise(self, ref_index: list = None, plot: bool = True) -> pd.DataFrame:
+        """Return the normalised dataframe using the Probabilistic Quotient Normalisation (PQN) method.
+
+        Parameters
+        ----------
+        ref_index : list, optional
+            Row indices to use as the reference set for computing the median spectrum.
+            If None, all samples are used.
+        plot : bool, optional
+            Whether to plot the histograms of normalisation factors and fold changes.
+
+        Returns
+        -------
+        pd.DataFrame
+            PQN-normalised feature matrix with the same index and columns as the input.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(20, 50))
+        >>> norm = metbit.Normalise(X, compute_missing=False)
+        >>> norm_df = norm.pqn_normalise(plot=False)
+        >>> norm_df.shape
+        (20, 50)
+        """
         import numpy as np
         import pandas as pd
         import matplotlib.pyplot as plt
 
-        """
-        This function returns the normalised dataframe using the PQN method.
-        Parameters
-        ----------
-        data: pandas dataframe
-            The dataframe to be used.
-        plot: bool, optional
-            Whether to plot the histograms of normalization factors and fold changes.
-        """
         data = self.data
         features = data.columns
         index = data.index
@@ -211,20 +258,47 @@ class Normalise:
         return norm_df
 
     def decimal_place_normalisation(self, decimals: int = 2) -> pd.DataFrame:
-        """
-        This function returns the dataframe with values rounded to a specified number of decimal places.
+        """Return the dataframe with values rounded to a specified number of decimal places.
+
         Parameters
         ----------
-        decimals: int
-            The number of decimal places to round to.
+        decimals : int, optional
+            The number of decimal places to round to. Default is 2.
+
+        Returns
+        -------
+        pd.DataFrame
+            Rounded feature matrix.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(10, 20))
+        >>> norm = metbit.Normalise(X, compute_missing=False)
+        >>> rounded_df = norm.decimal_place_normalisation(decimals=3)
         """
         data = self.data.round(decimals)
         return data
 
 
     def z_score_normalisation(self) -> pd.DataFrame:
-        """
-        This function returns the dataframe normalized using Z-Score.
+        """Return the dataframe normalized using Z-Score standardisation.
+
+        Returns
+        -------
+        pd.DataFrame
+            Z-score normalised feature matrix.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(10, 20))
+        >>> norm = metbit.Normalise(X, compute_missing=False)
+        >>> z_df = norm.z_score_normalisation()
         """
         from scipy.stats import zscore
         data = self.data.apply(zscore)
@@ -232,8 +306,21 @@ class Normalise:
         return data
 
     def linear_normalisation(self) -> pd.DataFrame:
-        """
-        This function returns the dataframe normalized using Min-Max (linear normalization).
+        """Return the dataframe normalized using Min-Max (linear) normalisation.
+
+        Returns
+        -------
+        pd.DataFrame
+            Min-Max normalised feature matrix with values in [0, 1].
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(10, 20))
+        >>> norm = metbit.Normalise(X, compute_missing=False)
+        >>> linear_df = norm.linear_normalisation()
         """
         data = self.data
         data = (data - data.min()) / (data.max() - data.min())
@@ -241,8 +328,21 @@ class Normalise:
         return data
 
     def normalize_to_100(self) -> pd.DataFrame:
-        """
-        This function returns the dataframe with values normalized to 100.
+        """Return the dataframe with each column normalised to sum to 100.
+
+        Returns
+        -------
+        pd.DataFrame
+            Feature matrix where column values sum to 100.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(10, 20))
+        >>> norm = metbit.Normalise(X, compute_missing=False)
+        >>> norm100_df = norm.normalize_to_100()
         """
         data = self.data
         data = (data / data.sum()) * 100
@@ -250,22 +350,49 @@ class Normalise:
         return data
 
     def clipping_normalisation(self, lower: float, upper: float) -> pd.DataFrame:
-        """
-        This function returns the dataframe with values clipped to the specified range.
+        """Return the dataframe with values clipped to the specified range.
+
         Parameters
         ----------
-        lower: float
-            The lower bound for clipping.
-        upper: float
-            The upper bound for clipping.
+        lower : float
+            The lower bound; values below this are set to ``lower``.
+        upper : float
+            The upper bound; values above this are set to ``upper``.
+
+        Returns
+        -------
+        pd.DataFrame
+            Clipped feature matrix.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(10, 20))
+        >>> norm = metbit.Normalise(X, compute_missing=False)
+        >>> clipped_df = norm.clipping_normalisation(lower=0.1, upper=0.9)
         """
         data = self.data.clip(lower, upper)
 
         return data
 
     def standard_deviation_normalisation(self) -> pd.DataFrame:
-        """
-        This function returns the dataframe normalized using Standard Deviation.
+        """Return the dataframe normalized using mean-centring and standard deviation scaling.
+
+        Returns
+        -------
+        pd.DataFrame
+            Mean-centred, SD-scaled feature matrix.
+
+        Examples
+        --------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.rand(10, 20))
+        >>> norm = metbit.Normalise(X, compute_missing=False)
+        >>> sd_df = norm.standard_deviation_normalisation()
         """
         data = self.data
         mean = data.mean()
@@ -276,6 +403,20 @@ class Normalise:
 
 
 def project_name_generator():
+    """Generate a unique project name by combining a timestamp with a random codename.
+
+    Returns
+    -------
+    str
+        A string of the form ``'YYYYMMDDHHMMSSmss_RandomCodename'``.
+
+    Examples
+    --------
+    >>> import metbit
+    >>> name = metbit.project_name_generator()
+    >>> isinstance(name, str)
+    True
+    """
     #random project name
     #get random time
     import random

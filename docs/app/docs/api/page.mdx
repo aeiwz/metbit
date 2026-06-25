@@ -1,47 +1,58 @@
 # API Reference
 
-Browse the main public APIs exposed by `metbit`. The preferred import style is:
+Browse the public API exposed by `metbit` (sorted by category).
 
-```python
-from metbit import pca, opls_da, nmr_preprocessing, Normalization
-```
+## Data Processing
 
-Advanced users can also import from subpackages such as `metbit.analysis`, `metbit.nmr`, `metbit.preprocessing`, `metbit.stats`, and `metbit.apps`.
-
-## NMR Data Processing
-
-- [nmr_preprocessing](/docs/api/nmr_preprocess) - read Bruker FID folders and generate processed spectra.
-- [calibrate](/docs/api/calibrate) - calibrate chemical-shift axes.
-- [baseline_correct and bline](/docs/api/baseline) - baseline correction helpers.
-- [detect_multiplets, icoshift_align, and PeakAligner](/docs/api/peak_processe) - peak detection and interval alignment utilities.
-- [peak_chops](/docs/api/peak_processe) - peak-region extraction.
-- [denoise_spec](/docs/api/denoise_spec) - spectral denoising helpers.
-
-## Normalization and Pretreatment
-
-- [Normalization](/docs/api/spec_norm) - static PQN, SNV, MSC, and combined normalization methods.
-- [Normalise](/docs/api/utility) - class-based normalization utilities.
-- [scaler](/docs/api/scaler) - scaling utilities used by statistical models.
-- [pretreatment](/docs/api/pretreatment) - preprocessing and transformation helpers.
+- [calibrate](/docs/api/metbit.nmr.calibrate)
+- [nmr_preprocessing](/docs/api/metbit.nmr.preprocess)
+- [Normalise](/docs/api/metbit.stats.normalise)
+- [Normalization](/docs/api/metbit.preprocessing.normalize)
+- [peak_chops](/docs/api/metbit.nmr.peaks)
 
 ## Statistical Models
 
-- [pca](/docs/api/metbit) - PCA model with interactive scores, loading, variance, and trajectory plots.
-- [opls_da](/docs/api/metbit) - OPLS-DA model with cross-validation, permutation testing, VIP, loading, S-plot, and scores plotting.
-- [lazy_opls_da](/docs/api/lazy_opls_da) - convenience workflow for OPLS-DA analysis.
-- [OPLS](/docs/api/opls) - lower-level OPLS model implementation.
-- [PLS](/docs/api/pls) - lower-level PLS model implementation.
-- [CrossValidation](/docs/api/cross_validation) - cross-validation helpers.
-- [VIP helpers](/docs/api/vip) - Variable Importance in Projection utilities.
-- [UnivarStats](/docs/api/utility) - univariate statistical analysis helpers.
+- [opls_da](/docs/api/metbit.analysis.opls_da)
+- [pca](/docs/api/metbit.analysis.pca)
+- [UnivarStats](/docs/api/metbit.stats.univariate)
 
-## Visualization and Interactive Apps
+## Data Visualization
 
-- [STOCSY](/docs/api/STOCSY) - Statistical Total Correlation Spectroscopy.
-- [STOCSY_app](/docs/api/ui_stocsy) - interactive Dash STOCSY app.
-- [pickie_peak](/docs/api/ui_picky_peak) - interactive peak-picking app.
-- [annotate_peak](/docs/api/annotate_peak) - peak annotation helper.
-- [get_intensity](/docs/api/take_intensity) - peak intensity extraction.
-- [plotting](/docs/api/plotting) - reusable plotting helpers.
-- [boxplot](/docs/api/boxplot) - boxplot visualization utilities.
-- [pca_ellipse](/docs/api/pca_ellipse) - confidence ellipse plotting.
+- [STOCSY](/docs/api/metbit.analysis.stocsy)
+
+## Other
+
+- [ANOVAStats](/docs/api/metbit.stats.multitest)
+- [available_cv_strategies](/docs/api/metbit.validation.splitter)
+- [backend_info](/docs/api/metbit._native)
+- [baseline_correct](/docs/api/metbit.preprocessing.baseline)
+- [Biplot](/docs/api/metbit.viz.interpretation)
+- [bline](/docs/api/metbit.preprocessing.baseline)
+- [ChunkedSTOCSY](/docs/api/metbit.analysis.large_scale)
+- [CoefficientPlot](/docs/api/metbit.viz.interpretation)
+- [CorrelationMatrix](/docs/api/metbit.viz.summary)
+- [CrossValidator](/docs/api/metbit.validation.splitter)
+- [detect_multiplets](/docs/api/metbit.nmr.alignment)
+- [feature_preselection](/docs/api/metbit.analysis.large_scale)
+- [FeatureHeatmap](/docs/api/metbit.viz.summary)
+- [FeatureImportancePlot](/docs/api/metbit.viz.interpretation)
+- [FoldChangePlot](/docs/api/metbit.viz.profiling)
+- [gpu_available](/docs/api/metbit._native)
+- [GroupComparison](/docs/api/metbit.viz.profiling)
+- [hca](/docs/api/metbit.analysis.multivariate)
+- [ica](/docs/api/metbit.analysis.multivariate)
+- [icoshift_align](/docs/api/metbit.nmr.alignment)
+- [KruskalStats](/docs/api/metbit.stats.multitest)
+- [LargeScaleAlignment](/docs/api/metbit.analysis.large_scale)
+- [lda](/docs/api/metbit.analysis.multivariate)
+- [memory_report](/docs/api/metbit.analysis.large_scale)
+- [MemoryEstimator](/docs/api/metbit.analysis.large_scale)
+- [ModelValidator](/docs/api/metbit.validation.metrics)
+- [native_available](/docs/api/metbit._native)
+- [PeakAligner](/docs/api/metbit.nmr.alignment)
+- [plsr](/docs/api/metbit.analysis.multivariate)
+- [PValueTable](/docs/api/metbit.viz.summary)
+- [SpectraPlot](/docs/api/metbit.viz.spectra)
+- [TrainTestSplit](/docs/api/metbit.validation.splitter)
+- [VolcanoPlot](/docs/api/metbit.stats.multitest)
+

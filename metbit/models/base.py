@@ -12,6 +12,8 @@ import numpy as np
 import numpy.linalg as la
 import typing
 
+from metbit._native import nipals as _nipals_native
+
 
 def nipals(x: np.ndarray, y: np.ndarray,
            tol: float = 1e-10,
@@ -51,17 +53,5 @@ def nipals(x: np.ndarray, y: np.ndarray,
         Elimination: OSC, OPLS, and O2PLS. in Comprehensive Chemometrics.
 
     """
-    u = y
-    i = 0
-    d = tol * 10
-    while d > tol and i <= max_iter:
-        w = dot(u, x) / dot(u, u)
-        w /= la.norm(w)
-        t = dot(x, w)
-        c = dot(t, y) / dot(t, t)
-        u_new = y * c / (c * c)
-        d = la.norm(u_new - u) / la.norm(u_new)
-        u = u_new
-        i += 1
-
-    return w, u, c, t
+    # Dispatch to the C/NumPy backend (handles both native and pure-numpy paths)
+    return _nipals_native(x, y, tol=tol, max_iter=max_iter)

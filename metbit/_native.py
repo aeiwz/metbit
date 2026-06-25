@@ -543,3 +543,200 @@ def vip_scores(
     if total_s == 0.0:
         return np.zeros(n_feat, dtype=np.float64)
     return np.sqrt(n_feat * ((w_norm ** 2) @ S) / total_s)
+
+
+# ---------------------------------------------------------------------------
+# Public API: nipals  (NIPALS-PLS1 loop)
+# ---------------------------------------------------------------------------
+
+def nipals(
+    x: np.ndarray,
+    y: np.ndarray,
+    tol: float = 1e-10,
+    max_iter: int = 1000,
+) -> tuple:
+    """NIPALS-PLS1.  Returns (w, u, c, t).
+
+    Dispatches to the C extension when available; falls back to pure NumPy.
+
+    Parameters
+    ----------
+    x        : (n, p) float64
+    y        : (n,)   float64
+    tol      : convergence tolerance
+    max_iter : maximum iterations
+
+    Returns
+    -------
+    w : (p,) weights
+    u : (n,) y-scores
+    c : float y-weight
+    t : (n,) x-scores
+    """
+    x_c = _asf64_c(x)
+    y_c = np.ascontiguousarray(y, dtype=np.float64)
+    n, p = x_c.shape
+
+    # C NIPALS wins only for small matrices (n*p <= 50k) where BLAS call overhead
+    # dominates. For larger matrices numpy BLAS DGEMV with SIMD is faster.
+    if _NATIVE_OK and hasattr(_native_backend, "nipals_full") and n * p <= 50_000:  # pragma: no cover
+        w_b, u_b, c, t_b, _ = _native_backend.nipals_full(
+            memoryview(x_c), memoryview(y_c), n, p, tol, max_iter
+        )
+        w = np.frombuffer(w_b, dtype=np.float64).copy()
+        u = np.frombuffer(u_b, dtype=np.float64).copy()
+        t = np.frombuffer(t_b, dtype=np.float64).copy()
+        return w, u, c, t
+
+    # pure-NumPy fallback
+    import numpy.linalg as _la
+    u = y_c.copy()
+    w = np.zeros(p)
+    t = np.zeros(n)
+    c = 0.0
+    d = tol * 10.0 + 1.0
+    for _ in range(max_iter):
+        utu = np.dot(u, u)
+        if utu < 1e-300:
+            break
+        w = x_c.T @ u / utu
+        wnorm = _la.norm(w)
+        if wnorm < 1e-300:
+            break
+        w /= wnorm
+        t = x_c @ w
+        ttt = np.dot(t, t)
+        if ttt < 1e-300:
+            break
+        c = np.dot(t, y_c) / ttt
+        if abs(c) < 1e-300:
+            break
+        u_new = y_c / c
+        unorm = _la.norm(u_new)
+        d = _la.norm(u_new - u) / unorm if unorm > 1e-300 else 0.0
+        u = u_new
+        if d <= tol:
+            break
+    return w, u, c, t
+
+
+# ---------------------------------------------------------------------------
+# Public API: scale_transform  (pareto / standard scaler)
+# ---------------------------------------------------------------------------
+
+def scale_transform(
+    X: np.ndarray,
+    mean: np.ndarray,
+    s: np.ndarray,
+) -> np.ndarray:
+    """Element-wise (X - mean) / s.
+
+    s is std for standard scaling or sqrt(std) for pareto scaling.
+    Dispatches to the C extension when available; otherwise NumPy broadcast.
+
+    Parameters
+    ----------
+    X    : (n, p) float64
+    mean : (p,)   float64  column means
+    s    : (p,)   float64  divisors (std or sqrt(std))
+
+    Returns
+    -------
+    np.ndarray (n, p) float64
+    """
+    X_c    = _asf64_c(X)
+    mean_c = np.ascontiguousarray(mean, dtype=np.float64)
+    s_c    = np.ascontiguousarray(s,    dtype=np.float64)
+    squeeze = X_c.ndim == 1
+    if squeeze:
+        X_c = X_c.reshape(1, -1)
+    n, p   = X_c.shape
+
+    if _NATIVE_OK and hasattr(_native_backend, "scale_transform"):  # pragma: no cover
+        raw = _native_backend.scale_transform(
+            memoryview(X_c), memoryview(mean_c), memoryview(s_c), n, p
+        )
+        result = np.frombuffer(raw, dtype=np.float64).reshape(n, p).copy()
+        return result.squeeze(0) if squeeze else result
+
+    # NumPy fallback – avoids large temporary via in-place ops on a copy
+    out = X_c - mean_c
+    inv_s = np.where(s_c != 0.0, 1.0 / s_c, 1.0)
+    out *= inv_s
+    return out.squeeze(0) if squeeze else out
+
+
+# ---------------------------------------------------------------------------
+# Public API: xcorr_max_shift  (icoshift alignment)
+# ---------------------------------------------------------------------------
+
+def xcorr_max_shift(
+    template: np.ndarray,
+    query: np.ndarray,
+    max_shift: int,
+) -> tuple:
+    """Find the integer shift in [-max_shift, max_shift] maximising cross-correlation.
+
+    Parameters
+    ----------
+    template  : (n,) float64 reference spectrum window
+    query     : (n,) float64 sample spectrum window
+    max_shift : int  half-width of the shift search range
+
+    Returns
+    -------
+    (shift, corr) – best integer shift and its cross-correlation value
+    """
+    tmpl = np.ascontiguousarray(template, dtype=np.float64)
+    qry  = np.ascontiguousarray(query,    dtype=np.float64)
+    n    = len(tmpl)
+
+    if _NATIVE_OK and hasattr(_native_backend, "xcorr_max_shift"):  # pragma: no cover
+        return _native_backend.xcorr_max_shift(
+            memoryview(tmpl), memoryview(qry), n, int(max_shift)
+        )
+
+    # NumPy fallback – direct correlation over all shifts
+    best_shift, best_corr = 0, -1e300
+    for sh in range(-max_shift, max_shift + 1):
+        i_start = max(0, -sh)
+        i_end   = min(n, n - sh)
+        if i_end <= i_start:
+            continue
+        corr = float(np.dot(tmpl[i_start:i_end], qry[i_start + sh:i_end + sh]))
+        if corr > best_corr:
+            best_corr, best_shift = corr, sh
+    return best_shift, best_corr
+
+
+# ---------------------------------------------------------------------------
+# Public API: pqn_median_quotient  (PQN normalisation)
+# ---------------------------------------------------------------------------
+
+def pqn_median_quotient(
+    sample: np.ndarray,
+    reference: np.ndarray,
+) -> float:
+    """Median of (sample / reference) over non-zero reference entries.
+
+    Parameters
+    ----------
+    sample    : (n,) float64
+    reference : (n,) float64
+
+    Returns
+    -------
+    float  –  median quotient (1.0 if no valid entries)
+    """
+    samp = np.ascontiguousarray(sample,    dtype=np.float64)
+    ref  = np.ascontiguousarray(reference, dtype=np.float64)
+    n    = len(samp)
+
+    if _NATIVE_OK and hasattr(_native_backend, "pqn_median_quotient"):  # pragma: no cover
+        return _native_backend.pqn_median_quotient(memoryview(samp), memoryview(ref), n)
+
+    # NumPy fallback
+    mask = ref != 0.0
+    if not mask.any():
+        return 1.0
+    return float(np.median(samp[mask] / ref[mask]))

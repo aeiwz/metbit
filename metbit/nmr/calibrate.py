@@ -19,6 +19,18 @@ def calibrate(X, ppm, calib_type='tsp', custom_range=None, custom_target=None):
           otherwise falls back to the highest peak.
         - For 'custom', both `custom_range` and `custom_target` should be provided, e.g.:
               calibrate(X, ppm, calib_type='custom', custom_range=(0.89, 1.20), custom_target=0.91)
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> import metbit
+        >>> ppm = np.linspace(-0.5, 10.0, 2000)
+        >>> spectra = np.random.rand(10, 2000)
+        >>> calibrated = metbit.nmr.calibrate(spectra, ppm, calib_type='tsp')
+        >>> calibrated_custom = metbit.nmr.calibrate(
+        ...     spectra, ppm, calib_type='custom',
+        ...     custom_range=(0.89, 1.20), custom_target=0.91
+        ... )
     """
     import numpy as np
     import pandas as pd

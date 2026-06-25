@@ -39,7 +39,7 @@ class STOCSY_app:
     run_ui() -> dash.Dash:
         Sets up the Dash UI layout, initializes the application callbacks, and returns the app instance.
 
-    
+
     Example:
     -------
     # Load your NMR spectra data
@@ -76,11 +76,51 @@ class STOCSY_app:
     def cached_stocsy(self, x_peak, pvalue_threshold):
         """
         Cache the STOCSY analysis results to avoid redundant computation.
+
+        Parameters:
+        -----------
+        x_peak : float
+            The anchor PPM value for the STOCSY analysis.
+        pvalue_threshold : float
+            The p-value threshold used to filter correlated peaks.
+
+        Returns:
+        --------
+        plotly.graph_objects.Figure
+            A Plotly figure containing the STOCSY plot.
+
+        Examples:
+        ---------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> spectra = pd.DataFrame(np.random.rand(20, 100))
+        >>> ppm = list(np.linspace(0.5, 9.5, 100))
+        >>> app_instance = STOCSY_app(spectra, ppm)
+        >>> fig = app_instance.cached_stocsy(3.56, 0.05)
+        >>> fig.show()
         """
         return STOCSY(spectra=self.spectra, anchor_ppm_value=x_peak, p_value_threshold=pvalue_threshold)
 
     def run_ui(self):
-       
+        """
+        Sets up the Dash UI layout, registers callbacks, and returns the Dash app instance.
+
+        Returns:
+        --------
+        dash.Dash
+            A configured Dash application ready to be served.
+
+        Examples:
+        ---------
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> spectra = pd.DataFrame(np.random.rand(20, 100))
+        >>> ppm = list(np.linspace(0.5, 9.5, 100))
+        >>> stocsy_app = STOCSY_app(spectra, ppm)
+        >>> app = stocsy_app.run_ui()
+        >>> app.run_server(debug=True, port=8051)  # doctest: +SKIP
+        """
+
         class plot_NMR_spec:
             def __init__(self, spectra, ppm):
                 self.spectra = spectra
@@ -93,7 +133,7 @@ class STOCSY_app:
                 df_spectra.columns = self.ppm
                 fig = go.Figure()
                 import random
-                
+
                 n_sample = df_spectra.shape[0]
 
 
@@ -116,7 +156,7 @@ class STOCSY_app:
                     yaxis=dict(tickformat=".2e")
                 )
                 return fig
-        
+
         plotter = plot_NMR_spec(self.spectra, self.ppm)
 
         app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])

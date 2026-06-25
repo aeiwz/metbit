@@ -151,6 +151,23 @@ class pca:
 
 
     def fit(self):
+        '''
+        Fit the PCA model to the data.
+
+        Returns
+        -------
+        pca_model : sklearn.decomposition.PCA
+            Fitted PCA model.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> fitted = model.fit()
+        '''
         test_size=self.test_size
 
         X = self.X
@@ -252,18 +269,90 @@ class pca:
         return pca_model
 
     def get_explained_variance(self) -> pd.DataFrame:
+        '''
+        Return the explained variance dataframe.
+
+        Returns
+        -------
+        df_explained_variance_ : pd.DataFrame
+            DataFrame containing PC labels, explained variance, and cumulative variance.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> df_ev = model.get_explained_variance()
+        '''
         df_explained_variance_ = self.df_explained_variance_
         return df_explained_variance_
 
     def get_scores(self) -> pd.DataFrame:
+        '''
+        Return the PCA scores dataframe.
+
+        Returns
+        -------
+        df_scores_ : pd.DataFrame
+            DataFrame containing PC scores and group labels.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> df_scores = model.get_scores()
+        '''
         df_scores_ = self.df_scores_
         return df_scores_
 
     def get_loadings(self) -> pd.DataFrame:
+        '''
+        Return the PCA loadings dataframe.
+
+        Returns
+        -------
+        df_loadings_ : pd.DataFrame
+            DataFrame containing PC loadings for each feature.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> df_loadings = model.get_loadings()
+        '''
         df_loadings_ = self.df_loadings_
         return df_loadings_
 
     def get_q2_test(self) -> float:
+        '''
+        Return the Q2 score computed on the held-out test set.
+
+        Returns
+        -------
+        q2_test : float
+            Q2 score for the test set reconstruction.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> q2 = model.get_q2_test()
+        '''
         q2_test = self.q2_test
         return q2_test
 
@@ -277,6 +366,16 @@ class pca:
         fig : plotly.graph_objects.Figure
             Explained variance plot.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> fig = model.plot_observe_variance()
+            >>> fig.show()
         '''
 
         scaling_method = self.scaling_method
@@ -309,6 +408,16 @@ class pca:
         fig : plotly.graph_objects.Figure
             Cumulative variance plot.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> fig = model.plot_cumulative_observed()
+            >>> fig.show()
         '''
 
         df_explained_variance_ = self.df_explained_variance_
@@ -387,6 +496,16 @@ class pca:
         fig : plotly.graph_objects.Figure
             PCA scores plot.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> fig = model.plot_pca_scores(pc=['PC1', 'PC2'])
+            >>> fig.show()
         '''
 
         scaling_method = self.scaling_method
@@ -558,6 +677,17 @@ class pca:
         fig : plotly.graph_objects.Figure
             Plotly figure.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> fig = model.plot_loading_(pc=['PC1', 'PC2'])
+            >>> fig.show()
+
         ----------
         '''
         pc = pc
@@ -596,6 +726,55 @@ class pca:
                             marker_size: int = 35, marker_opacity: float = 0.7,
                             title_font_size: int = 20, font_size: int = 20,
                             legend_name: List[str] = ['Group', 'Time point']) -> go.Figure:
+        '''
+        Visualise PCA trajectory plot showing group centroids across time points.
+
+        Parameters
+        ----------
+        time_ : pd.Series
+            Time point labels for each sample.
+        time_order : dict
+            Dictionary mapping time point labels to their sort order.
+        stat_ : list, default=['mean', 'sem']
+            Aggregation statistics: [center ('mean' or 'median'), error ('sem' or 'std')].
+        pc : list, default=['PC1', 'PC2']
+            List of two principal components to plot.
+        color_dict : dict, default=None
+            Dictionary mapping group labels to colours.
+        symbol_dict : dict, default=None
+            Dictionary mapping time point labels to marker symbols.
+        fig_height : int, default=900
+            Height of figure.
+        fig_width : int, default=1300
+            Width of figure.
+        marker_size : int, default=35
+            Size of marker.
+        marker_opacity : float, default=0.7
+            Opacity of marker.
+        title_font_size : int, default=20
+            Font size for title.
+        font_size : int, default=20
+            Font size for annotations.
+        legend_name : list, default=['Group', 'Time point']
+            Legend labels for group and time point.
+
+        Returns
+        -------
+        fig : plotly.graph_objects.Figure
+            PCA trajectory plot.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(80, 100))
+            >>> label = pd.Series(['A'] * 40 + ['B'] * 40)
+            >>> time = pd.Series(['T1', 'T2'] * 40)
+            >>> model = pca(X=X, label=label, n_components=2)
+            >>> model.fit()
+            >>> fig = model.plot_pca_trajectory(time_=time, time_order={'T1': 0, 'T2': 1})
+            >>> fig.show()
+        '''
         import plotly.graph_objects as go
         import plotly.express as px
         import pandas as pd
@@ -737,6 +916,16 @@ class pca:
         fig : plotly.graph_objects.Figure
             PCA scores plot.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.analysis.pca import pca
+            >>> X = pd.DataFrame(np.random.rand(60, 100))
+            >>> label = pd.Series(['A'] * 30 + ['B'] * 30)
+            >>> model = pca(X=X, label=label, n_components=3)
+            >>> model.fit()
+            >>> fig = model.plot_3d_pca(pc=['PC1', 'PC2', 'PC3'])
+            >>> fig.show()
         '''
 
 

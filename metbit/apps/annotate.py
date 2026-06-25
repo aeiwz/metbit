@@ -47,6 +47,15 @@ class annotate_peak:
     annotator = annotate_peak(label, spectra, ppm, label)
     annotator.run(debug=True, port=8050)
     ```
+
+    Examples:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> ppm = np.linspace(0.5, 9.5, 200)
+        >>> spectra = pd.DataFrame(np.random.randn(10, 200), columns=ppm)
+        >>> label = pd.Series(['A'] * 5 + ['B'] * 5, name='Group')
+        >>> app = annotate_peak(meta=label, spectra=spectra, label=label)
+        >>> app.run(debug=False, port=8050)  # doctest: +SKIP
     """
 
     def __init__(self, meta, spectra, ppm=None, label=None, colour_dict: dict=None):
@@ -257,7 +266,7 @@ class annotate_peak:
                             dcc.Download(id='json-download'),
                             dcc.Download(id='intensity-download'),
                         ]),
-                        html.Div(className="meta-note", children="Click a peak (exact x), type a label, then ‘Add Label’.")
+                        html.Div(className="meta-note", children="Click a peak (exact x), type a label, then 'Add Label'.")
                     ])
                 ]),
 
@@ -622,6 +631,21 @@ class annotate_peak:
             return "Current peak: –"
 
     def run(self, debug=True, port=8050):
+        """Launch the Dash server for the NMR annotator application.
+
+        Args:
+            debug (bool): Enable Dash debug mode with hot-reloading. Defaults to True.
+            port (int): Port number to serve the application on. Defaults to 8050.
+
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> ppm = np.linspace(0.5, 9.5, 200)
+            >>> spectra = pd.DataFrame(np.random.randn(10, 200), columns=ppm)
+            >>> label = pd.Series(['A'] * 5 + ['B'] * 5, name='Group')
+            >>> app = annotate_peak(meta=label, spectra=spectra, label=label)
+            >>> app.run(debug=False, port=8050)  # doctest: +SKIP
+        """
         self.app.run(debug=debug, port=port)
 
 

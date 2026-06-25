@@ -18,6 +18,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Tuple, Optional, Dict
 import numpy as np
+
+from metbit._native import xcorr_max_shift as _xcorr_max_shift
 import pandas as pd
 from scipy.signal import savgol_filter, find_peaks
 
@@ -100,6 +102,16 @@ def detect_multiplets(
     - smooth_window, smooth_poly: Savitzky-Golay smoothing params
     - prominence, width: find_peaks parameters (tune to data scale)
     - max_group_width_ppm: group peaks within this span as a multiplet
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from metbit.nmr.alignment import detect_multiplets
+        >>> ppm = np.linspace(10, 0, 1000)
+        >>> spectrum = pd.Series(np.random.rand(1000) * 0.01, index=ppm)
+        >>> spectrum.iloc[400] += 1.0
+        >>> multiplets = detect_multiplets(spectrum, ppm, sf_mhz=600)
+        >>> print(len(multiplets), multiplets[0].pattern)
     """
     y = np.asarray(spectrum, dtype=float)
     if smooth_window and smooth_window > 2:
@@ -159,6 +171,18 @@ def icoshift_align(
     Returns
     - aligned spectra (DataFrame)
     - per-sample list of applied integer-point shifts for each window
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from metbit.nmr.alignment import icoshift_align
+        >>> ppm = np.linspace(10, 0, 500)
+        >>> spectra = pd.DataFrame(np.random.rand(10, 500) * 0.01,
+        ...                        columns=ppm)
+        >>> spectra.iloc[:, 200] += 1.0
+        >>> windows = [(4.8, 5.2), (3.3, 3.7)]
+        >>> aligned, shifts = icoshift_align(spectra, ppm, windows)
+        >>> print(aligned.shape, len(shifts))
     """
     # Single allocation: extract to a writable numpy array and keep the index for reconstruction.
     # The previous implementation created two full copies (spectra.copy() then .values.copy()),
@@ -195,26 +219,10 @@ def icoshift_align(
 
         for r, sid in enumerate(sample_index):
             y = aligned[r, idx]
-            best_shift = 0
-            best_corr = -np.inf
             y_z = y - y.mean()
-            denom = (np.linalg.norm(y_z) + 1e-12) * ref_norm
-            # try integer shifts in [-max_pts, max_pts]
-            for s in range(-max_pts, max_pts + 1):
-                if s == 0:
-                    corr = float(np.dot(y_z, ref_z) / denom)
-                elif s > 0:
-                    corr = float(np.dot(y_z[s:], ref_z[:-s]) / ((np.linalg.norm(y_z[s:]) + 1e-12) * (np.linalg.norm(ref_z[:-s]) + 1e-12)))
-                else:
-                    s_ = -s
-                    corr = float(np.dot(y_z[:-s_], ref_z[s_:]) / ((np.linalg.norm(y_z[:-s_]) + 1e-12) * (np.linalg.norm(ref_z[s_:]) + 1e-12)))
-                if corr > best_corr:
-                    best_corr = corr
-                    best_shift = s
-            # apply best shift to the aligned matrix within this window
+            best_shift, _ = _xcorr_max_shift(ref_z, y_z, max_pts)
             if best_shift != 0:
-                seg = aligned[r, idx]
-                aligned[r, idx] = np.roll(seg, best_shift)
+                aligned[r, idx] = np.roll(y, best_shift)
             shifts[str(sid)].append(int(best_shift))
 
     aligned_df = pd.DataFrame(aligned, index=sample_index, columns=ppm_vec)
@@ -228,6 +236,17 @@ class PeakAligner:
         pa = PeakAligner(spectra, ppm, sf_mhz=600)
         windows, mptable = pa.auto_windows(top_n=30)
         X_aligned, shifts = pa.align(windows)
+
+    Examples:
+        >>> import numpy as np
+        >>> import pandas as pd
+        >>> from metbit.nmr.alignment import PeakAligner
+        >>> ppm = np.linspace(10, 0, 500)
+        >>> spectra = pd.DataFrame(np.random.rand(8, 500) * 0.01, columns=ppm)
+        >>> spectra.iloc[:, 200] += 1.0
+        >>> pa = PeakAligner(spectra, ppm, sf_mhz=600)
+        >>> windows, mptable = pa.auto_windows(top_n=10)
+        >>> X_aligned, shifts = pa.align(windows)
     """
 
     def __init__(self, spectra: pd.DataFrame, ppm: np.ndarray, sf_mhz: float) -> None:
@@ -236,7 +255,19 @@ class PeakAligner:
         self.sf_mhz = float(sf_mhz)
 
     def auto_windows(self, top_n: int = 30, max_group_width_ppm: float = 0.03) -> Tuple[List[Tuple[float, float]], pd.DataFrame]:
-        """Generate non-overlapping windows centered on strongest multiplets of the median spectrum."""
+        """Generate non-overlapping windows centered on strongest multiplets of the median spectrum.
+
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.nmr.alignment import PeakAligner
+            >>> ppm = np.linspace(10, 0, 500)
+            >>> spectra = pd.DataFrame(np.random.rand(8, 500) * 0.01, columns=ppm)
+            >>> spectra.iloc[:, 200] += 1.0
+            >>> pa = PeakAligner(spectra, ppm, sf_mhz=600)
+            >>> windows, mptable = pa.auto_windows(top_n=10)
+            >>> print(len(windows), mptable.shape)
+        """
         ref = self.spectra.median(axis=0)
         mps = detect_multiplets(ref, self.ppm, self.sf_mhz, max_group_width_ppm=max_group_width_ppm)
         # score by integrated intensity within group
@@ -266,5 +297,18 @@ class PeakAligner:
         return [(float(a), float(b)) for a, b in merged], df
 
     def align(self, windows: List[Tuple[float, float]], reference: str = 'median', max_shift_ppm: float = 0.02) -> Tuple[pd.DataFrame, Dict[str, List[int]]]:
-        return icoshift_align(self.spectra, self.ppm, windows, reference=reference, max_shift_ppm=max_shift_ppm)
+        """Align spectra within the given ppm windows using icoshift.
 
+        Examples:
+            >>> import numpy as np
+            >>> import pandas as pd
+            >>> from metbit.nmr.alignment import PeakAligner
+            >>> ppm = np.linspace(10, 0, 500)
+            >>> spectra = pd.DataFrame(np.random.rand(8, 500) * 0.01, columns=ppm)
+            >>> spectra.iloc[:, 200] += 1.0
+            >>> pa = PeakAligner(spectra, ppm, sf_mhz=600)
+            >>> windows = [(4.8, 5.2)]
+            >>> X_aligned, shifts = pa.align(windows, reference='median')
+            >>> print(X_aligned.shape)
+        """
+        return icoshift_align(self.spectra, self.ppm, windows, reference=reference, max_shift_ppm=max_shift_ppm)

@@ -12,18 +12,65 @@ import logging
 logger = logging.getLogger(__name__)
 
 def read_fid(data_path: str):  # pragma: no cover
+    """Read a Bruker FID file from the given directory.
+
+    Args:
+        data_path: Path to the Bruker FID directory.
+
+    Returns:
+        tuple: (dic, data) where dic is the parameter dictionary and
+            data is the raw FID array.
+
+    Examples:
+        >>> dic, data = read_fid('data/sample_001')
+        >>> print(type(data))
+        <class 'numpy.ndarray'>
+    """
     import nmrglue as ng
     logger.debug("Reading FID from: %s", data_path)
     dic, data = ng.bruker.read(data_path)
     return dic, data
 
 def remove_digital_filter(dic, data):  # pragma: no cover
+    """Remove the Bruker digital filter from the FID data.
+
+    Args:
+        dic: Bruker parameter dictionary returned by read_fid.
+        data: Raw FID array returned by read_fid.
+
+    Returns:
+        numpy.ndarray: FID data with the digital filter removed.
+
+    Examples:
+        >>> dic, data = read_fid('data/sample_001')
+        >>> data = remove_digital_filter(dic, data)
+        >>> print(data.shape)
+        (65536,)
+    """
     import nmrglue as ng
     logger.debug("Removing digital filter")
     data = ng.bruker.remove_digital_filter(dic, data)
     return data
 
 def generate_ppm_scale(dic, data):  # pragma: no cover
+    """Generate a PPM scale array for a processed NMR spectrum.
+
+    Args:
+        dic: Bruker parameter dictionary containing acquisition parameters.
+        data: Processed spectrum array (used only to determine the number
+            of points).
+
+    Returns:
+        numpy.ndarray: PPM values corresponding to each data point,
+            running from high to low field.
+
+    Examples:
+        >>> dic, raw = read_fid('data/sample_001')
+        >>> raw = remove_digital_filter(dic, raw)
+        >>> ppm = generate_ppm_scale(dic, raw)
+        >>> print(ppm[0], ppm[-1])
+        11.9873 -3.0124
+    """
     import numpy as np
     size = len(data)
     sweep_width = dic['acqus']['SW']
@@ -34,6 +81,28 @@ def generate_ppm_scale(dic, data):  # pragma: no cover
     return ppm
 
 def phasing(data, index, auto=True, fn='peak_minima', p0=0.0, p1=0.0):  # pragma: no cover
+    """Apply phase correction to an NMR spectrum at the given index.
+
+    Args:
+        data: 2-D array of spectra where rows are individual spectra.
+        index: Row index of the spectrum to phase.
+        auto: If True, automatic phasing is applied using nmrglue
+            autops (default: True).
+        fn: Algorithm name passed to autops (default: 'peak_minima').
+        p0: Zero-order phase correction in degrees (default: 0.0).
+        p1: First-order phase correction in degrees (default: 0.0).
+
+    Returns:
+        numpy.ndarray: The data array with the spectrum at *index*
+            phase-corrected in place.
+
+    Examples:
+        >>> import numpy as np
+        >>> data = np.random.randn(5, 65536) + 1j * np.random.randn(5, 65536)
+        >>> data = phasing(data, index=0, auto=True, fn='peak_minima')
+        >>> print(data.shape)
+        (5, 65536)
+    """
     import nmrglue as ng
     logger.debug("Phasing spectrum at index %s, auto=%s, fn=%s", index, auto, fn)
     if auto:
@@ -284,6 +353,22 @@ class nmr_preprocessing:
 
 
     def get_data(self, flip_data=True):
+        """Return the processed NMR data as a DataFrame.
+
+        Args:
+            flip_data: If True (default), reverse the column order so that
+                the PPM axis runs from low to high field (left to right).
+
+        Returns:
+            pd.DataFrame: Processed NMR spectra with PPM values as column
+                headers and sample identifiers as the index.
+
+        Examples:
+            >>> nmr = nmr_preprocessing('data/cohort_fids', calib_type='tsp')
+            >>> spectra = nmr.get_data()
+            >>> print(spectra.shape)
+            (20, 39936)
+        """
         nmr_data = self.nmr_data
         nmr_data.sort_index(inplace=True)
         if flip_data:
@@ -291,12 +376,52 @@ class nmr_preprocessing:
         return nmr_data
 
     def get_ppm(self):
+        """Return the PPM scale array for the processed spectra.
+
+        Returns:
+            numpy.ndarray: 1-D array of PPM values corresponding to the
+                columns of the DataFrame returned by get_data().
+
+        Examples:
+            >>> nmr = nmr_preprocessing('data/cohort_fids', calib_type='tsp')
+            >>> ppm = nmr.get_ppm()
+            >>> print(ppm.min(), ppm.max())
+            -3.012 11.987
+        """
         return self.ppm
 
     def get_metadata(self):
+        """Return the Bruker acquisition metadata for all processed samples.
+
+        Returns:
+            dict: Mapping of sample folder name to its nmrglue parameter
+                dictionary (dic) from the Bruker read step.
+
+        Examples:
+            >>> nmr = nmr_preprocessing('data/cohort_fids', calib_type='tsp')
+            >>> meta = nmr.get_metadata()
+            >>> sample_key = list(meta.keys())[0]
+            >>> print(meta[sample_key]['acqus']['SFO1'])
+            600.13
+        """
         return self.dic_array
 
     def get_phase(self):
+        """Return the phase correction values applied to each spectrum.
+
+        Returns:
+            pd.DataFrame: DataFrame with columns 'p0' and 'p1' containing
+                the zero-order and first-order phase angles (degrees) used
+                for each sample.
+
+        Examples:
+            >>> nmr = nmr_preprocessing('data/cohort_fids', auto_phasing=True)
+            >>> phase_df = nmr.get_phase()
+            >>> print(phase_df.head())
+               p0      p1
+            1  12.3  -245.1
+            2   9.8  -231.4
+        """
         return self.phase_data
 
 if __name__ == '__main__':  # pragma: no cover

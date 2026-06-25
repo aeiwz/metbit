@@ -12,15 +12,29 @@ import pandas as pd
 import numpy as np
 
 class peak_chops:
+    """Utility class for removing (chopping) unwanted spectral regions from NMR data.
 
+    Examples:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> ppm = np.linspace(10, 0, 1000)
+        >>> spectra = pd.DataFrame(np.random.rand(10, 1000), columns=ppm)
+        >>> chopper = metbit.nmr.peaks.peak_chops(spectra)
+        >>> X_chopped, ppm_chopped = chopper.cut_peak(4.7, 5.0)
+    """
 
     def __init__(self, data: pd.DataFrame, ppm: list = None) -> None:
-
-
-
         '''
         data: NMR spectra data maybe contain ppm as columns
         ppm: list of ppm (Can ignore this argument if columns of data is ppm)
+
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> ppm = np.linspace(10, 0, 1000)
+            >>> spectra = pd.DataFrame(np.random.rand(10, 1000), columns=ppm)
+            >>> chopper = metbit.nmr.peaks.peak_chops(spectra)
+            >>> chopper2 = metbit.nmr.peaks.peak_chops(spectra, ppm=list(ppm))
         '''
 
         #if ppm is None check column of X can convert to float?
@@ -52,6 +66,25 @@ class peak_chops:
 
 
     def cut_peak(self, first_ppm: float, second_ppm: float):
+        """Remove a spectral region between two ppm values.
+
+        Args:
+            first_ppm: Start of the region to remove (ppm).
+            second_ppm: End of the region to remove (ppm).
+
+        Returns:
+            tuple: (X, ppm) where X is the trimmed DataFrame and ppm is the
+                updated list of chemical shift values.
+
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> ppm = np.linspace(10, 0, 1000)
+            >>> spectra = pd.DataFrame(np.random.rand(10, 1000), columns=ppm)
+            >>> chopper = metbit.nmr.peaks.peak_chops(spectra)
+            >>> X_chopped, ppm_chopped = chopper.cut_peak(4.7, 5.0)
+            >>> print(X_chopped.shape)
+        """
 
         X = self.data
         ppm = self.ppm

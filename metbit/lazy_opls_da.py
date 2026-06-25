@@ -83,6 +83,15 @@ class lazy_opls_da:
         4.	VIP Score Plot: Generates VIP score plots and saves VIP scores as CSV if VIP=True.
         5.	Permutation Test Plot: Conducts permutation tests and saves permutation scores as CSV if permutation=True.
         6.	Volcano Plot (Linear Regression): Generates volcano plot and saves data if linear_regression=True.
+
+    Examples:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> X = pd.DataFrame(np.random.randn(40, 100), columns=[str(i) for i in range(100)])
+        >>> y = ['Control'] * 20 + ['Disease'] * 20
+        >>> model = metbit.lazy_opls_da(data=X, groups=y, working_dir='/tmp/opls_output')
+        >>> model.fit()
     '''
     import os
     import random
@@ -102,17 +111,6 @@ class lazy_opls_da:
                     permutation: bool = True, n_permutation: int = 500, n_jobs: int = 4,
                     VIP: bool = True, VIP_threshold: float = 1.5,
                     linear_regression: bool = True, FC_threshold: float = 1.5, p_val_threshold: float = 2) -> None:
-
-        import os
-        from glob import glob
-        import pandas as pd
-        import numpy as np
-        import random
-        from .analysis.opls_da import opls_da
-
-        from .stats.normalise import project_name_generator
-        from ._internal.pairs import lazypair
-
         """
         This function takes in a dataframe and a list of y values and returns the project_name model.
         Parameters
@@ -126,8 +124,24 @@ class lazy_opls_da:
             The number of components to use.
         lazy_opls_da(data, y, n_components).fit()
 
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.randn(40, 100), columns=[str(i) for i in range(100)])
+            >>> y = ['Control'] * 20 + ['Disease'] * 20
+            >>> model = metbit.lazy_opls_da(data=X, groups=y, working_dir='/tmp/opls_output')
         """
 
+        import os
+        from glob import glob
+        import pandas as pd
+        import numpy as np
+        import random
+        from .analysis.opls_da import opls_da
+
+        from .stats.normalise import project_name_generator
+        from ._internal.pairs import lazypair
 
         self.groups = groups
         self.n_components = n_components
@@ -163,20 +177,6 @@ class lazy_opls_da:
             self.p_val_threshold = p_val_threshold
         else:
             pass
-
-        """
-        This function takes in a dataframe and a list of y values and returns the project_name model.
-        Parameters
-        ----------
-        data: pandas dataframe
-            The dataframe to be used.
-        y: list
-            The list of y values.
-        n_components: int
-            The number of components to use.
-        lazy_opls_da(data, y, n_components).fit()
-
-        """
 
         project_name = project_name_generator()
 
@@ -269,7 +269,31 @@ class lazy_opls_da:
             custom_legend_name = ['Group', 'Sub-group'],
             marker_label=None, marker_size=None, marker_opacity=None,
             individual_ellipse=False) -> None:
+        """Fit the OPLS-DA model to all pairwise group comparisons and save plots and data.
 
+        Parameters:
+            marker_color (dict, optional): Dictionary mapping group labels to hex color strings.
+            custom_color (list, optional): List assigning a color group to each sample.
+            custom_shape (list, optional): List assigning a shape group to each sample.
+            symbol_dict (dict, optional): Dictionary mapping group labels to plotly marker symbols.
+            custom_legend_name (list, optional): Legend header names, defaults to ['Group', 'Sub-group'].
+            marker_label (str or None, optional): Marker label source - 'class', 'group', 'sub-group', or 'index'.
+            marker_size (int or None, optional): Marker size in pixels.
+            marker_opacity (float or None, optional): Marker opacity between 0 and 1.
+            individual_ellipse (bool, optional): Draw a confidence ellipse per group, defaults to False.
+
+        Returns:
+            None
+
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> import metbit
+            >>> X = pd.DataFrame(np.random.randn(40, 100), columns=[str(i) for i in range(100)])
+            >>> y = ['Control'] * 20 + ['Disease'] * 20
+            >>> model = metbit.lazy_opls_da(data=X, groups=y, working_dir='/tmp/opls_output')
+            >>> model.fit(marker_size=20, marker_opacity=0.8)
+        """
 
         from .analysis.opls_da import opls_da
         from lingress import lin_regression

@@ -50,6 +50,16 @@ class pickie_peak:
     1. **Plot Visualization**: Displays the spectra using an interactive Plotly graph.
     2. **Peak Selection**: Allows users to click on the plot to select peaks, storing their positions.
     3. **Export Functionality**: Offers options to export selected peak positions as a CSV file.
+
+    Examples:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> spectra = pd.DataFrame(np.random.randn(10, 100))
+        >>> ppm = list(np.linspace(9.0, 0.5, 100))
+        >>> label = ['GroupA'] * 5 + ['GroupB'] * 5
+        >>> picker_ui = pickie_peak(spectra, ppm, label)
+        >>> app = picker_ui.run_ui()
+        >>> app.run_server(debug=True, port=8051)  # doctest: +SKIP
     """
 
     def __init__(self, spectra: pd.DataFrame, ppm: list, label: list):
@@ -58,8 +68,6 @@ class pickie_peak:
         self.label = label
 
     def run_ui(self):
-
-
         """
         Launches the Dash application for visualizing and selecting NMR spectral peaks.
 
@@ -70,8 +78,17 @@ class pickie_peak:
 
         Returns:
         - Dash app: An interactive web application with plot, data selection, and export features.
-        """
 
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> spectra = pd.DataFrame(np.random.randn(10, 100))
+            >>> ppm = list(np.linspace(9.0, 0.5, 100))
+            >>> label = ['GroupA'] * 5 + ['GroupB'] * 5
+            >>> picker_ui = pickie_peak(spectra, ppm, label)
+            >>> app = picker_ui.run_ui()
+            >>> app.run_server(debug=True, port=8051)  # doctest: +SKIP
+        """
 
         import dash
         from dash.dependencies import Input, Output, State
@@ -92,7 +109,7 @@ class pickie_peak:
                 df_spectra.columns = self.ppm
                 fig = go.Figure()
                 import random
-                
+
                 n_sample = df_spectra.shape[0]
 
 
@@ -115,7 +132,7 @@ class pickie_peak:
                     yaxis=dict(tickformat=".2e")
                 )
                 return fig
-        
+
         plotter = plot_NMR_spec(self.spectra, self.ppm)
 
 

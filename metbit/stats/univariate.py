@@ -56,6 +56,21 @@ class UnivarStats:
         Plot type.
     show_axis_lines : bool, default=True
         Whether to show axis lines.
+
+    Examples:
+        >>> import pandas as pd
+        >>> import numpy as np
+        >>> import metbit
+        >>> np.random.seed(0)
+        >>> df = pd.DataFrame({
+        ...     "group": ["A"] * 20 + ["B"] * 20,
+        ...     "value": np.concatenate([np.random.normal(0, 1, 20), np.random.normal(1, 1, 20)])
+        ... })
+        >>> us = metbit.stats.UnivarStats(df, x_col="group", y_col="value", stats_options=["t-test"])
+        >>> fig = us.plot()
+        >>> fig.show()
+        >>> table = us.get_stats_table()
+        >>> print(table)
     """
 
     def __init__(
@@ -100,12 +115,62 @@ class UnivarStats:
 
     @staticmethod
     def compute_effsize(a, b, eftype: str = "cohen") -> float:
+        """Compute effect size between two groups.
+
+        Parameters
+        ----------
+        a : array-like
+            Observations for group A.
+        b : array-like
+            Observations for group B.
+        eftype : str, default='cohen'
+            Effect size type. Currently only 'cohen' (Cohen's d) is supported.
+
+        Returns
+        -------
+        float
+            Computed effect size.
+
+        Examples:
+            >>> import numpy as np
+            >>> import metbit
+            >>> a = np.random.normal(0, 1, 30)
+            >>> b = np.random.normal(1, 1, 30)
+            >>> d = metbit.stats.UnivarStats.compute_effsize(a, b)
+            >>> print(f"Cohen's d: {d:.3f}")
+        """
         if eftype == "cohen":
             pooled_std = np.sqrt((np.std(a, ddof=1)**2 + np.std(b, ddof=1)**2) / 2)
             return (np.mean(a) - np.mean(b)) / pooled_std
         raise ValueError("Unsupported effect size type.")
 
     def plot(self, show_description: bool = True) -> go.Figure:
+        """Generate an annotated box or violin plot with statistical comparisons.
+
+        Parameters
+        ----------
+        show_description : bool, default=True
+            If True and annotate_style is 'symbol', adds a legend annotation
+            explaining the significance symbols.
+
+        Returns
+        -------
+        go.Figure
+            Plotly figure with significance annotations.
+
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> import metbit
+            >>> np.random.seed(42)
+            >>> df = pd.DataFrame({
+            ...     "group": ["A"] * 20 + ["B"] * 20,
+            ...     "value": np.concatenate([np.random.normal(0, 1, 20), np.random.normal(2, 1, 20)])
+            ... })
+            >>> us = metbit.stats.UnivarStats(df, x_col="group", y_col="value")
+            >>> fig = us.plot()
+            >>> fig.show()
+        """
         warnings.filterwarnings("ignore")
         df = self.df
         if df.empty:
@@ -283,7 +348,28 @@ class UnivarStats:
         return fig
 
     def get_stats_table(self) -> pd.DataFrame:
-        """Return a DataFrame of statistical results."""
+        """Return a DataFrame of statistical results.
+
+        Returns
+        -------
+        pd.DataFrame
+            Table with columns: Comparison, Raw P-Value, Corrected P-Value,
+            and Effect Size (Cohen's d).
+
+        Examples:
+            >>> import pandas as pd
+            >>> import numpy as np
+            >>> import metbit
+            >>> np.random.seed(0)
+            >>> df = pd.DataFrame({
+            ...     "group": ["A"] * 20 + ["B"] * 20,
+            ...     "value": np.concatenate([np.random.normal(0, 1, 20), np.random.normal(1, 1, 20)])
+            ... })
+            >>> us = metbit.stats.UnivarStats(df, x_col="group", y_col="value")
+            >>> _ = us.plot()
+            >>> table = us.get_stats_table()
+            >>> print(table)
+        """
         res = self._results
         return pd.DataFrame({
             "Comparison": [f"{a} vs {b}" for a, b in res["comparisons"]],
