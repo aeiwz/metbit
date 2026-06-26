@@ -1,5 +1,7 @@
 """Tests for the new stats, multivariate, ML, DL, and validation modules."""
 # ruff: noqa: E501
+from importlib import metadata as importlib_metadata
+import platform
 import sys
 import numpy as np
 import pandas as pd
@@ -28,6 +30,12 @@ if sys.version_info >= (3, 14):
     _XGB_SKIP_REASON = "xgboost 3.x segfaults under CPython 3.14 (upstream C-API incompatibility)"
 else:
     try:
+        _xgb_version = importlib_metadata.version("xgboost")
+        _xgb_major = int(_xgb_version.split(".", 1)[0])
+        if platform.system() == "Darwin" and _xgb_major >= 3:
+            raise RuntimeError(
+                f"xgboost {_xgb_version} segfaults during sklearn CV on macOS"
+            )
         from xgboost import XGBClassifier as _XGBCheck
         _XGBCheck()  # forces dylib load → catches missing libomp on macOS
         _XGB_AVAILABLE = True

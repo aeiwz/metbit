@@ -6,7 +6,7 @@ coverage
 
 # Optional deps required for full test coverage
 # XGBoost: ML classifier tests
-xgboost
+xgboost>=1.7,<3; python_version < "3.14"
 
 # PyTorch CPU-only wheel (smaller, sufficient for tests)
 --extra-index-url https://download.pytorch.org/whl/cpu

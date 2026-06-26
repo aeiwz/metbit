@@ -43,7 +43,8 @@ def _make_xgb(kw, rs):
         raise ImportError(
             "xgboost is required for model='xgb'. Install it with: pip install xgboost"
         ) from exc
-    return XGBClassifier(random_state=rs, eval_metric="mlogloss", **kw)
+    params = {"n_jobs": 1, **kw}
+    return XGBClassifier(random_state=rs, eval_metric="mlogloss", **params)
 
 
 class MLClassifier:
