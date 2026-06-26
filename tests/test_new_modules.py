@@ -27,17 +27,15 @@ _skip_no_torch = pytest.mark.skipif(not _TORCH_AVAILABLE, reason="torch not inst
 _XGB_SKIP_REASON: str = ""
 if sys.version_info >= (3, 14):
     _XGB_AVAILABLE = False
-    _XGB_SKIP_REASON = "xgboost 3.x segfaults under CPython 3.14 (upstream C-API incompatibility)"
+    _XGB_SKIP_REASON = "xgboost segfaults under CPython 3.14 (upstream C-API incompatibility)"
+elif platform.system() == "Darwin":
+    _XGB_AVAILABLE = False
+    _XGB_SKIP_REASON = "xgboost segfaults in _meta_from_numpy during sklearn CV on macOS arm64 (all versions)"
 else:
     try:
         _xgb_version = importlib_metadata.version("xgboost")
-        _xgb_major = int(_xgb_version.split(".", 1)[0])
-        if platform.system() == "Darwin" and _xgb_major >= 3:
-            raise RuntimeError(
-                f"xgboost {_xgb_version} segfaults during sklearn CV on macOS"
-            )
         from xgboost import XGBClassifier as _XGBCheck
-        _XGBCheck()  # forces dylib load → catches missing libomp on macOS
+        _XGBCheck()
         _XGB_AVAILABLE = True
     except Exception as _e:
         _XGB_AVAILABLE = False
