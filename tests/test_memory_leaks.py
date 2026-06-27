@@ -34,6 +34,17 @@ from typing import Callable
 import numpy as np
 import pytest
 
+try:
+    import metbit._native_backend  # noqa: F401
+    _NATIVE_AVAILABLE = True
+except ImportError:
+    _NATIVE_AVAILABLE = False
+
+_skip_no_native = pytest.mark.skipif(
+    not _NATIVE_AVAILABLE,
+    reason="metbit._native_backend C extension not built",
+)
+
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -79,6 +90,7 @@ def _growth_per_call(fn: Callable, reps: int = 300) -> float:
 # Reference count sanity (pure-Python, fast)
 # ---------------------------------------------------------------------------
 
+@_skip_no_native
 class TestReferenceCount:
     """Verify C extension outputs are collectable after release.
 

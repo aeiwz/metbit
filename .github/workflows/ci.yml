@@ -69,7 +69,9 @@ jobs:
           pip install -r requirements-dev.txt
 
       - name: Build and install with C extension
-        run: pip install -e . --no-build-isolation
+        run: |
+          python setup.py build_ext --inplace
+          pip install -e . --no-build-isolation
 
       - name: Run test suite (no slow/perf tests)
         run: |
