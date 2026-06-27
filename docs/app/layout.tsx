@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Analytics } from '@vercel/analytics/next'
 import ReportIssueButton from './components/ReportIssueButton'
 import './globals.css'
 
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body>
         {children}
         <ReportIssueButton />
+        <Analytics />
       </body>
     </html>
   )
