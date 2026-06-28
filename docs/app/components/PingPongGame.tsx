@@ -63,6 +63,7 @@ export default function PingPongGame() {
   const canvasRef  = useRef<HTMLCanvasElement>(null)
   const stateRef   = useRef<State | null>(null)
   const rafRef     = useRef<number>(0)
+  const tickRef    = useRef<() => void>(() => {})
   const wRef       = useRef(560)
   const hRef       = useRef(220)
   const reducedRef = useRef(false)
@@ -223,8 +224,10 @@ export default function PingPongGame() {
     }
 
     draw(ctx, s, w, h)
-    rafRef.current = requestAnimationFrame(tick)
+    rafRef.current = requestAnimationFrame(tickRef.current)
   }, [draw])
+
+  useEffect(() => { tickRef.current = tick }, [tick])
 
   // ── setup ───────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -261,7 +264,7 @@ export default function PingPongGame() {
     ro.observe(canvas)
 
     if (!reducedRef.current) {
-      rafRef.current = requestAnimationFrame(tick)
+      rafRef.current = requestAnimationFrame(tickRef.current)
     }
 
     // ── mouse ────────────────────────────────────────────────────────────────
@@ -306,7 +309,7 @@ export default function PingPongGame() {
       window.removeEventListener('keydown', onKeyDown)
       window.removeEventListener('keyup',   onKeyUp)
     }
-  }, [tick, draw])
+  }, [draw])
 
   return (
     <canvas
