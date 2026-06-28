@@ -7,6 +7,9 @@ import {
   summary,
 } from '@/lib/versioned-docs'
 
+// matches: "name: desc"  "name (type): desc"  "name : type"
+const PARAM_RE = /^([A-Za-z_]\w*)\s*(?:\([^)]*\))?\s*:\s*(.+)/
+
 function DocText({ value }: { value: string }) {
   if (!value) return null
   const lines = value.split('\n')
@@ -22,33 +25,42 @@ function DocText({ value }: { value: string }) {
   for (let index = 0; index < lines.length; index += 1) {
     const line = lines[index].trim()
     const next = lines[index + 1]?.trim() || ''
+
     if (line && /^-{3,}$/.test(next)) {
       flushParagraph()
-      blocks.push(<h4 key={`h-${blocks.length}`}>{line}</h4>)
+      blocks.push(<h4 key={`h-${blocks.length}`}>{line.replace(/:$/, '')}</h4>)
       index += 1
       continue
     }
-    if (!line) {
+    if (!line) { flushParagraph(); continue }
+
+    // strip leading bullet (• or -) then try to match as a named parameter
+    const isBullet = /^[•\-]/.test(line)
+    const inner    = isBullet ? line.replace(/^[•\-]\s*/, '') : line
+    const m        = PARAM_RE.exec(inner)
+
+    if (m) {
       flushParagraph()
-      continue
-    }
-    if (/^[A-Za-z_][\w, ]*\s*:\s*.+/.test(line)) {
-      flushParagraph()
-      const [name, ...typeParts] = line.split(':')
       blocks.push(
         <div className="docParameter" key={`d-${blocks.length}`}>
-          <code>{name.trim()}</code>
-          <span>{typeParts.join(':').trim()}</span>
+          <code>{m[1]}</code>
+          <span>{m[2].trim()}</span>
         </div>,
       )
       continue
     }
+
+    // plain bullet with no name:desc pattern → list item
+    if (isBullet) {
+      flushParagraph()
+      blocks.push(<li key={`li-${blocks.length}`}>{inner}</li>)
+      continue
+    }
+
     paragraph.push(line)
   }
   flushParagraph()
-  return (
-    <div className="docText">{blocks.slice(0, 80)}</div>
-  )
+  return <div className="docText">{blocks.slice(0, 80)}</div>
 }
 
 export default async function ModuleReference({
