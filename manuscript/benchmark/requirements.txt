@@ -1,9 +1,0 @@
-requests
-nmrglue
-pandas
-numpy
-scipy
-scikit-learn
-matplotlib
-pybaselines
-tqdm
