@@ -1,0 +1,106 @@
+name: Cross-OS Performance Benchmark
+
+# Runs scripts/perf_report.py on Linux, Windows, and macOS GitHub-hosted
+# runners, building the native C extension from source on each. This produces
+# the multi-platform, OpenMP-enabled numbers the laptop benchmark could not,
+# and uploads them as downloadable artifacts.
+#
+# Trigger manually: Actions tab -> "Cross-OS Performance Benchmark" -> Run workflow.
+# Note: GitHub-hosted runners have NO GPU, so the CUDA path is still not exercised.
+
+on:
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: "Quick mode (small datasets, faster)"
+        type: boolean
+        default: false
+      reps:
+        description: "Repetitions per benchmark (0 = perf_report default of 5)"
+        type: string
+        default: "0"
+  push:
+    tags:
+      - "bench-*"        # push a tag like bench-v9.0.0 to run automatically
+
+concurrency:
+  group: benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  benchmark:
+    name: benchmark (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Enable OpenMP toolchain (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          brew install libomp
+          PREFIX="$(brew --prefix libomp)"
+          # setup.py's OpenMP probe and the linker need these paths
+          echo "CPATH=$PREFIX/include" >> "$GITHUB_ENV"
+          echo "LIBRARY_PATH=$PREFIX/lib" >> "$GITHUB_ENV"
+          echo "DYLD_LIBRARY_PATH=$PREFIX/lib" >> "$GITHUB_ENV"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install numpy scipy scikit-learn pandas plotly
+
+      - name: Build metbit from source (compiles native + OpenMP extension)
+        shell: bash
+        run: |
+          python -m pip install -e . --no-build-isolation --force-reinstall
+
+      - name: Report active backend
+        shell: bash
+        run: |
+          python - <<'PY'
+          from metbit._native import backend_info
+          info = backend_info()
+          for k, v in info.items():
+              print(f"{k} = {v}")
+          if not info["native_c"]:
+              print("::warning::native C extension NOT active on this runner - "
+                    "benchmark measures only the NumPy fallback.")
+          PY
+
+      - name: Run benchmark (OpenMP thread sweep)
+        shell: bash
+        run: |
+          set -e
+          OS="${{ matrix.os }}"
+          EXTRA=""
+          [ "${{ inputs.quick }}" = "true" ] && EXTRA="$EXTRA --quick"
+          [ "${{ inputs.reps }}" != "0" ] && [ -n "${{ inputs.reps }}" ] && EXTRA="$EXTRA --reps ${{ inputs.reps }}"
+          CORES="$(python -c 'import os;print(os.cpu_count() or 1)')"
+          THREADS="$(printf '1\n%s\n' "$CORES" | sort -un)"
+          echo "Runner cores: $CORES ; sweeping OMP threads: $(echo $THREADS)"
+          for T in $THREADS; do
+            echo "===== OMP_NUM_THREADS=$T ====="
+            OMP_NUM_THREADS="$T" METBIT_N_JOBS="$T" \
+              python scripts/perf_report.py --output "reports/ci/${OS}/omp_${T}" $EXTRA
+          done
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-${{ matrix.os }}
+          path: reports/ci/**
+          if-no-files-found: error
+          retention-days: 90

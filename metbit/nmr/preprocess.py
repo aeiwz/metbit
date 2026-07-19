@@ -246,7 +246,9 @@ class nmr_preprocessing:
         dir_ = pd.DataFrame(sub_dirs, columns=['dir'])
         dir_['dir'] = dir_['dir'].apply(lambda x: x.replace('\\', '/'))
         dir_['folder name'] = dir_['dir'].apply(lambda x: x.split('/')[-2])
-        dir_['dir'].replace('fid', '', regex=True, inplace=True)
+        # Strip only the trailing 'fid' filename (each match ends in '/fid'),
+        # not every 'fid' substring, so paths like '.../myfid_data/...' survive.
+        dir_['dir'] = dir_['dir'].str.replace(r'fid$', '', regex=True)
 
         nmr_data = pd.DataFrame()
         phase_data = pd.DataFrame(columns=['p0', 'p1'])
@@ -330,7 +332,6 @@ class nmr_preprocessing:
         self.ppm = self.nmr_data.columns.to_numpy(dtype=float)
         self.dic_array = dic_list
         self.phase_data = phase_data
-        self.nmr_data = nmr_data
 
         if self.align:
             try:
@@ -375,12 +376,22 @@ class nmr_preprocessing:
             nmr_data = nmr_data.iloc[:, ::-1]
         return nmr_data
 
-    def get_ppm(self):
-        """Return the PPM scale array for the processed spectra.
+    def get_ppm(self, flip_data=True):
+        """Return the PPM scale array aligned with get_data().
+
+        The returned axis is ordered to match the columns of
+        get_data(flip_data=...) with the same flag, so plotting
+        get_data() against get_ppm() pairs each intensity with its
+        correct ppm (no mirror flip).
+
+        Args:
+            flip_data: Must match the flag passed to get_data(). With the
+                default True the axis runs high-to-low field (high ppm on
+                the left), the standard NMR display order.
 
         Returns:
-            numpy.ndarray: 1-D array of PPM values corresponding to the
-                columns of the DataFrame returned by get_data().
+            numpy.ndarray: 1-D array of PPM values for the columns of
+                get_data(flip_data=...).
 
         Examples:
             >>> nmr = nmr_preprocessing('data/cohort_fids', calib_type='tsp')
@@ -388,7 +399,8 @@ class nmr_preprocessing:
             >>> print(ppm.min(), ppm.max())
             -3.012 11.987
         """
-        return self.ppm
+        ppm = self.nmr_data.columns.to_numpy(dtype=float)
+        return ppm[::-1] if flip_data else ppm
 
     def get_metadata(self):
         """Return the Bruker acquisition metadata for all processed samples.

@@ -1,0 +1,56 @@
+{
+  "total_wallclock_seconds": 168.08,
+  "n_samples": 132,
+  "n_samples_after_outlier_exclusion": 121,
+  "n_features_raw": 66705,
+  "n_features_normalised": 66705,
+  "stages": [
+    {
+      "stage": "preprocessing (raw FID -> auto-phased, aligned matrix)",
+      "seconds": 98.499,
+      "peak_mb": 398.35
+    },
+    {
+      "stage": "PQN normalisation",
+      "seconds": 2.253,
+      "peak_mb": 420.22
+    },
+    {
+      "stage": "outlier exclusion (Hotelling T2)",
+      "seconds": 0.102,
+      "peak_mb": 273.25
+    },
+    {
+      "stage": "PCA fit",
+      "seconds": 0.347,
+      "peak_mb": 184.22
+    },
+    {
+      "stage": "OPLS-DA fit + VIP",
+      "seconds": 65.056,
+      "peak_mb": 990.47
+    },
+    {
+      "stage": "STOCSY (anchor 1.255 ppm)",
+      "seconds": 0.632,
+      "peak_mb": 243.79
+    }
+  ],
+  "environment": {
+    "platform": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+    "python_version": "3.14.5",
+    "numpy": "2.4.6",
+    "scipy": "1.18.0",
+    "scikit_learn": "1.8.0",
+    "pandas": "2.3.3",
+    "metbit_version": "9.1.0",
+    "metbit_backend": {
+      "native_c": true,
+      "openmp_threads": 0,
+      "gpu_cupy": false,
+      "gpu_torch": false,
+      "n_jobs": 8,
+      "default_chunk": 50000
+    }
+  }
+}

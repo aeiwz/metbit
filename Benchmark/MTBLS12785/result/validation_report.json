@@ -1,0 +1,13 @@
+{
+  "dataset": "MTBLS12785 infant urinary 1H NMR (open Scientific Data)",
+  "timepoint": "1M_urine",
+  "n_samples": 60,
+  "median_TSP_peak_ppm": -0.0004,
+  "TSP_within_0.02ppm": true,
+  "n_assigned_metabolite_peaks": 39,
+  "n_resolved_by_metbit_SNR_gt_3": 16,
+  "fraction_resolved": 0.41,
+  "resolved_peak_ppm_accuracy_median": 0.0075,
+  "resolved_peak_ppm_accuracy_max": 0.0173,
+  "note": "MAF assignments span ages 0-5y; low-abundance/dietary metabolites (trigonelline, aromatics, sugars) are expectedly weak in 1-month milk-fed infant urine, so unresolved != processing error."
+}

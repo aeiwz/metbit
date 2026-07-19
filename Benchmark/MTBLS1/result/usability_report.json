@@ -1,0 +1,19 @@
+{
+  "pipeline_function_lines": 56,
+  "distinct_metbit_api_calls_raw_fid_to_stocsy": 11,
+  "api_call_sequence": [
+    "nmr_preprocessing(...)",
+    "prep.get_data()",
+    "Normalise(...)",
+    "norm.pqn_normalise()",
+    "pca(...)",
+    "model.fit()",
+    "opls_da(...)",
+    "model.fit()",
+    "model.vip_scores()",
+    "model.get_vip_scores()",
+    "STOCSY(...)"
+  ],
+  "manual_intervention_required": false,
+  "note": "Single Python function, no manual parameter tuning between stages; all stages run against the same in-memory objects."
+}

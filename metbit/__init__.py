@@ -19,7 +19,7 @@ from metbit.analysis.large_scale import (
     feature_preselection,
     memory_report,
 )
-from metbit._native import backend_info, gpu_available, native_available
+from metbit._native import backend_info, gpu_available, gpu_installed, native_available
 
 # NMR processing
 from metbit.nmr.preprocess import nmr_preprocessing
@@ -108,6 +108,7 @@ _always_exported = [
     "memory_report",
     "backend_info",
     "gpu_available",
+    "gpu_installed",
     "native_available",
     "nmr_preprocessing",
     "calibrate",

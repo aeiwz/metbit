@@ -1,0 +1,17 @@
+{
+  "n_repeats": 3,
+  "random_state": 42,
+  "R2Y_values": [
+    0.973739,
+    0.973739,
+    0.973739
+  ],
+  "R2Y_max_abs_diff": 0.0,
+  "Q2_values": [
+    -0.528238,
+    -0.528238,
+    -0.528238
+  ],
+  "Q2_max_abs_diff": 0.0,
+  "top10_VIP_ppm_identical_across_repeats": true
+}

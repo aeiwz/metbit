@@ -1,0 +1,184 @@
+{
+  "cpmg": {
+    "feature_fidelity": [
+      {
+        "metabolite": "Glucose",
+        "target_ppm": 5.23,
+        "bucket_ppm": 5.23,
+        "n": 365,
+        "pearson_r": 0.985,
+        "spearman_r": 0.918
+      },
+      {
+        "metabolite": "Alanine",
+        "target_ppm": 1.48,
+        "bucket_ppm": 1.47,
+        "n": 365,
+        "pearson_r": 0.915,
+        "spearman_r": 0.908
+      },
+      {
+        "metabolite": "Pyruvicacid",
+        "target_ppm": 2.37,
+        "bucket_ppm": 2.37,
+        "n": 366,
+        "pearson_r": 0.917,
+        "spearman_r": 0.9
+      },
+      {
+        "metabolite": "3-Hydroxybutyricacid",
+        "target_ppm": 1.2,
+        "bucket_ppm": 1.19,
+        "n": 218,
+        "pearson_r": 0.961,
+        "spearman_r": 0.767
+      },
+      {
+        "metabolite": "Lacticacid",
+        "target_ppm": 1.33,
+        "bucket_ppm": 1.33,
+        "n": 365,
+        "pearson_r": 0.753,
+        "spearman_r": 0.723
+      },
+      {
+        "metabolite": "Creatinine",
+        "target_ppm": 3.04,
+        "bucket_ppm": 3.03,
+        "n": 365,
+        "pearson_r": 0.234,
+        "spearman_r": 0.214
+      },
+      {
+        "metabolite": "Citricacid",
+        "target_ppm": 2.54,
+        "bucket_ppm": 2.53,
+        "n": 340,
+        "pearson_r": 0.017,
+        "spearman_r": 0.129
+      },
+      {
+        "metabolite": "Aceticacid",
+        "target_ppm": 1.92,
+        "bucket_ppm": 1.91,
+        "n": 357,
+        "pearson_r": 0.169,
+        "spearman_r": 0.106
+      }
+    ],
+    "median_spearman": 0.745,
+    "discrimination": {
+      "contrast": "acute (COVID-19<21days, n=246) vs post (Post-COVID-19, n=94)",
+      "R2Y": 0.7037,
+      "Q2": 0.5621,
+      "top15_VIP_ppm": [
+        0.81,
+        7.69,
+        0.83,
+        0.79,
+        0.65,
+        0.63,
+        0.73,
+        5.27,
+        1.23,
+        6.73,
+        7.33,
+        3.09,
+        2.05,
+        0.59,
+        0.61
+      ]
+    }
+  },
+  "noesy": {
+    "feature_fidelity": [
+      {
+        "metabolite": "Glucose",
+        "target_ppm": 5.23,
+        "bucket_ppm": 5.23,
+        "n": 365,
+        "pearson_r": 0.919,
+        "spearman_r": 0.749
+      },
+      {
+        "metabolite": "Lacticacid",
+        "target_ppm": 1.33,
+        "bucket_ppm": 1.33,
+        "n": 365,
+        "pearson_r": 0.585,
+        "spearman_r": 0.536
+      },
+      {
+        "metabolite": "Citricacid",
+        "target_ppm": 2.54,
+        "bucket_ppm": 2.53,
+        "n": 340,
+        "pearson_r": 0.426,
+        "spearman_r": 0.476
+      },
+      {
+        "metabolite": "Alanine",
+        "target_ppm": 1.48,
+        "bucket_ppm": 1.47,
+        "n": 365,
+        "pearson_r": 0.215,
+        "spearman_r": 0.243
+      },
+      {
+        "metabolite": "Pyruvicacid",
+        "target_ppm": 2.37,
+        "bucket_ppm": 2.37,
+        "n": 366,
+        "pearson_r": 0.194,
+        "spearman_r": 0.186
+      },
+      {
+        "metabolite": "3-Hydroxybutyricacid",
+        "target_ppm": 1.2,
+        "bucket_ppm": 1.19,
+        "n": 218,
+        "pearson_r": 0.345,
+        "spearman_r": 0.157
+      },
+      {
+        "metabolite": "Aceticacid",
+        "target_ppm": 1.92,
+        "bucket_ppm": 1.91,
+        "n": 357,
+        "pearson_r": 0.054,
+        "spearman_r": 0.084
+      },
+      {
+        "metabolite": "Creatinine",
+        "target_ppm": 3.04,
+        "bucket_ppm": 3.03,
+        "n": 365,
+        "pearson_r": -0.056,
+        "spearman_r": -0.092
+      }
+    ],
+    "median_spearman": 0.214,
+    "discrimination": {
+      "contrast": "acute (COVID-19<21days, n=246) vs post (Post-COVID-19, n=94)",
+      "R2Y": 0.7003,
+      "Q2": 0.6082,
+      "top15_VIP_ppm": [
+        3.59,
+        3.99,
+        3.57,
+        2.35,
+        3.61,
+        0.81,
+        1.85,
+        3.97,
+        2.51,
+        0.79,
+        0.77,
+        1.87,
+        2.53,
+        1.77,
+        2.49
+      ]
+    }
+  }
+}

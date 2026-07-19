@@ -448,6 +448,18 @@ class opls_da:
         from sklearn.pipeline import Pipeline
         import time
 
+        import warnings
+        warnings.warn(
+            "permutation_test() evaluates scikit-learn's default estimator score "
+            "of the underlying PLS estimator, not the OPLS cross-validated Q2, and "
+            "does not support participant/animal grouping. Its p-value must not be "
+            "interpreted as a permutation test of the OPLS Q2. A grouped, Q2-based "
+            "permutation procedure is planned; until then treat this output as "
+            "exploratory only.",
+            UserWarning,
+            stacklevel=2,
+        )
+
         T1 = time.time()
 
         self.cv = cv

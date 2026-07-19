@@ -1,0 +1,7 @@
+{
+  "matrix": "kidney (week 6, target organ)",
+  "article": "Hanifa et al. 2019 Metabolomics, doi:10.1007/s11306-019-1569-3",
+  "n_article_biomarkers_checked": 7,
+  "n_recovered_by_metbit_VIP_gt_1": 5,
+  "note": "metbit independently ranks 5/7 of the article's renal biomarkers above VIP=1; trimethylamine, hippurate and creatine fall in the 78-96th VIP percentile."
+}

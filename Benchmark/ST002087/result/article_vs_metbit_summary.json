@@ -1,0 +1,7 @@
+{
+  "n_metabolites_compared": 23,
+  "n_article_significant_BH": 14,
+  "direction_agreement_all": 0.696,
+  "direction_agreement_article_significant": 0.857,
+  "rank_concordance_spearman(article_-log10p vs metbit_VIP)": 0.115
+}

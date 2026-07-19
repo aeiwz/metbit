@@ -43,6 +43,12 @@ _DISABLE_NATIVE = os.environ.get("METBIT_DISABLE_NATIVE", "").lower() in {
 _DISABLE_GPU = os.environ.get("METBIT_DISABLE_GPU", "").lower() in {
     "1", "true", "yes",
 }
+# GPU dispatch is experimental (not performance-characterised across platforms)
+# and is opt-in: it is skipped by auto-dispatch unless explicitly enabled, even
+# when a CUDA-capable GPU backend is installed and the size threshold is met.
+_ENABLE_EXPERIMENTAL_GPU = os.environ.get(
+    "METBIT_ENABLE_EXPERIMENTAL_GPU", ""
+).lower() in {"1", "true", "yes"}
 _ENV_N_JOBS = os.environ.get("METBIT_N_JOBS")
 _ENV_CHUNK  = os.environ.get("METBIT_CHUNK")
 
@@ -99,9 +105,20 @@ def native_available() -> bool:
     return _NATIVE_OK
 
 
-def gpu_available() -> bool:
-    """Return True when a CUDA-capable GPU backend is available."""
+def gpu_installed() -> bool:
+    """Return True when a CUDA-capable GPU backend is installed, regardless
+    of whether experimental auto-dispatch to it is enabled."""
     return _cupy is not None or _torch is not None
+
+
+def gpu_available() -> bool:
+    """Return True when a CUDA-capable GPU backend is installed AND the user
+    has explicitly opted in to experimental GPU auto-dispatch via
+    METBIT_ENABLE_EXPERIMENTAL_GPU=1. GPU dispatch is experimental and not yet
+    performance-characterised, so it is never selected automatically by
+    default; the characterised native C path is used instead at the same
+    size threshold."""
+    return gpu_installed() and _ENABLE_EXPERIMENTAL_GPU
 
 
 def backend_info() -> dict:
@@ -111,6 +128,8 @@ def backend_info() -> dict:
         "openmp_threads": _OPENMP_THREADS,
         "gpu_cupy": _cupy is not None,
         "gpu_torch": _torch is not None and _torch is not None,
+        "gpu_installed": gpu_installed(),
+        "gpu_experimental_dispatch_enabled": _ENABLE_EXPERIMENTAL_GPU,
         "n_jobs": _N_JOBS,
         "default_chunk": _DEFAULT_CHUNK,
     }

@@ -1,0 +1,20 @@
+{
+  "method": "Hotelling T2 on 5-component PCA (pareto), 95% F-limit",
+  "n_before": 132,
+  "n_excluded": 11,
+  "n_after": 121,
+  "T2_limit": 11.788,
+  "excluded_samples": [
+    "ADG10003u_023",
+    "ADG10003u_051",
+    "ADG10003u_072",
+    "ADG10003u_073",
+    "ADG10003u_152",
+    "ADG10003u_156",
+    "ADG10003u_178",
+    "ADG19007u_075",
+    "ADG19007u_192",
+    "ADG19007u_285",
+    "ADG19007u_474"
+  ]
+}

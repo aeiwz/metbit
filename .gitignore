@@ -56,3 +56,9 @@ ENV/
 manuscript/incob2026/~$cob2026_manuscript.docx
 /manuscript
 /manuscript
+
+# Benchmark large intermediate output (regenerate via benchmark_mtbls1.py)
+/Benchmark/MTBLS1/result/spectral_matrix_normalised.csv
+
+# Benchmark raw datasets (large; fetch per each dataset's PROVENANCE/README)
+/Benchmark/data/

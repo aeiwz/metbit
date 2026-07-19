@@ -1,0 +1,108 @@
+{
+  "study": "MTBLS2052 5/6-Nx rat CKD, week 6, CKD vs sham",
+  "contrast": "nephrectomy vs sham control",
+  "per_matrix": [
+    {
+      "matrix": "kidney",
+      "n_samples": 34,
+      "n_CKD": 14,
+      "n_sham": 20,
+      "median_TSP_peak_ppm": -0.0,
+      "TSP_within_0.02ppm": true,
+      "R2Y": 0.9704,
+      "Q2": 0.6969,
+      "top5_VIP_ppm": [
+        2.255,
+        2.256,
+        2.256,
+        2.255,
+        2.257
+      ]
+    },
+    {
+      "matrix": "urine",
+      "n_samples": 23,
+      "n_CKD": 13,
+      "n_sham": 10,
+      "median_TSP_peak_ppm": 0.0002,
+      "TSP_within_0.02ppm": true,
+      "R2Y": 0.8778,
+      "Q2": 0.1222,
+      "top5_VIP_ppm": [
+        4.598,
+        4.598,
+        3.31,
+        4.322,
+        4.598
+      ]
+    },
+    {
+      "matrix": "lung",
+      "n_samples": 24,
+      "n_CKD": 14,
+      "n_sham": 10,
+      "median_TSP_peak_ppm": -0.0,
+      "TSP_within_0.02ppm": true,
+      "R2Y": 0.9797,
+      "Q2": 0.1209,
+      "top5_VIP_ppm": [
+        1.891,
+        1.882,
+        1.882,
+        1.901,
+        1.837
+      ]
+    },
+    {
+      "matrix": "heart",
+      "n_samples": 24,
+      "n_CKD": 14,
+      "n_sham": 10,
+      "median_TSP_peak_ppm": 0.0001,
+      "TSP_within_0.02ppm": true,
+      "R2Y": 0.7561,
+      "Q2": 0.2751,
+      "top5_VIP_ppm": [
+        7.089,
+        3.061,
+        3.067,
+        3.066,
+        7.678
+      ]
+    },
+    {
+      "matrix": "spleen",
+      "n_samples": 24,
+      "n_CKD": 14,
+      "n_sham": 10,
+      "median_TSP_peak_ppm": -0.0,
+      "TSP_within_0.02ppm": true,
+      "R2Y": 0.9992,
+      "Q2": 0.5295,
+      "top5_VIP_ppm": [
+        3.046,
+        3.94,
+        1.626,
+        1.627,
+        1.627
+      ]
+    },
+    {
+      "matrix": "liver",
+      "n_samples": 24,
+      "n_CKD": 14,
+      "n_sham": 10,
+      "median_TSP_peak_ppm": -0.0001,
+      "TSP_within_0.02ppm": true,
+      "R2Y": 0.9623,
+      "Q2": 0.464,
+      "top5_VIP_ppm": [
+        3.938,
+        2.733,
+        3.938,
+        3.938,
+        3.045
+      ]
+    }
+  ]
+}

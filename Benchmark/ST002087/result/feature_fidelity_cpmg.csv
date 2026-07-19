@@ -1,0 +1,9 @@
+metabolite,target_ppm,bucket_ppm,n,pearson_r,spearman_r
+Glucose,5.23,5.23,365,0.985,0.918
+Alanine,1.48,1.47,365,0.915,0.908
+Pyruvicacid,2.37,2.37,366,0.917,0.9
+3-Hydroxybutyricacid,1.2,1.19,218,0.961,0.767
+Lacticacid,1.33,1.33,365,0.753,0.723
+Creatinine,3.04,3.03,365,0.234,0.214
+Citricacid,2.54,2.53,340,0.017,0.129
+Aceticacid,1.92,1.91,357,0.169,0.106
