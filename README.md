@@ -5,6 +5,12 @@
 [![Python](https://img.shields.io/pypi/pyversions/metbit?style=for-the-badge)](https://pypi.org/project/metbit/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 [![Open Documentation](https://img.shields.io/badge/Docs-metbit--docs.vercel.app-2563EB?style=for-the-badge&logo=readthedocs&logoColor=white)](https://metbit-docs.vercel.app)
+[![CI](https://github.com/aeiwz/metbit/actions/workflows/ci.yml/badge.svg)](https://github.com/aeiwz/metbit/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/aeiwz/metbit/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/aeiwz/metbit/actions/workflows/github-code-scanning/codeql)
+[![Copilot](https://github.com/aeiwz/metbit/actions/workflows/agents/copilot-pull-request-reviewer/badge.svg)](https://github.com/aeiwz/metbit/actions/workflows/agents/copilot-pull-request-reviewer)
+[![Dependabot Updates](https://github.com/aeiwz/metbit/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/aeiwz/metbit/actions/workflows/dependabot/dependabot-updates)
+[![Documentation](https://github.com/aeiwz/metbit/actions/workflows/docs.yml/badge.svg)](https://github.com/aeiwz/metbit/actions/workflows/docs.yml)
+[![Release](https://github.com/aeiwz/metbit/actions/workflows/python-publish.yml/badge.svg)](https://github.com/aeiwz/metbit/actions/workflows/python-publish.yml)
 
 An open-source Python package for reproducible <sup>1</sup>H NMR metabolomics - from raw FID preprocessing through normalization, chemometrics, and interactive visualization, in a single scriptable workflow.
 
