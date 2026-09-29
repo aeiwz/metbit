@@ -24,16 +24,22 @@ export function AnnotationPopover({ ppm, x, y, onAdd, onCancel }: Props) {
       }}
     >
       <span class="popover-title">Label at {ppm.toFixed(3)} ppm</span>
-      <input aria-label="Label" autoFocus placeholder="e.g. lactate" value={label} onInput={(e) => setLabel(e.currentTarget.value)} />
-      <input
-        aria-label="Angle"
-        type="number"
-        min={-180}
-        max={180}
-        step={5}
-        value={angle}
-        onInput={(e) => setAngle(Number(e.currentTarget.value) || 0)}
-      />
+      <label class="popover-field">
+        Label
+        <input aria-label="Label" autoFocus placeholder="e.g. lactate" value={label} onInput={(e) => setLabel(e.currentTarget.value)} />
+      </label>
+      <label class="popover-field">
+        Text angle (°)
+        <input
+          aria-label="Angle"
+          type="number"
+          min={-180}
+          max={180}
+          step={5}
+          value={angle}
+          onInput={(e) => setAngle(Number(e.currentTarget.value) || 0)}
+        />
+      </label>
       <div class="row">
         <button class="btn primary" type="submit" disabled={!label.trim()}>
           Add

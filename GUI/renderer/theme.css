@@ -244,3 +244,4 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 .label-list li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ppm-tag { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .link:disabled { opacity: 0.4; cursor: default; }
+.popover-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
