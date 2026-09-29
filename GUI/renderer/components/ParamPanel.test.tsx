@@ -22,6 +22,8 @@ function mount(props: Partial<Parameters<typeof ParamPanel>[0]> = {}) {
   return { root, onRun };
 }
 
+const tick = () => new Promise((r) => setTimeout(r));
+
 it("renders one control per property with the right kind", () => {
   const { root } = mount();
   expect(root.querySelector<HTMLInputElement>("#f-n_components")!.type).toBe("number");
@@ -55,4 +57,33 @@ it("maps pydantic 422 detail to field errors", () => {
     "": "whole",
   });
   expect(fieldErrors("boom")).toEqual({ "": "boom" });
+});
+
+it("shows field descriptions as hints", () => {
+  const withHint: JsonSchema = { properties: { windows: { type: "string", title: "Windows", description: "e.g. 3.2-2.8" } } };
+  const { root } = mount({ schema: withHint });
+  expect(root.querySelector(".hint")!.textContent).toBe("e.g. 3.2-2.8");
+});
+
+it("offers the picked ppm for pick fields only", async () => {
+  const pickSchema: JsonSchema = {
+    properties: {
+      anchor_ppm: { type: "number", title: "Anchor (ppm)", pick_ppm: true },
+      p_threshold: { type: "number", title: "p", default: 0.0001 },
+    },
+  };
+  const { root, onRun } = mount({ schema: pickSchema, picked: 3.0512 });
+  const picks = root.querySelectorAll<HTMLButtonElement>(".pick");
+  expect(picks).toHaveLength(1);
+  expect(picks[0].textContent).toBe("Use 3.051 ppm");
+  picks[0].click();
+  await tick();
+  root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+  expect(onRun).toHaveBeenCalledWith({ anchor_ppm: 3.0512, p_threshold: 0.0001 });
+});
+
+it("hides the pick button when nothing is picked", () => {
+  const pickSchema: JsonSchema = { properties: { anchor_ppm: { type: "number", pick_ppm: true } } };
+  const { root } = mount({ schema: pickSchema, picked: null });
+  expect(root.querySelector(".pick")).toBeNull();
 });

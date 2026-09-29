@@ -1,3 +1,4 @@
+import { Fragment } from "preact";
 import type { StageInfo } from "../api";
 
 interface Props {
@@ -11,14 +12,17 @@ export function Rail({ stages, current, onSelect }: Props) {
   return (
     <nav class="rail" aria-label="Pipeline">
       <div class="rail-brand">metbit</div>
-      {stages.map((s) => {
+      {stages.map((s, i) => {
         // reachable when its input exists, or it already has its own result
         const reachable = !s.requires || statusOf[s.requires] === "done" || s.status !== "empty";
         return (
-          <button key={s.id} aria-current={s.id === current} disabled={!reachable} onClick={() => onSelect(s.id)}>
-            <span class={`dot ${s.status}`} title={s.status} />
-            {s.title}
-          </button>
+          <Fragment key={s.id}>
+            {s.section !== stages[i - 1]?.section && <div class="rail-section">{s.section}</div>}
+            <button aria-current={s.id === current} disabled={!reachable} onClick={() => onSelect(s.id)}>
+              <span class={`dot ${s.status}`} title={s.status} />
+              {s.title}
+            </button>
+          </Fragment>
         );
       })}
     </nav>

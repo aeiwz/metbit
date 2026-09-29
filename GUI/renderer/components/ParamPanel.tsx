@@ -20,9 +20,10 @@ interface Props {
   errors: FieldErrors;
   busy: boolean;
   onRun: (values: Values) => void;
+  picked?: number | null;
 }
 
-export function ParamPanel({ title, schema, initial, errors, busy, onRun }: Props) {
+export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked = null }: Props) {
   const [values, setValues] = useState<Values>(() => ({ ...defaults(schema), ...initial }));
   const set = (k: string, v: unknown) => setValues((s) => ({ ...s, [k]: v }));
   return (
@@ -35,7 +36,7 @@ export function ParamPanel({ title, schema, initial, errors, busy, onRun }: Prop
     >
       <h2>{title}</h2>
       {Object.entries(schema.properties).map(([k, f]) => (
-        <Field key={k} name={k} field={f} value={values[k]} error={errors[k]} onChange={(v) => set(k, v)} />
+        <Field key={k} name={k} field={f} value={values[k]} error={errors[k]} picked={picked} onChange={(v) => set(k, v)} />
       ))}
       {errors[""] && <p class="error">{errors[""]}</p>}
       <button class="btn primary" type="submit" disabled={busy}>
@@ -50,10 +51,11 @@ interface FieldProps {
   field: FieldSchema;
   value: unknown;
   error?: string;
+  picked: number | null;
   onChange: (v: unknown) => void;
 }
 
-function Field({ name, field, value, error, onChange }: FieldProps) {
+function Field({ name, field, value, error, picked, onChange }: FieldProps) {
   const id = `f-${name}`;
   const text = (e: Event) => onChange((e.currentTarget as HTMLInputElement).value);
   let control;
@@ -83,7 +85,7 @@ function Field({ name, field, value, error, onChange }: FieldProps) {
       />
     );
   } else if (field.format === "file-path") {
-    // ponytail: CSV is the only file input in stage 1; take filters from the schema when Bruker import lands
+    // ponytail: CSV is the only file input so far; take filters from the schema when Bruker import lands
     const browse = async () => {
       const path = await window.metbit.openFile([{ name: "CSV", extensions: ["csv"] }]);
       if (path) onChange(path);
@@ -103,6 +105,12 @@ function Field({ name, field, value, error, onChange }: FieldProps) {
     <div class={`field${error ? " invalid" : ""}`}>
       <label for={id}>{field.title ?? name}</label>
       {control}
+      {field.pick_ppm && picked !== null && (
+        <button type="button" class="pick" onClick={() => onChange(picked)}>
+          Use {picked.toFixed(3)} ppm
+        </button>
+      )}
+      {field.description && <span class="hint">{field.description}</span>}
       {error && <span class="err">{error}</span>}
     </div>
   );

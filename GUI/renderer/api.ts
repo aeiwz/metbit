@@ -3,11 +3,13 @@ export type Status = "empty" | "running" | "done" | "failed" | "stale";
 export interface FieldSchema {
   type?: string;
   title?: string;
+  description?: string;
   default?: unknown;
   enum?: string[];
   minimum?: number;
   maximum?: number;
   format?: string;
+  pick_ppm?: boolean;
 }
 
 export interface JsonSchema {
@@ -18,9 +20,12 @@ export interface JsonSchema {
 export interface StageInfo {
   id: string;
   title: string;
+  section: string;
   requires: string | null;
   status: Status;
   views: string[];
+  ppm_views: Record<string, "x" | "customdata">;
+  has_table: boolean;
   schema: JsonSchema;
   params: Record<string, unknown> | null;
 }
