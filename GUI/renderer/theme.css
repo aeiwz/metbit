@@ -206,3 +206,18 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 .check input { accent-color: var(--accent); }
 .style-override { border-top: 1px solid var(--border); padding-top: var(--s2); }
 .style-override summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-bottom: var(--s1); }
+.loader { display: flex; flex-direction: column; align-items: center; gap: var(--s1); color: var(--muted); }
+.molecule { width: 96px; height: 96px; overflow: visible; }
+.molecule .ring { transform-box: view-box; transform-origin: 50% 50%; animation: ring-turn 8s linear infinite; }
+.molecule .bond { stroke: var(--accent); stroke-width: 2; stroke-linecap: round; opacity: 0.55; }
+.molecule .double { stroke: var(--accent); stroke-width: 2; stroke-linecap: round; animation: resonance 2.4s ease-in-out infinite; }
+.molecule .double.alt { animation-delay: -1.2s; }
+.molecule .atom { fill: var(--bg); stroke: var(--accent); stroke-width: 2; animation: atom-pulse 1.5s ease-in-out infinite; }
+.loader-caption { font-size: 13px; }
+.loader-progress { color: var(--text); font-weight: 500; font-variant-numeric: tabular-nums; }
+@keyframes ring-turn { to { transform: rotate(360deg); } }
+@keyframes resonance { 0%, 100% { opacity: 0.9; } 50% { opacity: 0.12; } }
+@keyframes atom-pulse { 0%, 100% { fill: var(--bg); } 20% { fill: var(--accent); } }
+@media (prefers-reduced-motion: reduce) {
+  .molecule .ring, .molecule .double, .molecule .atom { animation: none; }
+}
