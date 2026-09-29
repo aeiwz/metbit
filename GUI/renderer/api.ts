@@ -10,6 +10,7 @@ export interface FieldSchema {
   maximum?: number;
   format?: string;
   pick_ppm?: boolean;
+  show_if?: Record<string, unknown>;
 }
 
 export interface JsonSchema {
@@ -26,6 +27,7 @@ export interface StageInfo {
   views: string[];
   ppm_views: Record<string, "x" | "customdata">;
   has_table: boolean;
+  blocked: string | null;
   schema: JsonSchema;
   params: Record<string, unknown> | null;
 }

@@ -39,8 +39,8 @@ ipcMain.handle("backend:restart", async () => {
   old?.proc.kill();
   return info(await launchBackend());
 });
-ipcMain.handle("dialog:openFile", async (_e, filters?: Electron.FileFilter[]) => {
-  const r = await dialog.showOpenDialog(win!, { properties: ["openFile"], filters });
+ipcMain.handle("dialog:openFile", async (_e, filters?: Electron.FileFilter[], directory?: boolean) => {
+  const r = await dialog.showOpenDialog(win!, { properties: [directory ? "openDirectory" : "openFile"], filters });
   return r.canceled ? null : r.filePaths[0];
 });
 

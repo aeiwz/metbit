@@ -87,3 +87,45 @@ it("hides the pick button when nothing is picked", () => {
   const { root } = mount({ schema: pickSchema, picked: null });
   expect(root.querySelector(".pick")).toBeNull();
 });
+
+const importSchema: JsonSchema = {
+  properties: {
+    source: { type: "string", title: "Source", enum: ["csv", "bruker"], default: "csv" },
+    path: { type: "string", title: "CSV file", format: "file-path", show_if: { source: "csv" } },
+    folder: { type: "string", title: "Bruker folder", format: "dir-path", show_if: { source: "bruker" } },
+    auto_phasing: { type: "boolean", title: "Automatic phasing", default: false },
+  },
+};
+
+it("shows only the fields whose show_if matches", async () => {
+  const { root } = mount({ schema: importSchema });
+  expect(root.querySelector("#f-path")).not.toBeNull();
+  expect(root.querySelector("#f-folder")).toBeNull();
+  const source = root.querySelector<HTMLSelectElement>("#f-source")!;
+  source.value = "bruker";
+  source.dispatchEvent(new Event("change"));
+  await tick();
+  expect(root.querySelector("#f-path")).toBeNull();
+  expect(root.querySelector("#f-folder")).not.toBeNull();
+});
+
+it("renders booleans as checkboxes and submits booleans", async () => {
+  const { root, onRun } = mount({ schema: importSchema });
+  const box = root.querySelector<HTMLInputElement>("#f-auto_phasing")!;
+  expect(box.type).toBe("checkbox");
+  box.click();
+  await tick();
+  root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+  expect(onRun.mock.calls[0][0].auto_phasing).toBe(true);
+});
+
+it("opens a folder picker for dir-path fields", async () => {
+  const openFile = vi.fn().mockResolvedValue("/data/exps");
+  (window as any).metbit = { openFile };
+  const { root } = mount({ schema: importSchema, initial: { source: "bruker" } });
+  [...root.querySelectorAll("button")].find((b) => b.textContent === "Browse")!.click();
+  await tick();
+  expect(openFile).toHaveBeenCalledWith(undefined, true);
+  await tick();
+  expect(root.querySelector<HTMLInputElement>("#f-folder")!.value).toBe("/data/exps");
+});

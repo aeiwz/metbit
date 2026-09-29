@@ -159,3 +159,4 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 .pick { all: unset; cursor: pointer; color: var(--accent); font-size: 12px; align-self: flex-start; }
 .pick:focus-visible { outline: 2px solid var(--accent); }
 .tabs .picked { margin-left: auto; align-self: center; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.field input[type="checkbox"] { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); align-self: flex-start; }

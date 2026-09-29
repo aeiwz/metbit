@@ -7,7 +7,7 @@ interface Window {
   metbit: {
     backendInfo(): Promise<BackendInfo>;
     restartBackend(): Promise<BackendInfo>;
-    openFile(filters?: { name: string; extensions: string[] }[]): Promise<string | null>;
+    openFile(filters?: { name: string; extensions: string[] }[], directory?: boolean): Promise<string | null>;
     onBackendExit(cb: () => void): void;
   };
 }

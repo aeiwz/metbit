@@ -12,6 +12,7 @@ const stage = (id: string, section: string, requires: string | null = null, stat
   views: [],
   ppm_views: {},
   has_table: true,
+  blocked: null,
   schema: { properties: {} },
   params: null,
 });
@@ -24,4 +25,13 @@ it("renders one header per section and gates stages on their requirement", () =>
   const button = (text: string) => [...root.querySelectorAll("button")].find((b) => b.textContent === text)!;
   expect(button("IMPORT").disabled).toBe(false);
   expect(button("PCA").disabled).toBe(true);
+});
+
+it("disables blocked stages and explains why", () => {
+  const root = document.createElement("div");
+  const process = { ...stage("process", "Data", "import"), blocked: "Bruker only" };
+  render(<Rail stages={[stage("import", "Data", null, "done"), process]} current="import" onSelect={() => {}} />, root);
+  const button = [...root.querySelectorAll("button")].find((b) => b.textContent === "PROCESS")!;
+  expect(button.disabled).toBe(true);
+  expect(button.title).toBe("Bruker only");
 });

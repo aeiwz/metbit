@@ -13,6 +13,9 @@ export function fieldErrors(detail: unknown): FieldErrors {
   return Object.fromEntries(detail.map((d: { loc: unknown[]; msg: string }) => [String(d.loc[0] ?? ""), d.msg]));
 }
 
+const visible = (f: FieldSchema, values: Values) =>
+  !f.show_if || Object.entries(f.show_if).every(([k, v]) => values[k] === v);
+
 interface Props {
   title: string;
   schema: JsonSchema;
@@ -35,9 +38,11 @@ export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked
       }}
     >
       <h2>{title}</h2>
-      {Object.entries(schema.properties).map(([k, f]) => (
-        <Field key={k} name={k} field={f} value={values[k]} error={errors[k]} picked={picked} onChange={(v) => set(k, v)} />
-      ))}
+      {Object.entries(schema.properties)
+        .filter(([, f]) => visible(f, values))
+        .map(([k, f]) => (
+          <Field key={k} name={k} field={f} value={values[k]} error={errors[k]} picked={picked} onChange={(v) => set(k, v)} />
+        ))}
       {errors[""] && <p class="error">{errors[""]}</p>}
       <button class="btn primary" type="submit" disabled={busy}>
         {busy ? "Running…" : "Run"}
@@ -69,6 +74,9 @@ function Field({ name, field, value, error, picked, onChange }: FieldProps) {
         ))}
       </select>
     );
+  } else if (field.type === "boolean") {
+    // onClick, not onChange: click fires for mouse and Space and already carries the new state
+    control = <input id={id} type="checkbox" checked={value === true} onClick={(e) => onChange(e.currentTarget.checked)} />;
   } else if (field.type === "integer" || field.type === "number") {
     control = (
       <input
@@ -84,10 +92,11 @@ function Field({ name, field, value, error, picked, onChange }: FieldProps) {
         }}
       />
     );
-  } else if (field.format === "file-path") {
-    // ponytail: CSV is the only file input so far; take filters from the schema when Bruker import lands
+  } else if (field.format === "file-path" || field.format === "dir-path") {
+    const directory = field.format === "dir-path";
     const browse = async () => {
-      const path = await window.metbit.openFile([{ name: "CSV", extensions: ["csv"] }]);
+      // ponytail: every file input so far is a CSV; take filters from the schema when that changes
+      const path = await window.metbit.openFile(directory ? undefined : [{ name: "CSV", extensions: ["csv"] }], directory || undefined);
       if (path) onChange(path);
     };
     control = (

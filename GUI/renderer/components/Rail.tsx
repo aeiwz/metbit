@@ -18,8 +18,13 @@ export function Rail({ stages, current, onSelect }: Props) {
         return (
           <Fragment key={s.id}>
             {s.section !== stages[i - 1]?.section && <div class="rail-section">{s.section}</div>}
-            <button aria-current={s.id === current} disabled={!reachable} onClick={() => onSelect(s.id)}>
-              <span class={`dot ${s.status}`} title={s.status} />
+            <button
+              aria-current={s.id === current}
+              disabled={!reachable || !!s.blocked}
+              title={s.blocked ?? undefined}
+              onClick={() => onSelect(s.id)}
+            >
+              <span class={`dot ${s.status}`} />
               {s.title}
             </button>
           </Fragment>
