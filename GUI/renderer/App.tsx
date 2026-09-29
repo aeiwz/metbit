@@ -123,8 +123,16 @@ export function App() {
   const exportImage = (format: "png" | "svg") =>
     guarded(async () => {
       if (!figure) return;
-      // the original metbit figure (white background), not the themed on-screen one
-      const url = await Plotly.toImage({ data: figure.data, layout: { ...figure.layout, ...IMAGE } }, { format, ...IMAGE });
+      // the original metbit figure, not the themed on-screen one, on an opaque white page so it
+      // stays readable in dark viewers; extra top margin fits metbit's Q2 / R2 annotations
+      const layout = {
+        ...figure.layout,
+        ...IMAGE,
+        paper_bgcolor: "white",
+        plot_bgcolor: "white",
+        margin: { ...figure.layout.margin, t: Math.max(figure.layout.margin?.t ?? 0, 140) },
+      };
+      const url = await Plotly.toImage({ data: figure.data, layout }, { format, ...IMAGE });
       const path = await window.metbit.saveImage(`${current}-${tab}.${format}`, url);
       if (path) flash(`Saved ${basename(path)}`);
     });

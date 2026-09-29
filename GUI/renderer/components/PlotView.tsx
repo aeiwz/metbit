@@ -60,7 +60,9 @@ export function PlotView({ figure, onPick }: { figure: Figure; onPick?: (point: 
     const node: any = el.current!;
     const layout = themed(figure.layout);
     if (pickable) layout.hoverdistance = -1; // any click in the plot picks the nearest point, not only within 20 px
-    Plotly.react(node, figure.data, layout, { responsive: true, displaylogo: false }).then(() => {
+    // toImage removed: the tab bar's PNG / SVG export saves the original white-background figure instead
+    const config = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ["toImage"] };
+    Plotly.react(node, figure.data, layout, config).then(() => {
       node.removeAllListeners?.("plotly_click");
       node.on("plotly_click", (e: { points?: PickPoint[] }) => {
         const p = e.points?.[0];
