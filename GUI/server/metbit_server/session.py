@@ -13,6 +13,7 @@ class Session:
         self.style: dict = {}                    # global PlotStyle as stored (validated on use)
         self.stage_styles: dict[str, dict] = {}  # per-stage StyleOverride dicts
         self.annotations: list[dict] = []        # peak labels; mutate in place (Annotate holds a reference)
+        self.annotation_settings: dict = {}      # label font size and line styles; mutate in place too
         self.lock = threading.Lock()  # one job at a time
 
     def dependents(self, sid: str) -> list[str]:

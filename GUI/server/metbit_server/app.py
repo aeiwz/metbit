@@ -11,7 +11,17 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError, field_validator
 
-from .annotations import ANNOTATED_VIEWS, AnnotationIn, new_annotation, overlay, parse_annotation_file
+from .annotations import (
+    ANNOTATED_VIEWS,
+    AnnotationIn,
+    AnnotationPatch,
+    AnnotatorSettings,
+    new_annotation,
+    overlay,
+    parse_annotation_file,
+    settings_dict,
+)
+from .stages.annotate import sample_names
 from .jobs import Busy, Job, start_job
 from .project import ProjectError, load_project, save_project
 from .session import Session
@@ -32,6 +42,12 @@ class PathBody(BaseModel):
         if not p.parent.is_dir():
             raise ValueError(f"Folder does not exist: {p.parent}")
         return v
+
+
+class HtmlBody(PathBody):
+    view: str
+    ppm: Optional[float] = None
+    mode: Optional[str] = None
 
 
 def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str] = None) -> FastAPI:
@@ -139,8 +155,7 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
 
         return StreamingResponse(stream(), media_type="text/event-stream")
 
-    @app.get("/stages/{sid}/figure")
-    def figure(sid: str, view: str, ppm: Optional[float] = None):
+    def build_figure(sid: str, view: str, ppm: Optional[float] = None, mode: Optional[str] = None):
         stage = stage_or_404(sid)
         style = effective_style(sid)
         if view in stage.pre_views:
@@ -148,17 +163,26 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
                 data = working(session)  # pre-run views draw from the working matrix, no result needed
             except ValueError as e:
                 raise HTTPException(409, str(e))
-            fig = render(stage.pre_views[view], data, style, ppm=ppm)
+            fig = render(stage.pre_views[view], data, style, ppm=ppm, mode=mode)
         else:
             out = result_or_409(sid)
             make = stage.figures.get(view)
             if make is None:
                 raise HTTPException(404, f"Unknown view '{view}'")
-            fig = render(make, out, style, ppm=ppm)
+            fig = render(make, out, style, ppm=ppm, mode=mode)
         if view in ANNOTATED_VIEWS and session.annotations:
-            overlay(fig, session.annotations, style.font_size)
+            overlay(fig, session.annotations, session.annotation_settings.get("font_size") or style.font_size)
         fig.update_layout(width=None, height=None, autosize=True)  # renderer sizes the plot
-        return Response(fig.to_json(), media_type="application/json")
+        return fig
+
+    @app.get("/stages/{sid}/figure")
+    def figure(sid: str, view: str, ppm: Optional[float] = None, mode: Optional[str] = None):
+        return Response(build_figure(sid, view, ppm, mode).to_json(), media_type="application/json")
+
+    @app.post("/stages/{sid}/html")
+    def export_html(sid: str, body: HtmlBody):
+        build_figure(sid, body.view, body.ppm, body.mode).write_html(body.path, include_plotlyjs=True, full_html=True)
+        return {"path": body.path}  # plotly.js embedded: the file works offline
 
     @app.get("/style")
     def get_style():
@@ -242,6 +266,39 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
     def export_annotations(body: PathBody):
         Path(body.path).write_text(json.dumps(session.annotations, indent=2), encoding="utf-8")
         return {"path": body.path}
+
+    @app.patch("/annotations/{aid}")
+    def patch_annotation(aid: str, body: dict = Body(...)):
+        try:
+            patch = AnnotationPatch.model_validate(body)
+        except ValidationError as e:
+            raise HTTPException(422, json.loads(e.json(include_url=False)))
+        for a in session.annotations:
+            if a["id"] == aid:
+                a.update(patch.model_dump(exclude_none=True))
+                return a
+        raise HTTPException(404, "Unknown annotation")
+
+    def annotation_targets() -> dict:
+        try:
+            data = working(session)  # a Bruker import has no matrix until Process runs
+        except ValueError:
+            return {"groups": [], "samples": []}
+        return {"groups": sorted(set(data.labels)), "samples": sample_names(data)}
+
+    @app.get("/annotations/settings")
+    def get_annotation_settings():
+        return {**session.annotation_settings, "targets": annotation_targets()}
+
+    @app.put("/annotations/settings")
+    def put_annotation_settings(body: dict = Body(...)):
+        try:
+            settings = AnnotatorSettings.model_validate({k: v for k, v in body.items() if k != "targets"})
+        except ValidationError as e:
+            raise HTTPException(422, json.loads(e.json(include_url=False)))
+        session.annotation_settings.clear()  # in place: the Annotate result shares this dict
+        session.annotation_settings.update(settings_dict(settings))
+        return get_annotation_settings()
 
     def autosave_now() -> None:
         save_project(session, autosave)

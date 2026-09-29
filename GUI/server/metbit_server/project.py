@@ -10,7 +10,9 @@ import zipfile
 
 import pandas as pd
 
-from .annotations import parse_annotation_list
+from pydantic import ValidationError
+
+from .annotations import AnnotatorSettings, parse_annotation_list, settings_dict
 from .session import Session
 from .stages import DATA_ORDER, BrukerSource, Dataset, Stage
 
@@ -46,6 +48,7 @@ def save_project(session: Session, path: str) -> None:
         "style": session.style,
         "stage_styles": session.stage_styles,
         "annotations": session.annotations,
+        "annotation_settings": session.annotation_settings,
     }
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
         for sid in session.order:
@@ -89,6 +92,10 @@ def load_project(session: Session, stages: list[Stage], path: str) -> None:
     fresh = Session(session.order, session.after)  # swapped in only after everything loads
     # before analyses re-run, so the Annotate result shares this list; re-sanitized like any import
     fresh.annotations = parse_annotation_list(manifest.get("annotations") or [])
+    try:
+        fresh.annotation_settings = settings_dict(AnnotatorSettings.model_validate(manifest.get("annotation_settings") or {}))
+    except ValidationError:
+        fresh.annotation_settings = {}
     with zf:
         for sid in session.order:
             entry = saved.get(sid)
@@ -129,4 +136,5 @@ def load_project(session: Session, stages: list[Stage], path: str) -> None:
     session.status, session.params, session.outputs = fresh.status, fresh.params, fresh.outputs
     session.style = manifest.get("style") or {}
     session.annotations = fresh.annotations
+    session.annotation_settings = fresh.annotation_settings
     session.stage_styles = manifest.get("stage_styles") or {}
