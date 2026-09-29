@@ -1,3 +1,4 @@
+import Plotly from "plotly.js-dist-min";
 import { useEffect, useState } from "preact/hooks";
 import { Api, ApiError, type StageInfo, type TablePage } from "./api";
 import { DataTable } from "./components/DataTable";
@@ -13,6 +14,9 @@ interface Failure {
 
 const LABELS: Record<string, string> = { vip: "VIP", "s-plot": "S-plot", predicted: "Predicted vs actual" };
 const label = (t: string) => LABELS[t] ?? t[0].toUpperCase() + t.slice(1);
+const basename = (p: string) => p.split(/[\\/]/).pop() ?? p;
+const PROJECT = [{ name: "metbit project", extensions: ["metbit"] }];
+const IMAGE = { width: 1600, height: 1000 };
 
 export function App() {
   const [api, setApi] = useState<Api | null>(null);
@@ -20,6 +24,7 @@ export function App() {
   const [current, setCurrent] = useState("import");
   const [tab, setTab] = useState("table");
   const [version, setVersion] = useState(0); // bumps after every run to refetch views
+  const [formKey, setFormKey] = useState(0); // bumps when a project replaces the params
   const [figure, setFigure] = useState<any>(null);
   const [page, setPage] = useState<TablePage | null>(null);
   const [pct, setPct] = useState<number | null>(null);
@@ -27,6 +32,7 @@ export function App() {
   const [failure, setFailure] = useState<Failure | null>(null);
   const [backendDown, setBackendDown] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const stage = stages.find((s) => s.id === current);
   const hasResult = stage?.status === "done" || stage?.status === "stale";
@@ -60,11 +66,30 @@ export function App() {
     };
   }, [api, current, tab, hasResult, version]);
 
+  function flash(message: string) {
+    setNotice(message);
+    setTimeout(() => setNotice((n) => (n === message ? null : n)), 4000);
+  }
+
   function select(id: string) {
     setCurrent(id);
     setErrors({});
     setFailure(null);
     setTab(stages.find((s) => s.id === id)?.views[0] ?? "table");
+  }
+
+  async function refresh(client: Api) {
+    setStages(await client.stages());
+    setVersion((v) => v + 1);
+    setFormKey((k) => k + 1);
+  }
+
+  async function guarded(action: () => Promise<void>) {
+    try {
+      await action();
+    } catch (e) {
+      setFailure({ message: (e as Error).message });
+    }
   }
 
   async function run(values: Values) {
@@ -87,11 +112,50 @@ export function App() {
     setVersion((v) => v + 1);
   }
 
+  const exportCsv = () =>
+    guarded(async () => {
+      const path = await window.metbit.saveDialog(`${current}.csv`, [{ name: "CSV", extensions: ["csv"] }]);
+      if (!path || !api) return;
+      await api.exportCsv(current, path);
+      flash(`Saved ${basename(path)}`);
+    });
+
+  const exportImage = (format: "png" | "svg") =>
+    guarded(async () => {
+      if (!figure) return;
+      // the original metbit figure (white background), not the themed on-screen one
+      const url = await Plotly.toImage({ data: figure.data, layout: { ...figure.layout, ...IMAGE } }, { format, ...IMAGE });
+      const path = await window.metbit.saveImage(`${current}-${tab}.${format}`, url);
+      if (path) flash(`Saved ${basename(path)}`);
+    });
+
+  const saveProject = () =>
+    guarded(async () => {
+      const path = await window.metbit.saveDialog("analysis.metbit", PROJECT);
+      if (!path || !api) return;
+      await api.saveProject(path);
+      flash(`Saved ${basename(path)}`);
+    });
+
+  const openProject = () =>
+    guarded(async () => {
+      const path = await window.metbit.openFile(PROJECT);
+      if (!path || !api) return;
+      await api.loadProject(path);
+      await refresh(api);
+      select("import");
+      flash(`Opened ${basename(path)}`);
+    });
+
   async function restart() {
     await window.metbit.restartBackend();
     setBackendDown(false);
-    setApi(await Api.connect());
+    const next = await Api.connect();
+    const { restored } = await next.restore(); // before setApi, so the stage list reflects it
+    setApi(next);
+    setFormKey((k) => k + 1);
     select("import");
+    if (restored) flash("Session restored");
   }
 
   if (!stage) return <div class="placeholder">Starting metbit…</div>;
@@ -122,7 +186,7 @@ export function App() {
   return (
     <div class="layout">
       <JobBar pct={pct} />
-      <Rail stages={stages} current={current} onSelect={select} />
+      <Rail stages={stages} current={current} onSelect={select} onOpen={openProject} onSave={saveProject} />
       <main class="center">
         <div class="tabs" role="tablist">
           {hasResult &&
@@ -131,16 +195,34 @@ export function App() {
                 {label(t)}
               </button>
             ))}
-          {picked !== null && (
-            <span class="picked" aria-live="polite">
-              δ {picked.toFixed(3)} ppm
-            </span>
-          )}
+          <div class="tabs-right">
+            {notice && (
+              <span class="notice" aria-live="polite">
+                {notice}
+              </span>
+            )}
+            {picked !== null && <span class="picked">δ {picked.toFixed(3)} ppm</span>}
+            {hasResult && stage.exportable && (
+              <button class="link" onClick={exportCsv}>
+                Export CSV
+              </button>
+            )}
+            {hasResult && tab !== "table" && figure && (
+              <>
+                <button class="link" onClick={() => exportImage("png")}>
+                  PNG
+                </button>
+                <button class="link" onClick={() => exportImage("svg")}>
+                  SVG
+                </button>
+              </>
+            )}
+          </div>
         </div>
         <div class="view">{body}</div>
       </main>
       <ParamPanel
-        key={current}
+        key={`${current}:${formKey}`}
         title={stage.title}
         schema={stage.schema}
         initial={stage.params}

@@ -5,9 +5,11 @@ interface Props {
   stages: StageInfo[];
   current: string;
   onSelect: (id: string) => void;
+  onOpen?: () => void;
+  onSave?: () => void;
 }
 
-export function Rail({ stages, current, onSelect }: Props) {
+export function Rail({ stages, current, onSelect, onOpen, onSave }: Props) {
   const statusOf = Object.fromEntries(stages.map((s) => [s.id, s.status]));
   return (
     <nav class="rail" aria-label="Pipeline">
@@ -30,6 +32,12 @@ export function Rail({ stages, current, onSelect }: Props) {
           </Fragment>
         );
       })}
+      {(onOpen || onSave) && (
+        <div class="rail-footer">
+          {onOpen && <button onClick={onOpen}>Open project…</button>}
+          {onSave && <button onClick={onSave}>Save project…</button>}
+        </div>
+      )}
     </nav>
   );
 }

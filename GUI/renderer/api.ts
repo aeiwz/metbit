@@ -27,6 +27,7 @@ export interface StageInfo {
   views: string[];
   ppm_views: Record<string, "x" | "customdata">;
   has_table: boolean;
+  exportable: boolean;
   blocked: string | null;
   schema: JsonSchema;
   params: Record<string, unknown> | null;
@@ -94,6 +95,26 @@ export class Api {
 
   table(id: string, offset = 0, limit = 100): Promise<TablePage> {
     return this.req(`/stages/${id}/table?offset=${offset}&limit=${limit}`).then((r) => r.json());
+  }
+
+  private post(path: string, body?: unknown): Promise<any> {
+    return this.req(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) }).then((r) => r.json());
+  }
+
+  exportCsv(id: string, path: string): Promise<unknown> {
+    return this.post(`/stages/${id}/export`, { path });
+  }
+
+  saveProject(path: string): Promise<unknown> {
+    return this.post("/session/save", { path });
+  }
+
+  loadProject(path: string): Promise<unknown> {
+    return this.post("/session/load", { path });
+  }
+
+  restore(): Promise<{ restored: boolean }> {
+    return this.post("/session/restore");
   }
 
   async run(id: string, params: Record<string, unknown>, onEvent: (e: SseEvent) => void): Promise<void> {

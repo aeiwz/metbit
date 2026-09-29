@@ -13,6 +13,7 @@ const stage = (id: string, section: string, requires: string | null = null, stat
   ppm_views: {},
   has_table: true,
   blocked: null,
+  exportable: true,
   schema: { properties: {} },
   params: null,
 });
@@ -34,4 +35,17 @@ it("disables blocked stages and explains why", () => {
   const button = [...root.querySelectorAll("button")].find((b) => b.textContent === "PROCESS")!;
   expect(button.disabled).toBe(true);
   expect(button.title).toBe("Bruker only");
+});
+
+it("offers project open and save in the footer", () => {
+  const root = document.createElement("div");
+  const calls: string[] = [];
+  render(
+    <Rail stages={[stage("import", "Data")]} current="import" onSelect={() => {}} onOpen={() => calls.push("open")} onSave={() => calls.push("save")} />,
+    root,
+  );
+  const button = (text: string) => [...root.querySelectorAll(".rail-footer button")].find((b) => b.textContent === text) as HTMLButtonElement;
+  button("Open project…").click();
+  button("Save project…").click();
+  expect(calls).toEqual(["open", "save"]);
 });
