@@ -221,3 +221,26 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 @media (prefers-reduced-motion: reduce) {
   .molecule .ring, .molecule .double, .molecule .atom { animation: none; }
 }
+.popover {
+  position: fixed;
+  z-index: 10;
+  transform: translate(-50%, calc(-100% - 14px));
+  width: 220px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s1);
+  padding: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.popover-title { font-size: 12px; color: var(--muted); }
+.popover input { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px var(--s1); }
+.popover input:focus { outline: none; border-color: var(--accent); }
+.annotations { border-top: 1px solid var(--border); padding-top: var(--s2); display: flex; flex-direction: column; gap: var(--s1); }
+.annotations h3 { margin: 0; font-size: 12px; font-weight: 600; }
+.label-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.label-list li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: var(--s1); align-items: center; }
+.label-list li span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ppm-tag { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+.link:disabled { opacity: 0.4; cursor: default; }

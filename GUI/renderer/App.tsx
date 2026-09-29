@@ -1,6 +1,6 @@
 import Plotly from "plotly.js-dist-min";
 import { useEffect, useState } from "preact/hooks";
-import { Api, ApiError, type PlotStyle, type StageInfo, type StageStyle, type StyleOverride, type TablePage } from "./api";
+import { Api, ApiError, type Annotation, type PlotStyle, type StageInfo, type StageStyle, type StyleOverride, type TablePage } from "./api";
 import { DataTable } from "./components/DataTable";
 import { FormatGuide } from "./components/FormatGuide";
 import { makeExampleCsv } from "./exampleData";
@@ -8,6 +8,8 @@ import { JobBar } from "./components/JobBar";
 import { MoleculeLoader } from "./components/MoleculeLoader";
 import { ParamPanel, fieldErrors, type FieldErrors, type Values } from "./components/ParamPanel";
 import { PlotView, type PickPoint } from "./components/PlotView";
+import { AnnotationList } from "./components/AnnotationList";
+import { AnnotationPopover } from "./components/AnnotationPopover";
 import { Rail } from "./components/Rail";
 import { StyleForm, applyPatch } from "./components/StyleForm";
 
@@ -38,6 +40,8 @@ export function App() {
   const [picked, setPicked] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null); // caption while a project opens or a session restores
+  const [annotations, setAnnotations] = useState<Annotation[]>([]);
+  const [pending, setPending] = useState<{ ppm: number; x: number; y: number } | null>(null);
   const [importValues, setImportValues] = useState<Values>({});
   const [showGuide, setShowGuide] = useState(false);
   const [sideMode, setSideMode] = useState<"params" | "style">("params");
@@ -51,7 +55,12 @@ export function App() {
   const onPick = pickMode
     ? (pt: PickPoint) => {
         const v = Number(pickMode === "customdata" ? (pt.customdata as unknown[] | undefined)?.[0] : pt.x);
-        if (Number.isFinite(v)) setPicked(v);
+        if (!Number.isFinite(v)) return;
+        setPicked(v);
+        // on the Annotate spectra a click opens the label popover at the click
+        if (current === "annotate" && tab === "spectra" && pt.clientX !== undefined && pt.clientY !== undefined) {
+          setPending({ ppm: v, x: pt.clientX, y: pt.clientY });
+        }
       }
     : undefined;
 
@@ -62,6 +71,7 @@ export function App() {
 
   useEffect(() => {
     api?.stages().then(setStages);
+    api?.listAnnotations().then(setAnnotations);
   }, [api]);
 
   useEffect(() => {
@@ -98,6 +108,7 @@ export function App() {
     setShowGuide(false);
     setSideMode("params");
     setStageStyle(null); // the next stage's style loads fresh
+    setPending(null);
     setCurrent(id);
     setErrors({});
     setFailure(null);
@@ -182,6 +193,43 @@ export function App() {
       flash(`Saved ${basename(path)}`);
     });
   const guideVisible = current === "import" && !failure && (showGuide || (!hasResult && stage?.status !== "running"));
+
+  async function annotationsChanged(client: Api) {
+    setAnnotations(await client.listAnnotations());
+    setVersion((v) => v + 1); // labels are drawn server-side and feed the intensity table
+  }
+
+  const addAnnotation = (label: string, angle: number) =>
+    guarded(async () => {
+      if (!api || !pending) return;
+      await api.addAnnotation(pending.ppm, label, angle);
+      setPending(null);
+      await annotationsChanged(api);
+    });
+
+  const deleteAnnotation = (id: string) =>
+    guarded(async () => {
+      if (!api) return;
+      await api.deleteAnnotation(id);
+      await annotationsChanged(api);
+    });
+
+  const importAnnotations = () =>
+    guarded(async () => {
+      const path = await window.metbit.openFile([{ name: "JSON", extensions: ["json"] }]);
+      if (!path || !api) return;
+      await api.importAnnotations(path);
+      await annotationsChanged(api);
+      flash(`Imported ${basename(path)}`);
+    });
+
+  const exportAnnotations = () =>
+    guarded(async () => {
+      const path = await window.metbit.saveDialog("annotations.json", [{ name: "JSON", extensions: ["json"] }]);
+      if (!path || !api) return;
+      await api.exportAnnotations(path);
+      flash(`Saved ${basename(path)}`);
+    });
 
   const openStyle = () =>
     guarded(async () => {
@@ -357,6 +405,14 @@ export function App() {
         picked={picked}
         onValuesChange={current === "import" ? setImportValues : undefined}
       >
+        {current === "annotate" && (
+          <AnnotationList
+            items={annotations}
+            onDelete={deleteAnnotation}
+            onImport={importAnnotations}
+            onExport={exportAnnotations}
+          />
+        )}
         {stageStyle && (
           <details class="style-override">
             <summary>Style{Object.keys(stageStyle.override).length ? " (custom)" : ""}</summary>
@@ -369,6 +425,9 @@ export function App() {
           </details>
         )}
       </ParamPanel>
+      )}
+      {pending && (
+        <AnnotationPopover ppm={pending.ppm} x={pending.x} y={pending.y} onAdd={addAnnotation} onCancel={() => setPending(null)} />
       )}
       {backendDown && (
         <div class="banner" role="alert">

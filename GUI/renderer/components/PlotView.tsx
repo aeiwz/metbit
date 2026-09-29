@@ -9,6 +9,8 @@ interface Figure {
 export interface PickPoint {
   x: unknown;
   customdata: unknown;
+  clientX?: number; // viewport position of the click, for popovers
+  clientY?: number;
 }
 
 const BLACK = new Set(["black", "#000", "#000000", "rgb(0,0,0)", "rgb(0, 0, 0)"]);
@@ -39,7 +41,9 @@ function themed(layout: Record<string, any>): Record<string, any> {
     }
   }
   if (layout.title) out.title = { ...layout.title, font: { ...layout.title.font, color: text } };
-  if (layout.annotations) out.annotations = layout.annotations.map((a: any) => ({ ...a, font: { ...a.font, color: text } }));
+  if (layout.annotations) {
+    out.annotations = layout.annotations.map((a: any) => ({ ...a, arrowcolor: text, font: { ...a.font, color: text } }));
+  }
   if (layout.shapes) {
     out.shapes = layout.shapes.map((s: any) => (BLACK.has(String(s.line?.color).toLowerCase()) ? { ...s, line: { ...s.line, color: text } } : s));
   }
@@ -65,9 +69,9 @@ export function PlotView({ figure, onPick }: { figure: Figure; onPick?: (point: 
     const config = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ["toImage"] };
     Plotly.react(node, figure.data, layout, config).then(() => {
       node.removeAllListeners?.("plotly_click");
-      node.on("plotly_click", (e: { points?: PickPoint[] }) => {
+      node.on("plotly_click", (e: { points?: PickPoint[]; event?: MouseEvent }) => {
         const p = e.points?.[0];
-        if (p) pick.current?.({ x: p.x, customdata: p.customdata });
+        if (p) pick.current?.({ x: p.x, customdata: p.customdata, clientX: e.event?.clientX, clientY: e.event?.clientY });
       });
     });
   }, [figure, pickable]);

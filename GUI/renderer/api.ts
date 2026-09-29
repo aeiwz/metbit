@@ -55,6 +55,13 @@ export interface PlotStyle {
 
 export type StyleOverride = Partial<Omit<PlotStyle, "groups">> & { groups?: Record<string, Partial<GroupStyle>> };
 
+export interface Annotation {
+  id: string;
+  ppm: number;
+  label: string;
+  angle: number;
+}
+
 export interface StageStyle {
   override: StyleOverride;
   effective: PlotStyle;
@@ -140,6 +147,26 @@ export class Api {
 
   private put(path: string, body: unknown): Promise<any> {
     return this.req(path, { method: "PUT", body: JSON.stringify(body) }).then((r) => r.json());
+  }
+
+  listAnnotations(): Promise<Annotation[]> {
+    return this.req("/annotations").then((r) => r.json());
+  }
+
+  addAnnotation(ppm: number, label: string, angle: number): Promise<Annotation> {
+    return this.post("/annotations", { ppm, label, angle });
+  }
+
+  deleteAnnotation(id: string): Promise<unknown> {
+    return this.req(`/annotations/${id}`, { method: "DELETE" }).then((r) => r.json());
+  }
+
+  importAnnotations(path: string): Promise<Annotation[]> {
+    return this.post("/annotations/import", { path });
+  }
+
+  exportAnnotations(path: string): Promise<unknown> {
+    return this.post("/annotations/export", { path });
   }
 
   getStyle(): Promise<PlotStyle> {
