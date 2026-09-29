@@ -1,13 +1,14 @@
 # metbit GUI - Design Spec
 
 Date: 2026-09-29
-Status: Approved design, pending implementation plan
+Status: Approved. Stage 1 (shell, CSV import, PCA) implemented; full-pipeline revision approved 2026-09-29
 
 ## Goal
 
 A desktop app with a modern, minimal GUI that runs the full metbit pipeline:
-raw Bruker FID or CSV import, preprocessing, normalization, alignment, and
-analysis (PCA, OPLS-DA, STOCSY, univariate stats). It ships as a single
+raw Bruker FID or CSV import, preprocessing, normalization, alignment,
+multivariate analysis (PCA, OPLS-DA, PLS-R, LDA, ICA, HCA, STOCSY) and
+statistics (volcano, ANOVA / Kruskal-Wallis). It ships as a single
 installer with Python bundled, so users need no Python setup.
 
 Targets: macOS arm64, Windows x64, Linux x64 (AppImage).
@@ -43,31 +44,63 @@ GUI/
 Plot logic is not reimplemented in JS: metbit's existing Plotly figures are
 serialized with `fig.to_json()` and rendered with plotly.js.
 
+## Pipeline model
+
+Stages form a dependency graph in three rail sections:
+
+```
+DATA        Import -> Process (Bruker only) -> Normalize -> Align
+ANALYSIS    PCA, OPLS-DA, PLS-R, LDA, ICA, HCA, STOCSY
+STATISTICS  Volcano, Group tests (ANOVA / Kruskal-Wallis)
+```
+
+- **Working matrix**: every analysis reads the newest `done` data stage in the
+  order Align, Normalize, Process, Import. Normalize and Align are optional.
+- **Staleness**: each stage declares the stages it depends on (`after`).
+  When a stage completes, every `done` stage that transitively depends on it
+  becomes `stale`. Re-running an analysis never stales another analysis.
+- **Import** has `format: csv | bruker`. CSV loads the spectral matrix (ppm
+  column headers, other columns are metadata). Bruker lists experiment folders
+  and joins a metadata CSV mapping sample to group; **Process** then runs
+  `nmr_preprocessing` and is rejected for CSV imports.
+- **Dynamic options**: fields tagged `options: "groups"` or
+  `options: "columns"` get their `enum` filled by the server from the loaded
+  data when `/stages` is listed.
+
 ## Screens
 
-Layout: left pipeline rail, center plot, right parameter panel.
+Layout: left pipeline rail (with section headers), center plot, right
+parameter panel.
 
 Rail status per stage: empty dot (not run), filled (done), pulsing (running),
-red (failed), hollow ring (stale: an upstream stage was re-run).
+red (failed), hollow accent ring (stale).
 
-| Stage | Center view | Parameters |
+| Stage | Parameters | Views |
 |---|---|---|
-| Import | Sample table (name, group, path) | Bruker folder or CSV matrix; optional metadata CSV for groups |
-| Process | Overlaid spectra, sample picker | ppm range, water region, bin size, phasing mode, baseline lambda |
-| Normalize | Before / after spectra | PQN, MSC, TSP-area |
-| Align | Before / after spectra (zoomable) | icoshift intervals, max shift |
-| PCA | Scores / Loadings tabs | n components, scaling, color-by column |
-| OPLS-DA | Scores / S-plot / VIP tabs | group pair, scaling, CV folds, VIP threshold |
-| STOCSY | Correlation spectrum | driver ppm (or click on plot) |
-| Stats | Volcano plot + results table | test type, FDR method |
+| Import | format, path (file or folder picker), metadata CSV, group column | Table |
+| Process | bin size, auto-phasing, baseline type, calibration (TSP / DSS / custom) | Spectra, Table |
+| Normalize | PQN, MSC, SNV, SNV+PQN | Before / after spectra |
+| Align | ppm windows, reference (median / mean), max shift | Before / after spectra |
+| PCA | components, scaling, PC axes | Scores, Loadings, Variance, Table |
+| OPLS-DA | group A / B, scaling, CV folds, VIP threshold, permutations (0 = off) | Scores, S-plot, VIP, Permutation, Table |
+| PLS-R | numeric target column, components, scaling | Predicted vs actual, Scores, Table |
+| LDA | components, scaling | Scores, Loadings |
+| ICA | components, scaling | Components, Mixing |
+| HCA | linkage, metric, clusters | Dendrogram, Heatmap, Table |
+| STOCSY | anchor ppm, p threshold | Correlation spectrum |
+| Volcano | group A / B, fold-change and p thresholds, FDR method | Volcano, Table |
+| Group tests | ANOVA or Kruskal-Wallis, FDR, bin width (default 0.01 ppm), boxplot feature | Ranked table, Boxplot |
 
-CSV import skips Process and starts at Normalize.
+- Clicking a point on a spectrum or loadings plot fills the current stage's
+  ppm field when it has one (STOCSY anchor, Group tests feature).
+- Group tests rank features on a binned matrix; the boxplot shows the chosen
+  feature, or the top hit when none is given.
+- OPLS-DA and Volcano compare two chosen groups; other samples are excluded.
 
 `ParamPanel` renders its form from the JSON Schema that the server returns
 for each stage (derived from Pydantic models). No hand-written per-stage forms.
 
-Each stage has a `...` menu: export output matrix (CSV), plot (PNG/SVG),
-fitted model (JSON).
+Each stage has a `...` menu: export table or matrix (CSV), plot (PNG / SVG).
 
 ### Visual language
 
@@ -89,7 +122,7 @@ All routes require the bearer token; missing or wrong token returns 401.
 | GET | `/jobs/{id}/events` | SSE stream: `progress`, `done`, `error` |
 | GET | `/stages/{id}/figure?view=<name>` | Plotly figure JSON |
 | GET | `/stages/{id}/table?offset=&limit=` | Paginated summary table |
-| GET | `/stages/{id}/export?fmt=csv\|png\|svg\|json&path=` | Write export to a user-chosen path |
+| POST | `/stages/{id}/export` | Write the stage table or matrix as CSV to a user-chosen `path` |
 | POST | `/session/save` | Write `.metbit` project to a given path |
 | POST | `/session/load` | Load `.metbit` project from a given path |
 
@@ -107,8 +140,15 @@ All routes require the bearer token; missing or wrong token returns 401.
 ### Project file
 
 `.metbit` is a zip: `params.json` (all stage params and statuses) plus one
-Parquet file per completed stage output. Loading restores the rail without
-recomputing.
+Parquet file per completed data stage (Import, Process, Normalize, Align).
+Fitted models are not stored: pickled objects would execute code when a
+shared project is opened. On load, data stages restore directly and analysis
+stages re-run from their saved params, except OPLS-DA permutation tests,
+which load as `stale` until the user re-runs them.
+
+Plot exports (PNG / SVG) are produced in the renderer with `Plotly.toImage`
+and written by Electron after a native Save dialog; no image library is
+needed in Python.
 
 ### File access
 
@@ -138,16 +178,20 @@ chosen by the user and only reads or writes those paths.
 
 ## Build order
 
-Each stage is independently shippable.
+Each phase is independently shippable and gets its own plan, written just
+before it runs.
 
-1. **Shell and bridge**: Electron, sidecar spawn and health check, rail,
-   theme, CSV import, PCA. Proves the full path end to end.
-2. **Analysis**: OPLS-DA, STOCSY, Stats, exports, project save/load, autosave.
-3. **Preprocessing**: Bruker import and Process stage with per-sample progress.
-4. **Normalize and Align**.
-5. **Packaging CI**: GitHub Actions matrix (macos-14, windows-latest,
+1. **Stage 1 (done)**: shell and bridge, CSV import, PCA.
+2. **Phase A**: dependency-graph staleness, rail sections, dynamic options,
+   Normalize, Align, OPLS-DA, STOCSY (click-to-pick), Volcano.
+3. **Phase B**: PLS-R, LDA, ICA, HCA, Group tests.
+4. **Phase C**: Bruker import and Process with per-sample progress, verified
+   on the local MTBLS2052 subset (tests skip when absent).
+5. **Phase D**: exports, project save / load, autosave and restore.
+6. **Packaging CI**: GitHub Actions matrix (macos-14, windows-latest,
    ubuntu-latest). PyInstaller builds the sidecar, electron-builder bundles it
-   into `resources/`.
+   into `resources/`. The CI must run `node node_modules/electron/install.js`
+   if npm skips Electron's install script.
 
 ## Out of scope (deferred)
 
