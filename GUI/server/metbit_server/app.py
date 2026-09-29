@@ -108,7 +108,8 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
         if stage_or_404(sid).table is None:
             raise HTTPException(404, f"Stage '{sid}' has no table")
         df = by_id[sid].table(result_or_409(sid))
-        page = json.loads(df.iloc[offset:offset + limit].to_json(orient="split", index=False))
+        # double_precision=15 (the max): the default 10 rounds p-values like 3e-11 to 0
+        page = json.loads(df.iloc[offset:offset + limit].to_json(orient="split", index=False, double_precision=15))
         return {"columns": [str(c) for c in page["columns"]], "rows": page["data"], "total": len(df)}
 
     return app

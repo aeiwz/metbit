@@ -37,3 +37,21 @@ def test_table_pagination(client):
     assert page["rows"] == [["s10", "B"], ["s11", "B"]]
     assert page["total"] == 12
     assert client.get("/stages/import/table?limit=5000", headers=AUTH).status_code == 422
+
+
+def test_table_keeps_tiny_p_values():
+    import pandas as pd
+    from pydantic import BaseModel
+
+    from metbit_server.stages import Stage
+
+    class P(BaseModel):
+        pass
+
+    tiny = pd.DataFrame({"p_value": [3.2e-11, 7.5e-300, 0.5]})
+    stage = Stage(id="t", title="T", params=P, run=lambda p, s, prog: tiny, table=lambda df: df)
+    c = TestClient(create_app(TOKEN, stages=[stage]))
+    job = c.post("/stages/t/run", json={}, headers=AUTH).json()["job_id"]
+    c.get(f"/jobs/{job}/events", headers=AUTH)
+    rows = c.get("/stages/t/table", headers=AUTH).json()["rows"]
+    assert [r[0] for r in rows] == [3.2e-11, 7.5e-300, 0.5]
