@@ -245,3 +245,22 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 .ppm-tag { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
 .link:disabled { opacity: 0.4; cursor: default; }
 .popover-field { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.rail { min-height: 0; }
+.rail-stages { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
+.rail-footer { margin-top: 0; }
+@media (max-height: 760px) {
+  .rail { padding-top: 12px; }
+  .rail button { padding-top: 4px; padding-bottom: 4px; }
+  .rail-section { padding-top: 8px; }
+  .rail-brand { padding-bottom: 8px; }
+}
+/* the tab bar never wraps; on narrow windows it drops the ppm readout (the form shows it) and scrolls if needed */
+.tabs { overflow-x: auto; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs [role="tab"], .tabs-right > * { white-space: nowrap; flex: none; }
+.export-label { color: var(--muted); font-size: 12px; }
+@media (max-width: 1180px) {
+  .tabs { gap: 12px; }
+  .tabs-right { gap: 8px; }
+  .tabs .picked { display: none; }
+}

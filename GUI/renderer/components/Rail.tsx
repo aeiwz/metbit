@@ -15,6 +15,8 @@ export function Rail({ stages, current, onSelect, onOpen, onSave, onStyle }: Pro
   return (
     <nav class="rail" aria-label="Pipeline">
       <div class="rail-brand">metbit</div>
+      {/* the stage list scrolls on short windows; the footer stays pinned */}
+      <div class="rail-stages">
       {stages.map((s, i) => {
         // reachable when its input exists, or it already has its own result
         const reachable = !s.requires || statusOf[s.requires] === "done" || s.status !== "empty";
@@ -33,6 +35,7 @@ export function Rail({ stages, current, onSelect, onOpen, onSave, onStyle }: Pro
           </Fragment>
         );
       })}
+      </div>
       {(onOpen || onSave || onStyle) && (
         <div class="rail-footer">
           {onStyle && <button onClick={onStyle}>Plot style…</button>}

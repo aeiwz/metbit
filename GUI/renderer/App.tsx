@@ -385,9 +385,10 @@ export function App() {
                 {showGuide ? "Hide format" : "File format"}
               </button>
             )}
+            {hasResult && (stage.exportable || (tab !== "table" && figure)) && <span class="export-label">Export</span>}
             {hasResult && stage.exportable && (
-              <button class="link" onClick={exportCsv}>
-                Export CSV
+              <button class="link" aria-label="Export CSV" onClick={exportCsv}>
+                CSV
               </button>
             )}
             {hasResult && tab !== "table" && figure && (
