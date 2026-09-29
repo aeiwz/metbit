@@ -80,7 +80,7 @@ body {
 .tabs button:focus-visible { outline: 2px solid var(--accent); }
 .view { flex: 1; min-height: 0; overflow: auto; position: relative; }
 .plot { position: absolute; inset: 0; }
-.empty { display: grid; place-items: center; height: 100%; color: var(--muted); padding: var(--s3); }
+.placeholder { display: grid; place-items: center; height: 100%; color: var(--muted); padding: var(--s3); }
 .muted { color: var(--muted); padding: var(--s1) var(--s2); margin: 0; }
 
 .panel {
