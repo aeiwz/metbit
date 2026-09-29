@@ -233,6 +233,34 @@ meaningfully).
   opens, and while a session restores after a backend restart. The 2 px
   top bar stays.
 
+## 6. Group tests: boxplot with a clickable spectrum (Phase H)
+
+- The Boxplot view becomes a two-part view: the boxplot on top (about 55% of
+  the height) and the group median spectra underneath.
+- Clicking a peak on the spectrum redraws the boxplot at that ppm immediately,
+  with no re-run; a vertical marker on the spectrum shows the position.
+- The boxplot title carries that feature's statistics, for example
+  `3.025 ppm · ANOVA p = 1.2e-05 · FDR 2.4e-04`.
+- Mechanism: figure requests accept an optional `ppm` query passed to figure
+  functions that take a `ppm` argument; a stage may declare `companions`
+  (main view -> companion view, drawn below and hidden from the tab bar);
+  clicking the companion sets `ppm` for both. The form's Boxplot feature is
+  the starting point.
+
+## 7. Annotate: the metbit annotator dashboard UX (Phase I)
+
+- Toolbar above the plot, like `annotate_peak`: a Single spectra / Median
+  spectra switch (instant, no re-run), a label Font size slider (applies
+  wherever labels are drawn), and a "Current peak: x ppm" pill.
+- Right-column collapsible panels, like the Dash app: Add annotation (label,
+  angle, Add Label; clicking a peak fills the current peak and focuses the
+  label field, replacing the popover), Style line (a group or one sample:
+  color, dash solid / dash / dot / dashdot, width), Current labels (list with
+  delete), and exports: intensity table CSV, labels JSON import / export, and
+  Download HTML (a self-contained interactive plot).
+- Draggable labels (Plotly editable annotations): the dragged offset is saved
+  with the label and holds in exports and projects.
+
 ## Testing
 
 - Server: style merge (stage beats global), native args reach metbit (trace
