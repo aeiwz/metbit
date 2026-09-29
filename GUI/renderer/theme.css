@@ -194,3 +194,15 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 .mock-files .cells.head { color: var(--muted); border-bottom: 1px solid var(--border); }
 .mock-files .link { color: var(--accent); font-weight: 600; }
 .mock-actions { display: flex; align-items: center; gap: var(--s2); }
+.panel-form { display: flex; flex-direction: column; gap: var(--s2); }
+.style-form { display: flex; flex-direction: column; gap: var(--s2); }
+.style-groups { display: flex; flex-direction: column; gap: 6px; }
+.style-group { display: grid; grid-template-columns: 28px minmax(0, 1fr) 120px; align-items: center; gap: var(--s1); }
+.style-group input[type="color"] { width: 28px; height: 28px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; cursor: pointer; }
+.style-group select { font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; }
+.style-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.field.overridden > label, .style-group.overridden .style-name, .check.overridden { color: var(--accent); }
+.check { display: flex; align-items: center; gap: var(--s1); color: var(--muted); font-size: 12px; }
+.check input { accent-color: var(--accent); }
+.style-override { border-top: 1px solid var(--border); padding-top: var(--s2); }
+.style-override summary { cursor: pointer; color: var(--muted); font-size: 12px; margin-bottom: var(--s1); }

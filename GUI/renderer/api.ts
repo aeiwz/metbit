@@ -39,6 +39,27 @@ export interface TablePage {
   total: number;
 }
 
+export interface GroupStyle {
+  color: string;
+  symbol: string;
+}
+
+export interface PlotStyle {
+  groups: Record<string, GroupStyle>;
+  marker_size: number;
+  marker_opacity: number;
+  font_size: number;
+  line_width: number;
+  show_ellipses: boolean;
+}
+
+export type StyleOverride = Partial<Omit<PlotStyle, "groups">> & { groups?: Record<string, Partial<GroupStyle>> };
+
+export interface StageStyle {
+  override: StyleOverride;
+  effective: PlotStyle;
+}
+
 export interface SseEvent {
   event: string;
   data: any;
@@ -115,6 +136,26 @@ export class Api {
 
   restore(): Promise<{ restored: boolean }> {
     return this.post("/session/restore");
+  }
+
+  private put(path: string, body: unknown): Promise<any> {
+    return this.req(path, { method: "PUT", body: JSON.stringify(body) }).then((r) => r.json());
+  }
+
+  getStyle(): Promise<PlotStyle> {
+    return this.req("/style").then((r) => r.json());
+  }
+
+  putStyle(style: PlotStyle): Promise<PlotStyle> {
+    return this.put("/style", style);
+  }
+
+  getStageStyle(id: string): Promise<StageStyle> {
+    return this.req(`/stages/${id}/style`).then((r) => r.json());
+  }
+
+  putStageStyle(id: string, override: StyleOverride): Promise<StageStyle> {
+    return this.put(`/stages/${id}/style`, override);
   }
 
   async run(id: string, params: Record<string, unknown>, onEvent: (e: SseEvent) => void): Promise<void> {

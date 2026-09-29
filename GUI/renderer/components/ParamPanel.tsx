@@ -1,4 +1,5 @@
 import { useEffect, useState } from "preact/hooks";
+import type { ComponentChildren } from "preact";
 import type { FieldSchema, JsonSchema } from "../api";
 
 export type Values = Record<string, unknown>;
@@ -25,15 +26,17 @@ interface Props {
   onRun: (values: Values) => void;
   picked?: number | null;
   onValuesChange?: (values: Values) => void;
+  children?: ComponentChildren;
 }
 
-export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked = null, onValuesChange }: Props) {
+export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked = null, onValuesChange, children }: Props) {
   const [values, setValues] = useState<Values>(() => ({ ...defaults(schema), ...initial }));
   const set = (k: string, v: unknown) => setValues((s) => ({ ...s, [k]: v }));
   useEffect(() => onValuesChange?.(values), [values]);
   return (
+    <div class="panel">
     <form
-      class="panel"
+      class="panel-form"
       onSubmit={(e) => {
         e.preventDefault();
         onRun(values);
@@ -50,6 +53,8 @@ export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked
         {busy ? "Running…" : "Run"}
       </button>
     </form>
+    {children}
+    </div>
   );
 }
 

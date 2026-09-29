@@ -23,7 +23,8 @@ function themed(layout: Record<string, any>): Record<string, any> {
     ...layout,
     paper_bgcolor: "rgba(0,0,0,0)",
     plot_bgcolor: "rgba(0,0,0,0)",
-    font: { ...layout.font, family: css.getPropertyValue("--font"), size: 12, color: text },
+    // size comes from the plot style on the server
+    font: { ...layout.font, family: css.getPropertyValue("--font"), color: text },
   };
   for (const key of Object.keys(layout)) {
     if (/^[xy]axis\d*$/.test(key)) {

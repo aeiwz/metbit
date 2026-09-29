@@ -1,6 +1,6 @@
 import Plotly from "plotly.js-dist-min";
 import { useEffect, useState } from "preact/hooks";
-import { Api, ApiError, type StageInfo, type TablePage } from "./api";
+import { Api, ApiError, type PlotStyle, type StageInfo, type StageStyle, type StyleOverride, type TablePage } from "./api";
 import { DataTable } from "./components/DataTable";
 import { FormatGuide } from "./components/FormatGuide";
 import { makeExampleCsv } from "./exampleData";
@@ -8,6 +8,7 @@ import { JobBar } from "./components/JobBar";
 import { ParamPanel, fieldErrors, type FieldErrors, type Values } from "./components/ParamPanel";
 import { PlotView, type PickPoint } from "./components/PlotView";
 import { Rail } from "./components/Rail";
+import { StyleForm, applyPatch } from "./components/StyleForm";
 
 interface Failure {
   message: string;
@@ -37,6 +38,9 @@ export function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [importValues, setImportValues] = useState<Values>({});
   const [showGuide, setShowGuide] = useState(false);
+  const [sideMode, setSideMode] = useState<"params" | "style">("params");
+  const [globalStyle, setGlobalStyle] = useState<PlotStyle | null>(null);
+  const [stageStyle, setStageStyle] = useState<StageStyle | null>(null);
 
   const stage = stages.find((s) => s.id === current);
   const hasResult = stage?.status === "done" || stage?.status === "stale";
@@ -70,6 +74,16 @@ export function App() {
     };
   }, [api, current, tab, hasResult, version]);
 
+  useEffect(() => {
+    setStageStyle(null);
+    if (!api || !stages.find((s) => s.id === current)?.views.length) return;
+    let live = true;
+    api.getStageStyle(current).then((st) => live && setStageStyle(st));
+    return () => {
+      live = false;
+    };
+  }, [api, current, version, globalStyle, stages.length]);
+
   function flash(message: string) {
     setNotice(message);
     setTimeout(() => setNotice((n) => (n === message ? null : n)), 4000);
@@ -77,6 +91,7 @@ export function App() {
 
   function select(id: string) {
     setShowGuide(false);
+    setSideMode("params");
     setCurrent(id);
     setErrors({});
     setFailure(null);
@@ -162,6 +177,34 @@ export function App() {
     });
   const guideVisible = current === "import" && !failure && (showGuide || (!hasResult && stage?.status !== "running"));
 
+  const openStyle = () =>
+    guarded(async () => {
+      if (!api) return;
+      setGlobalStyle(await api.getStyle());
+      setSideMode("style");
+    });
+
+  const patchGlobal = (patch: StyleOverride) =>
+    guarded(async () => {
+      if (!api || !globalStyle) return;
+      setGlobalStyle(await api.putStyle(applyPatch(globalStyle, patch)));
+      setVersion((v) => v + 1);
+    });
+
+  const patchStage = (patch: StyleOverride) =>
+    guarded(async () => {
+      if (!api || !stageStyle) return;
+      setStageStyle(await api.putStageStyle(current, applyPatch(stageStyle.override, patch)));
+      setVersion((v) => v + 1);
+    });
+
+  const resetStage = () =>
+    guarded(async () => {
+      if (!api) return;
+      setStageStyle(await api.putStageStyle(current, {}));
+      setVersion((v) => v + 1);
+    });
+
   const openProject = () =>
     guarded(async () => {
       const path = await window.metbit.openFile(PROJECT);
@@ -213,7 +256,7 @@ export function App() {
   return (
     <div class="layout">
       <JobBar pct={pct} />
-      <Rail stages={stages} current={current} onSelect={select} onOpen={openProject} onSave={saveProject} />
+      <Rail stages={stages} current={current} onSelect={select} onOpen={openProject} onSave={saveProject} onStyle={openStyle} />
       <main class="center">
         <div class="tabs" role="tablist">
           {hasResult &&
@@ -256,6 +299,16 @@ export function App() {
         </div>
         <div class="view">{body}</div>
       </main>
+      {sideMode === "style" && globalStyle ? (
+        <div class="panel">
+          <h2>Plot style</h2>
+          <p class="hint">Applies to every plot and export. Stages can override it in their Style section.</p>
+          <StyleForm effective={globalStyle} onChange={patchGlobal} />
+          <button type="button" class="btn" onClick={() => setSideMode("params")}>
+            Done
+          </button>
+        </div>
+      ) : (
       <ParamPanel
         key={`${current}:${formKey}`}
         title={stage.title}
@@ -266,7 +319,20 @@ export function App() {
         onRun={run}
         picked={picked}
         onValuesChange={current === "import" ? setImportValues : undefined}
-      />
+      >
+        {stageStyle && (
+          <details class="style-override">
+            <summary>Style{Object.keys(stageStyle.override).length ? " (custom)" : ""}</summary>
+            <StyleForm
+              effective={stageStyle.effective}
+              override={stageStyle.override}
+              onChange={patchStage}
+              onReset={resetStage}
+            />
+          </details>
+        )}
+      </ParamPanel>
+      )}
       {backendDown && (
         <div class="banner" role="alert">
           Backend stopped
