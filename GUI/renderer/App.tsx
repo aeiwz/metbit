@@ -11,7 +11,7 @@ interface Failure {
   traceback?: string;
 }
 
-const LABELS: Record<string, string> = { vip: "VIP", "s-plot": "S-plot" };
+const LABELS: Record<string, string> = { vip: "VIP", "s-plot": "S-plot", predicted: "Predicted vs actual" };
 const label = (t: string) => LABELS[t] ?? t[0].toUpperCase() + t.slice(1);
 
 export function App() {
