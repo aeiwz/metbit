@@ -143,12 +143,17 @@ export function App() {
     setFailure(null);
     setPct(0.05);
     setStages((ss) => ss.map((s) => (s.id === current ? { ...s, status: "running" } : s)));
+    let ok = true; // this run's outcome: a rejected run leaves the previous run's "done" status behind
     try {
       await api.run(current, values, (e) => {
         if (e.event === "progress") setPct(e.data.pct);
-        if (e.event === "error") setFailure(e.data);
+        if (e.event === "error") {
+          ok = false;
+          setFailure(e.data);
+        }
       });
     } catch (e) {
+      ok = false;
       if (e instanceof ApiError && e.status === 422) setErrors(fieldErrors(e.detail));
       else setFailure({ message: (e as Error).message });
     }
@@ -157,7 +162,7 @@ export function App() {
     setStages(fresh);
     setVersion((v) => v + 1);
     const ran = fresh.find((s) => s.id === current);
-    if (ran?.status === "done") {
+    if (ok && ran?.status === "done") {
       // leave a pre-run view for the result it prepared (STOCSY: spectra to correlation)
       if (ran.pre_views.includes(tab) && ran.views[0]) setTab(ran.views[0]);
       if (current === "stocsy") {

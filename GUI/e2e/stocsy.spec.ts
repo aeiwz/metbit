@@ -41,6 +41,16 @@ test("STOCSY: click the spectra to set the anchor, run, reuse and clear", async 
   await plot();
   await expect(win.locator(".stocsy-tools .label-list")).toContainText("ppm");
 
+  // a rejected run must not be recorded as a recent anchor
+  await win.fill("#f-p_threshold", "abc");
+  await run();
+  await expect(win.locator(".field.invalid")).toContainText("Enter a number");
+  await expect(win.locator(".stocsy-tools .label-list li")).toHaveCount(1);
+  // scientific notation types and runs
+  await win.fill("#f-p_threshold", "1e-7");
+  await run();
+  await expect(win.locator(".stocsy-tools .label-list")).toContainText("p 1e-7");
+
   await win.getByRole("button", { name: "Clear anchor" }).click();
   await expect(win.locator("#f-anchor_ppm")).toHaveValue("");
 
