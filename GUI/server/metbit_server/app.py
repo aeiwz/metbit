@@ -3,7 +3,7 @@ import asyncio
 import json
 import secrets
 
-from fastapi import Body, Depends, FastAPI, HTTPException, Request
+from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import ValidationError
@@ -83,5 +83,27 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
                     return
 
         return StreamingResponse(stream(), media_type="text/event-stream")
+
+    def result_or_409(sid: str):
+        stage_or_404(sid)
+        if session.status[sid] not in ("done", "stale"):
+            raise HTTPException(409, f"Stage '{sid}' has no result")
+        return session.outputs[sid]
+
+    @app.get("/stages/{sid}/figure")
+    def figure(sid: str, view: str):
+        out = result_or_409(sid)
+        make = by_id[sid].figures.get(view)
+        if make is None:
+            raise HTTPException(404, f"Unknown view '{view}'")
+        fig = make(out)
+        fig.update_layout(width=None, height=None, autosize=True)  # renderer sizes the plot
+        return Response(fig.to_json(), media_type="application/json")
+
+    @app.get("/stages/{sid}/table")
+    def table(sid: str, offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)):
+        df = by_id[sid].table(result_or_409(sid))
+        page = json.loads(df.iloc[offset:offset + limit].to_json(orient="split", index=False))
+        return {"columns": [str(c) for c in page["columns"]], "rows": page["data"], "total": len(df)}
 
     return app
