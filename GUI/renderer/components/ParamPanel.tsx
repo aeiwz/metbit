@@ -26,13 +26,17 @@ interface Props {
   onRun: (values: Values) => void;
   picked?: number | null;
   onValuesChange?: (values: Values) => void;
+  injected?: { values: Values; n: number } | null; // merged in when n changes (a click set a field)
   children?: ComponentChildren;
 }
 
-export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked = null, onValuesChange, children }: Props) {
+export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked = null, onValuesChange, children, injected }: Props) {
   const [values, setValues] = useState<Values>(() => ({ ...defaults(schema), ...initial }));
   const set = (k: string, v: unknown) => setValues((s) => ({ ...s, [k]: v }));
   useEffect(() => onValuesChange?.(values), [values]);
+  useEffect(() => {
+    if (injected) setValues((s) => ({ ...s, ...injected.values }));
+  }, [injected?.n]);
   return (
     <div class="panel">
     <form

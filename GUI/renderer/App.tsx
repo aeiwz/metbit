@@ -11,6 +11,7 @@ import { PlotView, type PickPoint } from "./components/PlotView";
 import { AnnotationList } from "./components/AnnotationList";
 import { AnnotationPopover } from "./components/AnnotationPopover";
 import { Rail } from "./components/Rail";
+import { StocsyTools, type Anchor } from "./components/StocsyTools";
 import { StyleForm, applyPatch } from "./components/StyleForm";
 
 interface Failure {
@@ -42,6 +43,8 @@ export function App() {
   const [busy, setBusy] = useState<string | null>(null); // caption while a project opens or a session restores
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
   const [pending, setPending] = useState<{ ppm: number; x: number; y: number } | null>(null);
+  const [injected, setInjected] = useState<{ values: Values; n: number } | null>(null);
+  const [recent, setRecent] = useState<Anchor[]>([]); // STOCSY anchors run this session, newest first
   const [importValues, setImportValues] = useState<Values>({});
   const [showGuide, setShowGuide] = useState(false);
   const [sideMode, setSideMode] = useState<"params" | "style">("params");
@@ -50,7 +53,8 @@ export function App() {
 
   const stage = stages.find((s) => s.id === current);
   const hasResult = stage?.status === "done" || stage?.status === "stale";
-  const tabs = stage ? [...stage.views, ...(stage.has_table ? ["table"] : [])] : [];
+  const preViews = stage?.pre_views ?? [];
+  const tabs = stage ? [...preViews, ...(hasResult ? [...stage.views, ...(stage.has_table ? ["table"] : [])] : [])] : [];
   const pickMode = stage?.ppm_views[tab];
   const onPick = pickMode
     ? (pt: PickPoint) => {
@@ -61,6 +65,8 @@ export function App() {
         if (current === "annotate" && tab === "spectra" && pt.clientX !== undefined && pt.clientY !== undefined) {
           setPending({ ppm: v, x: pt.clientX, y: pt.clientY });
         }
+        // on the STOCSY spectra a click sets the anchor, as in metbit's STOCSY app
+        if (current === "stocsy" && tab === "spectra") setInjected({ values: { anchor_ppm: Number(v.toFixed(4)) }, n: Date.now() });
       }
     : undefined;
 
@@ -77,7 +83,7 @@ export function App() {
   useEffect(() => {
     setFigure(null);
     setPage(null);
-    if (!api || !hasResult) return;
+    if (!api || (!hasResult && !preViews.includes(tab))) return;
     let live = true; // drop responses for a view the user already left
     const load = tab === "table" ? api.table(current).then((p) => live && setPage(p)) : api.figure(current, tab).then((f) => live && setFigure(f));
     load.catch((e: Error) => live && setFailure({ message: e.message }));
@@ -109,10 +115,12 @@ export function App() {
     setSideMode("params");
     setStageStyle(null); // the next stage's style loads fresh
     setPending(null);
+    setInjected(null);
     setCurrent(id);
     setErrors({});
     setFailure(null);
-    setTab(stages.find((s) => s.id === id)?.views[0] ?? "table");
+    const next = stages.find((s) => s.id === id);
+    setTab(next?.pre_views[0] ?? next?.views[0] ?? "table");
   }
 
   async function refresh(client: Api) {
@@ -145,8 +153,18 @@ export function App() {
       else setFailure({ message: (e as Error).message });
     }
     setPct(null);
-    setStages(await api.stages());
+    const fresh = await api.stages();
+    setStages(fresh);
     setVersion((v) => v + 1);
+    const ran = fresh.find((s) => s.id === current);
+    if (ran?.status === "done") {
+      // leave a pre-run view for the result it prepared (STOCSY: spectra to correlation)
+      if (ran.pre_views.includes(tab) && ran.views[0]) setTab(ran.views[0]);
+      if (current === "stocsy") {
+        const a = { anchor_ppm: Number(values.anchor_ppm), p_threshold: Number(values.p_threshold) };
+        setRecent((r) => [a, ...r.filter((x) => x.anchor_ppm !== a.anchor_ppm || x.p_threshold !== a.p_threshold)].slice(0, 8));
+      }
+    }
   }
 
   const exportCsv = () =>
@@ -322,6 +340,8 @@ export function App() {
         </div>
       </div>
     );
+  } else if (stage.status !== "running" && preViews.includes(tab)) {
+    body = figure && <PlotView figure={figure} onPick={onPick} />;
   } else if (!hasResult) {
     body =
       stage.status === "running" ? (
@@ -344,7 +364,7 @@ export function App() {
       <Rail stages={stages} current={current} onSelect={select} onOpen={openProject} onSave={saveProject} onStyle={openStyle} />
       <main class="center">
         <div class="tabs" role="tablist">
-          {hasResult &&
+          {tabs.length > 0 &&
             tabs.map((t) => (
               <button key={t} role="tab" aria-selected={t === tab} onClick={() => {
                 setShowGuide(false);
@@ -404,7 +424,18 @@ export function App() {
         onRun={run}
         picked={picked}
         onValuesChange={current === "import" ? setImportValues : undefined}
+        injected={injected}
       >
+        {current === "stocsy" && (
+          <StocsyTools
+            recent={recent}
+            onUse={(a) => {
+              setInjected({ values: { ...a }, n: Date.now() });
+              run({ ...a });
+            }}
+            onClear={() => setInjected({ values: { anchor_ppm: "" }, n: Date.now() })}
+          />
+        )}
         {current === "annotate" && (
           <AnnotationList
             items={annotations}

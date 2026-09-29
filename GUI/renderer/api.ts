@@ -25,6 +25,7 @@ export interface StageInfo {
   requires: string | null;
   status: Status;
   views: string[];
+  pre_views: string[];
   ppm_views: Record<string, "x" | "customdata">;
   has_table: boolean;
   exportable: boolean;

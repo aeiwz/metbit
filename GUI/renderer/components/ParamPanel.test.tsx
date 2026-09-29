@@ -141,3 +141,25 @@ it("reports live values to onValuesChange", async () => {
   await vi.waitFor(() => expect(seen[seen.length - 1]).toBe("bruker"));
   expect(seen[0]).toBe("csv");
 });
+
+it("merges injected values without losing other edits", async () => {
+  const stocsy: JsonSchema = {
+    properties: {
+      anchor_ppm: { type: "number", title: "Anchor (ppm)", pick_ppm: true },
+      p_threshold: { type: "number", title: "p", default: 0.0001 },
+    },
+  };
+  const root = document.createElement("div");
+  const onRun = vi.fn();
+  const view = (injected: { values: Record<string, unknown>; n: number } | null) =>
+    render(<ParamPanel title="STOCSY" schema={stocsy} initial={null} errors={{}} busy={false} onRun={onRun} injected={injected} />, root);
+  view(null);
+  const p = root.querySelector<HTMLInputElement>("#f-p_threshold")!;
+  p.value = "0.01";
+  p.dispatchEvent(new Event("input"));
+  await tick();
+  view({ values: { anchor_ppm: 3.03 }, n: 1 });
+  await vi.waitFor(() => expect(root.querySelector<HTMLInputElement>("#f-anchor_ppm")!.value).toBe("3.03"));
+  root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+  expect(onRun).toHaveBeenCalledWith({ anchor_ppm: 3.03, p_threshold: 0.01 });
+});
