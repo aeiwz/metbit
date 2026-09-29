@@ -13,6 +13,9 @@ Builds on: `docs/superpowers/specs/2026-09-29-metbit-gui-design.md` (phases A to
 3. Rework the STOCSY stage to follow metbit's Dash app
    (`metbit.apps.stocsy_app.STOCSY_app`): pick the anchor by clicking a
    spectrum, run, cache results per anchor.
+4. Show, in the Import stage, mock-up visuals of compliant input files and
+   step-by-step preparation guides for both raw Bruker + metadata and a
+   processed data table.
 
 ## 1. Plot styling
 
@@ -130,6 +133,90 @@ PlotStyle (pydantic):
   cleared when any data stage completes. A "Recent anchors" list in the
   parameter panel re-runs a cached anchor instantly.
 
+## 4. Import format guide (mock-up file visuals)
+
+### Where
+
+- The Import stage's center view shows the guide whenever Import has no
+  result. It follows the form's **Source** field live (CSV or Bruker).
+- After data is loaded, a "File format" link in the tab bar reopens it.
+- `ParamPanel` gains an `onValuesChange(values)` callback so the App knows the
+  current Source.
+
+### Processed data table (Source = CSV)
+
+Mock spreadsheet (styled HTML table, metadata columns and spectral columns
+in two tinted bands, with captions):
+
+```
+Sample | Group   | Age | 10.000 | 9.997 | 9.994 | ... | 0.000
+s01    | Control | 34  | 0.0123 | 0.0119| 0.0121| ... | 0.0045
+s02    | Treated | 51  | 0.0131 | 0.0127| 0.0125| ... | 0.0051
+```
+
+How to prepare (numbered checklist beside the mock-up):
+
+1. One row per sample, one column per chemical shift. Spectral column headers
+   are the ppm values as plain numbers (for example `9.997`); any header that
+   parses as a number is read as a spectral column.
+2. Metadata columns (sample ID, group, other factors) have non-numeric
+   headers and can sit anywhere, usually first.
+3. Include a group column; its name goes in the form's Group column field.
+   Numeric metadata such as age or dose can later be a PLS-R target.
+4. Spectra must already be processed: phased, baseline corrected and
+   calibrated (TSP / DSS at 0 ppm). Binned data is fine.
+5. No missing values. Remove unwanted regions (for example water) by deleting
+   those columns.
+6. Save as a comma-separated UTF-8 CSV. From Python:
+   `pd.concat([meta, spectra], axis=1).to_csv("data.csv", index=False)`.
+   Any data stage's Export CSV in this app writes this format too.
+
+"Save example CSV" writes a synthetic compliant file (12 samples, 2 groups,
+about 400 ppm points with a few peaks), generated in the renderer and saved
+through the save dialog.
+
+### Raw Bruker + metadata (Source = Bruker)
+
+Two mock-ups side by side, joined by connector lines from the experiment
+folder names to the matching metadata cells:
+
+```
+study/                              metadata.csv
+  61020601/   ----------------->    fid      | Group   | Week
+    fid                             61020601 | sham    | 6
+    acqus                           61030601 | nx      | 6
+    pdata/1/procs
+  61030601/   ----------------->
+    ...
+```
+
+How to prepare:
+
+1. Export each experiment from TopSpin as its own folder containing `fid`,
+   `acqus` and `pdata/1/procs` (Process reads the stored phase PHC0 / PHC1 and
+   the spectrum offset from `procs`).
+2. Put all experiments of one study under a single folder, either directly
+   (`study/<exp>/fid`) or one level deeper (`study/<batch>/<exp>/fid`).
+3. Acquire every experiment with the same sweep width and spectrometer
+   settings: spectra are stacked by position, so point counts must match.
+4. Keep an internal reference (TSP or DSS) in each sample if you want
+   automatic calibration to 0 ppm.
+5. Make a metadata CSV with one row per experiment: a column holding the exact
+   experiment folder names (its name goes in Sample column, for example
+   `fid`), a group column, and any other factors. Every experiment needs a
+   row; extra rows are ignored.
+
+No Bruker example file is offered (raw FIDs cannot be synthesized
+meaningfully).
+
+### Tests
+
+- Unit: guide renders the CSV mock-up and checklist by default and the Bruker
+  mock-up and checklist after Source changes; the example CSV generator's
+  headers pass the importer's ppm check (numeric) and include `Sample` and
+  `Group`.
+- E2E: save the example CSV via the test seam, import it, see the table.
+
 ## Testing
 
 - Server: style merge (stage beats global), native args reach metbit (trace
@@ -145,6 +232,8 @@ PlotStyle (pydantic):
 
 ## Build order
 
+0. **Phase E0**: import format guide (mock-ups, preparation checklists,
+   example CSV).
 1. **Phase E**: styling (model, endpoints, native args + fallback, style panel,
    per-stage overrides, project persistence).
 2. **Phase F**: annotation (model, endpoints, Annotate stage, overlay, popover,
