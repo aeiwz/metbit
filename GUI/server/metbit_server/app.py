@@ -12,6 +12,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError, field_validator
 
 from .jobs import Busy, Job, start_job
+from .project import ProjectError, load_project, save_project
 from .session import Session
 from .stages import STAGES, Stage, resolve_schema
 
@@ -153,7 +154,32 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
         return {"path": body.path}
 
     def autosave_now() -> None:
-        # replaced in Task 3 by a real save; kept as a no-op so Task 1 stands alone
-        return None
+        save_project(session, autosave)
+
+    @app.post("/session/save")
+    def save(body: PathBody):
+        with exclusive():
+            save_project(session, body.path)
+        return {"path": body.path}
+
+    @app.post("/session/load")
+    def load(body: PathBody):
+        with exclusive():
+            try:
+                load_project(session, stages, body.path)
+            except ProjectError as e:
+                raise HTTPException(422, str(e))
+        return {"path": body.path}
+
+    @app.post("/session/restore")
+    def restore():
+        if not autosave or not Path(autosave).is_file():
+            return {"restored": False}
+        with exclusive():
+            try:
+                load_project(session, stages, autosave)
+            except ProjectError:
+                return {"restored": False}
+        return {"restored": True}
 
     return app
