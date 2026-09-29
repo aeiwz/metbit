@@ -1,6 +1,6 @@
 """Analysis stages: PCA, OPLS-DA, STOCSY."""
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 import plotly.graph_objects as go
 from pydantic import BaseModel, Field, model_validator
@@ -9,9 +9,25 @@ from metbit import opls_da, pca
 from metbit.analysis.stocsy import STOCSY
 
 from ..session import Session
+from .style import PlotStyle, colors, symbols
 from .base import DATA_ORDER, Progress, Stage, groups, not_run_figure, two_groups, working
 
 Scaling = Literal["pareto", "uv", "mean"]
+
+
+def scores_style(style: Optional[PlotStyle], labels: Any) -> dict:
+    """metbit's own scores-plot styling arguments (PCA and OPLS-DA share them)."""
+    if style is None or labels is None:
+        return {}
+    return {
+        "color_dict": colors(style),
+        "symbol_": labels,
+        "symbol_dict": symbols(style),
+        "marker_size": style.marker_size,
+        "marker_opacity": style.marker_opacity,
+        "font_size": style.font_size,
+        "individual_ellipse": style.show_ellipses,
+    }
 
 
 # PCA ------------------------------------------------------------------------
@@ -35,6 +51,7 @@ class PCAParams(BaseModel):
 class PCAResult:
     model: Any
     pcs: list[str]
+    labels: Any = None  # group per sample, for styling
 
 
 def run_pca(p: PCAParams, session: Session, progress: Progress) -> PCAResult:
@@ -48,7 +65,7 @@ def run_pca(p: PCAParams, session: Session, progress: Progress) -> PCAResult:
     )
     model.fit()
     progress(1.0)
-    return PCAResult(model=model, pcs=[f"PC{p.pc_x}", f"PC{p.pc_y}"])
+    return PCAResult(model=model, pcs=[f"PC{p.pc_x}", f"PC{p.pc_y}"], labels=groups(session))
 
 
 # OPLS-DA --------------------------------------------------------------------
@@ -78,6 +95,7 @@ class OPLSResult:
     model: Any
     vip_threshold: float
     permuted: bool
+    labels: Any = None  # group per sample in the two-group subset
 
 
 def run_opls(p: OPLSParams, session: Session, progress: Progress) -> OPLSResult:
@@ -89,7 +107,7 @@ def run_opls(p: OPLSParams, session: Session, progress: Progress) -> OPLSResult:
         progress(0.3)
         model.permutation_test(n_permutations=p.permutations, cv=p.kfold, n_jobs=-1, verbose=0)
     progress(1.0)
-    return OPLSResult(model=model, vip_threshold=p.vip_threshold, permuted=p.permutations > 0)
+    return OPLSResult(model=model, vip_threshold=p.vip_threshold, permuted=p.permutations > 0, labels=y)
 
 
 def _permutation_view(r: OPLSResult) -> go.Figure:
@@ -123,7 +141,7 @@ ANALYSIS_STAGES: list[Stage] = [
         run=run_pca,
         table=lambda r: r.model.get_explained_variance(),
         figures={
-            "scores": lambda r: r.model.plot_pca_scores(pc=r.pcs),
+            "scores": lambda r, st=None: r.model.plot_pca_scores(pc=r.pcs, **scores_style(st, r.labels)),
             "loadings": lambda r: r.model.plot_loading_(pc=r.pcs),
             "variance": lambda r: r.model.plot_observe_variance(),
         },
@@ -138,9 +156,11 @@ ANALYSIS_STAGES: list[Stage] = [
         run=run_opls,
         table=lambda r: r.model.get_vip_scores().sort_values("VIP", ascending=False),
         figures={
-            "scores": lambda r: r.model.plot_oplsda_scores(),
+            "scores": lambda r, st=None: r.model.plot_oplsda_scores(**scores_style(st, r.labels)),
             "s-plot": lambda r: r.model.plot_s_scores(),
-            "vip": lambda r: r.model.vip_plot(threshold=r.vip_threshold),
+            "vip": lambda r, st=None: r.model.vip_plot(
+                threshold=r.vip_threshold, **({"marker_size": st.marker_size, "font_size": st.font_size} if st else {})
+            ),
             "permutation": _permutation_view,
         },
         requires="import",

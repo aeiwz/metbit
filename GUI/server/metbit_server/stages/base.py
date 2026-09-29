@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from metbit.viz.spectra import SpectraPlot
 
 from ..session import Session
+from .style import PlotStyle, colors
 
 Progress = Callable[[float], None]
 
@@ -85,10 +86,13 @@ def two_groups(session: Session, a: str, b: str) -> tuple[pd.DataFrame, pd.Serie
     return X[mask].reset_index(drop=True), g[mask].reset_index(drop=True)
 
 
-def spectra_figure(X: pd.DataFrame, labels: pd.Series, title: str) -> go.Figure:
+def spectra_figure(X: pd.DataFrame, labels: pd.Series, title: str, style: Optional[PlotStyle] = None) -> go.Figure:
     # ponytail: display-only decimation keeps figure JSON small; full data stays in the session
     step = max(1, X.shape[1] // MAX_PLOT_POINTS)
-    return SpectraPlot(X.iloc[:, ::step], label=list(labels)).overlay(title=title)
+    plot = SpectraPlot(X.iloc[:, ::step], label=list(labels), color_dict=colors(style) if style else None)
+    if style is None:
+        return plot.overlay(title=title)
+    return plot.overlay(title=title, linewidth=style.line_width, font_size=style.font_size)
 
 
 def _numeric_columns(meta: pd.DataFrame) -> list[str]:

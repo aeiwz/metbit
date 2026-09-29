@@ -125,10 +125,10 @@ def _import_export(d: Union[Dataset, BrukerSource]) -> pd.DataFrame:
     return matrix_frame(d) if isinstance(d, Dataset) else d.meta
 
 
-def _import_spectra(d: Union[Dataset, BrukerSource]):
+def _import_spectra(d: Union[Dataset, BrukerSource], style=None):
     if isinstance(d, BrukerSource):
         return not_run_figure("Run Process to see the spectra.")
-    return spectra_figure(d.X, d.labels, "Spectra")
+    return spectra_figure(d.X, d.labels, "Spectra", style)
 
 
 # Process (Bruker) -------------------------------------------------------------
@@ -265,8 +265,8 @@ def run_align(p: AlignParams, session: Session, progress: Progress) -> Dataset:
 
 def _before_after(title: str) -> dict:
     return {
-        "spectra": lambda d: spectra_figure(d.X, d.labels, title),
-        "before": lambda d: spectra_figure(d.before, d.labels, "Before"),
+        "spectra": lambda d, st=None: spectra_figure(d.X, d.labels, title, st),
+        "before": lambda d, st=None: spectra_figure(d.before, d.labels, "Before", st),
     }
 
 
@@ -289,7 +289,7 @@ DATA_STAGES: list[Stage] = [
         params=ProcessParams,
         run=run_process,
         export=matrix_frame,
-        figures={"spectra": lambda d: spectra_figure(d.X, d.labels, "Processed spectra")},
+        figures={"spectra": lambda d, st=None: spectra_figure(d.X, d.labels, "Processed spectra", st)},
         requires="import",
         after=["import"],
         ppm_views={"spectra": "x"},

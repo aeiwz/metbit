@@ -11,6 +11,7 @@ from scipy.stats import f_oneway, kruskal
 from metbit.stats.multitest import ANOVAStats, KruskalStats, VolcanoPlot, _apply_correction
 
 from ..session import Session
+from .style import colors
 from .base import DATA_ORDER, Progress, Stage, groups, two_groups, working
 
 Correction = Literal["fdr_bh", "bonferroni", "none"]
@@ -119,11 +120,12 @@ def run_group_tests(p: GroupTestParams, session: Session, progress: Progress) ->
     return GroupTestResult(table=table, data=data, test=p.test, feature=str(target))
 
 
-def _boxplot(r: GroupTestResult) -> go.Figure:
+def _boxplot(r: GroupTestResult, style=None) -> go.Figure:
     cls = ANOVAStats if r.test == "anova" else KruskalStats
     stats = cls(r.data, x_col="Group", y_col=r.feature)
     stats.fit()
-    return stats.plot(title=f"{float(r.feature):.4f} ppm")
+    extra = {"custom_colors": colors(style), "font_size": style.font_size} if style else {}
+    return stats.plot(title=f"{float(r.feature):.4f} ppm", **extra)
 
 
 STATS_STAGES: list[Stage] = [

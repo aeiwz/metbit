@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field, model_validator
 from metbit.analysis.multivariate import hca, ica, lda, plsr
 
 from ..session import Session
+from .style import colors
 from .base import DATA_ORDER, Progress, Stage, groups, working
 
 Scaling = Literal["pareto", "uv", "mean"]
@@ -83,11 +84,15 @@ def run_lda(p: LDAParams, session: Session, progress: Progress) -> LDAResult:
     return LDAResult(model=model, lds=lds)
 
 
-def _lda_scores(r: LDAResult) -> go.Figure:
+def _lda_scores(r: LDAResult, style=None) -> go.Figure:
+    palette = colors(style) if style else None
     if len(r.lds) >= 2:
-        return r.model.plot_lda_scores(ld=r.lds)
+        extra = {"color_dict": palette, "marker_size": style.marker_size, "font_size": style.font_size} if style else {}
+        return r.model.plot_lda_scores(ld=r.lds, **extra)
     # two groups give a single discriminant: metbit's 2D plot needs LD2
-    return px.strip(r.model.get_scores(), x="Group", y="LD1", color="Group", title="LDA scores (LD1)")
+    return px.strip(
+        r.model.get_scores(), x="Group", y="LD1", color="Group", title="LDA scores (LD1)", color_discrete_map=palette or {}
+    )
 
 
 # ICA ------------------------------------------------------------------------
@@ -195,7 +200,9 @@ MULTIVARIATE_STAGES: list[Stage] = [
         run=run_ica,
         table=lambda r: r.model.get_components(),
         figures={
-            "components": lambda r: r.model.plot_components(ic=["IC1", "IC2"], color_=list(r.labels)),
+            "components": lambda r, st=None: r.model.plot_components(
+                ic=["IC1", "IC2"], color_=list(r.labels), **({"color_dict": colors(st), "font_size": st.font_size} if st else {})
+            ),
             "mixing": lambda r: r.model.plot_mixing_(ic=["IC1", "IC2"]),
         },
         ppm_views={"mixing": "x"},
