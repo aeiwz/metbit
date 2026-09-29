@@ -129,3 +129,15 @@ it("opens a folder picker for dir-path fields", async () => {
   await tick();
   expect(root.querySelector<HTMLInputElement>("#f-folder")!.value).toBe("/data/exps");
 });
+
+it("reports live values to onValuesChange", async () => {
+  const seen: unknown[] = [];
+  const { root } = mount({ schema: importSchema, onValuesChange: (v) => seen.push(v.source) });
+  await tick();
+  const source = root.querySelector<HTMLSelectElement>("#f-source")!;
+  source.value = "bruker";
+  source.dispatchEvent(new Event("change"));
+  // useEffect runs after paint, so wait rather than assume one tick is enough
+  await vi.waitFor(() => expect(seen[seen.length - 1]).toBe("bruker"));
+  expect(seen[0]).toBe("csv");
+});

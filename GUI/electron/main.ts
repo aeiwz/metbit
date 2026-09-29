@@ -62,7 +62,9 @@ async function chooseSavePath(defaultName: string, filters?: Electron.FileFilter
 
 ipcMain.handle("dialog:save", (_e, defaultName: string, filters?: Electron.FileFilter[]) => chooseSavePath(defaultName, filters));
 ipcMain.handle("file:saveImage", async (_e, defaultName: string, dataUrl: string) => {
-  const path = await chooseSavePath(defaultName, [{ name: "Image", extensions: [extname(defaultName).slice(1)] }]);
+  // saveImage writes any data URL: images from plot export, the example CSV from the format guide
+  const ext = extname(defaultName).slice(1);
+  const path = await chooseSavePath(defaultName, [{ name: ext === "csv" ? "CSV" : "Image", extensions: [ext] }]);
   if (path) await writeFile(path, dataUrlToBuffer(dataUrl));
   return path;
 });

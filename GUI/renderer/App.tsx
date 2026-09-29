@@ -2,6 +2,8 @@ import Plotly from "plotly.js-dist-min";
 import { useEffect, useState } from "preact/hooks";
 import { Api, ApiError, type StageInfo, type TablePage } from "./api";
 import { DataTable } from "./components/DataTable";
+import { FormatGuide } from "./components/FormatGuide";
+import { makeExampleCsv } from "./exampleData";
 import { JobBar } from "./components/JobBar";
 import { ParamPanel, fieldErrors, type FieldErrors, type Values } from "./components/ParamPanel";
 import { PlotView, type PickPoint } from "./components/PlotView";
@@ -33,6 +35,8 @@ export function App() {
   const [backendDown, setBackendDown] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [importValues, setImportValues] = useState<Values>({});
+  const [showGuide, setShowGuide] = useState(false);
 
   const stage = stages.find((s) => s.id === current);
   const hasResult = stage?.status === "done" || stage?.status === "stale";
@@ -72,6 +76,7 @@ export function App() {
   }
 
   function select(id: string) {
+    setShowGuide(false);
     setCurrent(id);
     setErrors({});
     setFailure(null);
@@ -145,6 +150,18 @@ export function App() {
       flash(`Saved ${basename(path)}`);
     });
 
+  const saveExample = () =>
+    guarded(async () => {
+      const url = `data:text/csv;charset=utf-8,${encodeURIComponent(makeExampleCsv())}`;
+      const path = await window.metbit.saveImage("metbit-example.csv", url);
+      if (!path) return;
+      // prefill the Import form so the next step is just Run
+      setStages((ss) => ss.map((s) => (s.id === "import" ? { ...s, params: { ...(s.params ?? {}), source: "csv", path } } : s)));
+      setFormKey((k) => k + 1);
+      flash(`Saved ${basename(path)}`);
+    });
+  const guideVisible = current === "import" && !failure && (showGuide || (!hasResult && stage?.status !== "running"));
+
   const openProject = () =>
     guarded(async () => {
       const path = await window.metbit.openFile(PROJECT);
@@ -169,7 +186,9 @@ export function App() {
   if (!stage) return <div class="placeholder">Starting metbit…</div>;
 
   let body;
-  if (failure) {
+  if (guideVisible) {
+    body = <FormatGuide source={String(importValues.source ?? "csv")} onSaveExample={saveExample} />;
+  } else if (failure) {
     body = (
       <div class="placeholder">
         <div>
@@ -199,7 +218,10 @@ export function App() {
         <div class="tabs" role="tablist">
           {hasResult &&
             tabs.map((t) => (
-              <button key={t} role="tab" aria-selected={t === tab} onClick={() => setTab(t)}>
+              <button key={t} role="tab" aria-selected={t === tab} onClick={() => {
+                setShowGuide(false);
+                setTab(t);
+              }}>
                 {label(t)}
               </button>
             ))}
@@ -210,6 +232,11 @@ export function App() {
               </span>
             )}
             {picked !== null && <span class="picked">δ {picked.toFixed(3)} ppm</span>}
+            {current === "import" && hasResult && (
+              <button class="link" onClick={() => setShowGuide((v) => !v)}>
+                {showGuide ? "Hide format" : "File format"}
+              </button>
+            )}
             {hasResult && stage.exportable && (
               <button class="link" onClick={exportCsv}>
                 Export CSV
@@ -238,6 +265,7 @@ export function App() {
         busy={pct !== null}
         onRun={run}
         picked={picked}
+        onValuesChange={current === "import" ? setImportValues : undefined}
       />
       {backendDown && (
         <div class="banner" role="alert">

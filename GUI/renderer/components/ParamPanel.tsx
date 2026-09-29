@@ -1,4 +1,4 @@
-import { useState } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
 import type { FieldSchema, JsonSchema } from "../api";
 
 export type Values = Record<string, unknown>;
@@ -24,11 +24,13 @@ interface Props {
   busy: boolean;
   onRun: (values: Values) => void;
   picked?: number | null;
+  onValuesChange?: (values: Values) => void;
 }
 
-export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked = null }: Props) {
+export function ParamPanel({ title, schema, initial, errors, busy, onRun, picked = null, onValuesChange }: Props) {
   const [values, setValues] = useState<Values>(() => ({ ...defaults(schema), ...initial }));
   const set = (k: string, v: unknown) => setValues((s) => ({ ...s, [k]: v }));
+  useEffect(() => onValuesChange?.(values), [values]);
   return (
     <form
       class="panel"
