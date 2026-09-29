@@ -33,6 +33,8 @@ export function App() {
   const [version, setVersion] = useState(0); // bumps after every run to refetch views
   const [formKey, setFormKey] = useState(0); // bumps when a project replaces the params
   const [figure, setFigure] = useState<any>(null);
+  const [companionFigure, setCompanionFigure] = useState<any>(null);
+  const [focusPpm, setFocusPpm] = useState<number | null>(null); // set by clicking a companion view
   const [page, setPage] = useState<TablePage | null>(null);
   const [pct, setPct] = useState<number | null>(null);
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -54,7 +56,10 @@ export function App() {
   const stage = stages.find((s) => s.id === current);
   const hasResult = stage?.status === "done" || stage?.status === "stale";
   const preViews = stage?.pre_views ?? [];
-  const tabs = stage ? [...preViews, ...(hasResult ? [...stage.views, ...(stage.has_table ? ["table"] : [])] : [])] : [];
+  const companion = stage?.companions?.[tab];
+  const companionViews = Object.values(stage?.companions ?? {});
+  const resultTabs = stage ? [...stage.views.filter((v) => !companionViews.includes(v)), ...(stage.has_table ? ["table"] : [])] : [];
+  const tabs = stage ? [...preViews, ...(hasResult ? resultTabs : [])] : [];
   const pickMode = stage?.ppm_views[tab];
   const onPick = pickMode
     ? (pt: PickPoint) => {
@@ -82,15 +87,18 @@ export function App() {
 
   useEffect(() => {
     setFigure(null);
+    setCompanionFigure(null);
     setPage(null);
     if (!api || (!hasResult && !preViews.includes(tab))) return;
     let live = true; // drop responses for a view the user already left
-    const load = tab === "table" ? api.table(current).then((p) => live && setPage(p)) : api.figure(current, tab).then((f) => live && setFigure(f));
+    const at = focusPpm ?? undefined;
+    const load = tab === "table" ? api.table(current).then((p) => live && setPage(p)) : api.figure(current, tab, at).then((f) => live && setFigure(f));
+    if (companion && hasResult) api.figure(current, companion, at).then((f) => live && setCompanionFigure(f));
     load.catch((e: Error) => live && setFailure({ message: e.message }));
     return () => {
       live = false;
     };
-  }, [api, current, tab, hasResult, version]);
+  }, [api, current, tab, hasResult, version, focusPpm]);
 
   // refresh in place (no reset to null): unmounting would collapse the open Style section
   useEffect(() => {
@@ -116,6 +124,7 @@ export function App() {
     setStageStyle(null); // the next stage's style loads fresh
     setPending(null);
     setInjected(null);
+    setFocusPpm(null);
     setCurrent(id);
     setErrors({});
     setFailure(null);
@@ -165,6 +174,7 @@ export function App() {
     if (ok && ran?.status === "done") {
       // leave a pre-run view for the result it prepared (STOCSY: spectra to correlation)
       if (ran.pre_views.includes(tab) && ran.views[0]) setTab(ran.views[0]);
+      setFocusPpm(null); // a new result starts from its own default feature
       if (current === "stocsy") {
         const a = { anchor_ppm: Number(values.anchor_ppm), p_threshold: Number(values.p_threshold) };
         setRecent((r) => [a, ...r.filter((x) => x.anchor_ppm !== a.anchor_ppm || x.p_threshold !== a.p_threshold)].slice(0, 8));
@@ -359,6 +369,17 @@ export function App() {
       );
   } else if (tab === "table") {
     body = page && <DataTable page={page} />;
+  } else if (companion) {
+    const pickCompanion = (pt: PickPoint) => {
+      const v = Number(pt.x);
+      if (Number.isFinite(v)) setFocusPpm(v);
+    };
+    body = (
+      <div class="split">
+        <div class="split-main">{figure && <PlotView figure={figure} onPick={onPick} />}</div>
+        <div class="split-companion">{companionFigure && <PlotView figure={companionFigure} onPick={pickCompanion} />}</div>
+      </div>
+    );
   } else {
     body = figure && <PlotView figure={figure} onPick={onPick} />;
   }

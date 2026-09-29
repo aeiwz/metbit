@@ -11,6 +11,7 @@ const stage = (id: string, section: string, requires: string | null = null, stat
   status,
   views: [],
   pre_views: [],
+  companions: {},
   ppm_views: {},
   has_table: true,
   blocked: null,

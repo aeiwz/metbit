@@ -264,3 +264,6 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
   .tabs-right { gap: 8px; }
   .tabs .picked { display: none; }
 }
+.split { position: absolute; inset: 0; display: grid; grid-template-rows: 55fr 45fr; }
+.split > div { position: relative; min-height: 0; }
+.split-companion { border-top: 1px solid var(--border); }

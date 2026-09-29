@@ -26,6 +26,7 @@ export interface StageInfo {
   status: Status;
   views: string[];
   pre_views: string[];
+  companions: Record<string, string>;
   ppm_views: Record<string, "x" | "customdata">;
   has_table: boolean;
   exportable: boolean;
@@ -118,8 +119,9 @@ export class Api {
     return this.req("/stages").then((r) => r.json());
   }
 
-  figure(id: string, view: string): Promise<any> {
-    return this.req(`/stages/${id}/figure?view=${encodeURIComponent(view)}`).then((r) => r.json());
+  figure(id: string, view: string, ppm?: number): Promise<any> {
+    const at = ppm === undefined ? "" : `&ppm=${ppm}`;
+    return this.req(`/stages/${id}/figure?view=${encodeURIComponent(view)}${at}`).then((r) => r.json());
   }
 
   table(id: string, offset = 0, limit = 100): Promise<TablePage> {
