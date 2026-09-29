@@ -4,6 +4,7 @@ from .analysis import ANALYSIS_STAGES, OPLSParams, OPLSResult, PCAParams, PCARes
 from .base import DATA_ORDER, Dataset, Progress, Stage, resolve_schema
 from .data import DATA_STAGES, AlignParams, BrukerSource, ImportParams, NormalizeParams, ProcessParams, parse_windows
 from .multivariate import MULTIVARIATE_STAGES, HCAParams, ICAParams, LDAParams, PLSRParams
+from .timeseries import time_stages
 from .stats import STATS_STAGES, GroupTestParams, GroupTestResult, VolcanoParams, bin_matrix
 
 _analysis = {s.id: s for s in ANALYSIS_STAGES}
@@ -16,4 +17,5 @@ STAGES: list[Stage] = [
     _analysis["stocsy"],
     *STATS_STAGES,
     *ANNOTATE_STAGES,
+    *time_stages(),
 ]

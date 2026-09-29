@@ -261,6 +261,31 @@ meaningfully).
 - Draggable labels (Plotly editable annotations): the dragged offset is saved
   with the label and holds in exports and projects.
 
+## 8. Time series (Phase J)
+
+A "Time series" rail section. Every stage shares one setup:
+
+- **Time column**: a metadata column; time-like names (time, day, week, visit, ...) are the default.
+  **Time order** is comma-separated; empty sorts numbers by value and text naturally (2-wk before 10-wk).
+- **Subject column**: optional donor ID for repeated measures; subject-like names are the default,
+  else "(none)". The group is the Import group column.
+
+Stages:
+
+- **Trajectory**: metbit's `plot_pca_trajectory` (group centroids per time point, mean or median,
+  SEM or SD bars). **Multilevel** centres each subject on its own mean first (Westerhuis 2010), so
+  the plot shows within-subject change. A Subjects view draws each subject's score path.
+- **Time profile**: one feature's intensity over time per group (center ± error), faint line per
+  subject; the median spectrum below picks the feature by click (like Group tests).
+- **ASCA** (Smilde 2005): scaled data split into Time, Group and Time × Group effect matrices
+  (level means; exact for balanced designs), a permutation p-value per effect (time and interaction
+  shuffle within subjects when a subject column is set), PCA per effect. Views: Effects (variation
+  explained with p), Scores (PC1 of time + interaction per group, ASCA+ combined), Loadings.
+- **Mixed model**: per binned feature, `y ~ time * group + (1 | subject)` (statsmodels MixedLM,
+  REML; time categorical or numeric) with a Wald test per term and BH-FDR; Friedman is the
+  non-parametric option across time points within subjects. A p-value plot under the profile
+  picks the feature by click. Displayed p-values floor at 1e-16.
+
 ## Testing
 
 - Server: style merge (stage beats global), native args reach metbit (trace
@@ -285,3 +310,6 @@ meaningfully).
    label list, JSON import / export, project persistence).
 3. **Phase G**: STOCSY rework (pre-views, click-to-anchor, clear, cache,
    recent anchors).
+4. **Phase H**: Group tests boxplot with a clickable spectrum.
+5. **Phase I**: annotator dashboard UX.
+6. **Phase J**: time series (Trajectory, Time profile, ASCA, Mixed model).

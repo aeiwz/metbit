@@ -20,6 +20,7 @@ def test_full_registry_order():
         "import", "process", "normalize", "align",
         "pca", "opls", "plsr", "lda", "ica", "hca", "stocsy",
         "volcano", "grouptests", "annotate",
+        "trajectory", "timeprofile", "asca", "mixedmodel",
     ]
     assert BY_ID["grouptests"].section == "Statistics"
 

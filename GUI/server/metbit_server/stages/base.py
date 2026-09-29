@@ -125,6 +125,10 @@ def _numeric_columns(meta: pd.DataFrame) -> list[str]:
     return [str(c) for c in meta.columns if pd.to_numeric(meta[c], errors="coerce").notna().all()]
 
 
+TIME_HINTS = ("time", "day", "week", "wk", "visit", "hour", "month")
+SUBJECT_HINTS = ("subject", "patient", "animal", "mouse", "donor", "individual", "id")
+
+
 def option_values(session: Session, kind: str) -> Optional[list[str]]:
     if session.status.get("import") != "done":
         return None
@@ -133,6 +137,14 @@ def option_values(session: Session, kind: str) -> Optional[list[str]]:
         return sorted(set(groups(session)))
     if kind == "columns":
         return [str(c) for c in meta.columns]
+    if kind in ("time_columns", "subject_columns"):
+        # likely columns first, so the default pick is usually right
+        hint = TIME_HINTS if kind == "time_columns" else SUBJECT_HINTS
+        cols = [str(c) for c in meta.columns]
+        likely = [c for c in cols if any(h in c.lower() for h in hint)]
+        rest = [c for c in cols if c not in likely]
+        # subject: a likely column is the default, else "(none)"
+        return likely + rest if kind == "time_columns" else [*likely, "(none)", *rest]
     if kind == "numeric_columns":
         return _numeric_columns(meta) or None
     return None

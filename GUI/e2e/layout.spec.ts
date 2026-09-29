@@ -18,10 +18,13 @@ function makeCsv(dir: string): string {
       (peak(j, 120, 8) * dose * 4 + peak(j, 124, 8) * dose * 3 + peak(j, 400, 10) * 5 + peak(j, 480, 6) * (3 - dose) +
         Math.abs(Math.sin(i * 3 + j)) * 0.15 + 0.2).toFixed(5),
     );
-    return [`sample_${String(i).padStart(2, "0")}`, group, (30 + i * 1.5 + Math.sin(i) * 2).toFixed(1), ...values].join(",");
+    const k = i % 8; // 4 subjects per group, each seen on two visits
+    const subject = `${group[0]}${k % 4}`;
+    const visit = k < 4 ? "day 1" : "day 7";
+    return [`sample_${String(i).padStart(2, "0")}`, group, (30 + i * 1.5 + Math.sin(i) * 2).toFixed(1), visit, subject, ...values].join(",");
   });
   const file = join(dir, "audit.csv");
-  writeFileSync(file, [["Sample", "Group", "Age", ...ppm].join(","), ...rows].join("\n"));
+  writeFileSync(file, [["Sample", "Group", "Age", "Visit", "Subject", ...ppm].join(","), ...rows].join("\n"));
   return file;
 }
 
@@ -88,6 +91,9 @@ const STAGES: { name: string; setup?: (w: Page) => Promise<void> }[] = [
   { name: "Volcano", setup: async (w) => { await w.selectOption("#f-group_b", "High dose"); } },
   { name: "Group tests", setup: async (w) => { await w.fill("#f-bin_width", "0.05"); } },
   { name: "Annotate" },
+  { name: "Trajectory" }, { name: "Time profile" },
+  { name: "ASCA", setup: async (w) => { await w.fill("#f-permutations", "20"); } },
+  { name: "Mixed model", setup: async (w) => { await w.fill("#f-bin_width", "0.1"); } },
 ];
 
 test("no overlapping, clipped or wrapped content in any view at large and minimum window sizes", async () => {
