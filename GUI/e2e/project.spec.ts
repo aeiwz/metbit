@@ -61,7 +61,8 @@ test("a backend crash restores the session after Restart", async () => {
   const { app, win } = await launch({ METBIT_USER_DATA: join(dir, "user") });
   await importAndPca(win, makeCsv(dir));
 
-  execSync("pkill -f metbit_server");
+  // only this app's sidecar (a direct child of its main process): other tests run in parallel workers
+  execSync(`pkill -P ${app.process().pid} -f metbit_server`);
   await expect(win.getByRole("alert")).toContainText("Backend stopped");
   await win.getByRole("button", { name: "Restart" }).click();
   await expect(win.getByText("Session restored")).toBeVisible({ timeout: 30_000 });
