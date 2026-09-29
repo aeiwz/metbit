@@ -1,6 +1,6 @@
 """Statistics stages: Volcano, Group tests (ANOVA / Kruskal-Wallis)."""
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 import numpy as np
 import pandas as pd
@@ -12,6 +12,7 @@ from metbit.stats.multitest import ANOVAStats, KruskalStats, VolcanoPlot, _apply
 
 from ..session import Session
 from .style import colors, declutter_point_labels
+from .base import median_spectra_figure
 from .base import DATA_ORDER, Progress, Stage, groups, two_groups, working
 
 Correction = Literal["fdr_bh", "bonferroni", "none"]
@@ -86,7 +87,9 @@ class GroupTestResult:
     table: pd.DataFrame  # ranked: ppm, statistic, p_value, p_adj
     data: pd.DataFrame   # Group + binned features (str ppm names), for the boxplot
     test: str
-    feature: str         # column of `data` shown in the boxplot
+    feature: str         # column of `data` shown in the boxplot by default
+    correction: str = "none"
+    spectra: Any = None  # working Dataset at full resolution, for the companion spectrum
 
 
 def run_group_tests(p: GroupTestParams, session: Session, progress: Progress) -> GroupTestResult:
@@ -117,15 +120,45 @@ def run_group_tests(p: GroupTestParams, session: Session, progress: Progress) ->
     data.columns = [str(c) for c in ppm]
     data.insert(0, "Group", labels.to_numpy())
     progress(1.0)
-    return GroupTestResult(table=table, data=data, test=p.test, feature=str(target))
+    return GroupTestResult(
+        table=table, data=data, test=p.test, feature=str(target), correction=p.correction, spectra=working(session)
+    )
 
 
-def _boxplot(r: GroupTestResult, style=None) -> go.Figure:
+CORRECTION_NAMES = {"fdr_bh": "FDR", "bonferroni": "Bonferroni"}
+
+
+def _feature_for(r: GroupTestResult, ppm: Optional[float]) -> str:
+    """Column of the tested (binned) matrix nearest `ppm`; the default feature when none is given."""
+    if ppm is None:
+        return r.feature
+    names = [c for c in r.data.columns if c != "Group"]
+    values = np.array([float(c) for c in names])
+    return names[int(np.abs(values - ppm).argmin())]
+
+
+def _stat_title(r: GroupTestResult, feature: str) -> str:
+    fmt = lambda v: "n/a" if v != v else f"{v:.2g}"  # NaN != NaN
+    row = r.table.loc[np.isclose(r.table["ppm"], float(feature))].iloc[0]
+    title = f"{float(feature):.4f} ppm · {'ANOVA' if r.test == 'anova' else 'Kruskal-Wallis'} p = {fmt(row['p_value'])}"
+    if r.correction in CORRECTION_NAMES:
+        title += f" · {CORRECTION_NAMES[r.correction]} {fmt(row['p_adj'])}"
+    return title
+
+
+def _boxplot(r: GroupTestResult, style=None, ppm: Optional[float] = None) -> go.Figure:
+    feature = _feature_for(r, ppm)
     cls = ANOVAStats if r.test == "anova" else KruskalStats
-    stats = cls(r.data, x_col="Group", y_col=r.feature)
+    stats = cls(r.data, x_col="Group", y_col=feature)
     stats.fit()
     extra = {"custom_colors": colors(style), "font_size": style.font_size} if style else {}
-    return stats.plot(title=f"{float(r.feature):.4f} ppm", **extra)
+    return stats.plot(title=_stat_title(r, feature), **extra)
+
+
+def _group_spectra(r: GroupTestResult, style=None, ppm: Optional[float] = None) -> go.Figure:
+    fig = median_spectra_figure(r.spectra.X, r.spectra.labels, "Click a peak to show its boxplot", style)
+    fig.add_vline(x=float(_feature_for(r, ppm)), line_dash="dot", line_color="#888888")
+    return fig
 
 
 STATS_STAGES: list[Stage] = [
@@ -148,7 +181,9 @@ STATS_STAGES: list[Stage] = [
         params=GroupTestParams,
         run=run_group_tests,
         table=lambda r: r.table,
-        figures={"boxplot": _boxplot},
+        figures={"boxplot": _boxplot, "spectra": _group_spectra},
+        companions={"boxplot": "spectra"},
+        ppm_views={"spectra": "x"},
         requires="import",
         after=list(DATA_ORDER),
     ),

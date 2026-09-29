@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Callable, Optional
 
+import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 from pydantic import BaseModel
@@ -36,6 +37,8 @@ class Stage:
     export: Optional[Callable[[Any], pd.DataFrame]] = None
     # views drawn from the working matrix before the stage has a result (called with the Dataset)
     pre_views: dict[str, Callable[..., go.Figure]] = field(default_factory=dict)
+    # main view -> companion view drawn under it (hidden from the tab bar); a click on it sets ppm for both
+    companions: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass
@@ -97,6 +100,25 @@ def spectra_figure(X: pd.DataFrame, labels: pd.Series, title: str, style: Option
     if style is None:
         return plot.overlay(title=title)
     return plot.overlay(title=title, linewidth=style.line_width, font_size=style.font_size)
+
+
+def median_spectra_figure(X: pd.DataFrame, labels: pd.Series, title: str, style: Optional[PlotStyle] = None) -> go.Figure:
+    """One median line per group, display-decimated like the other spectrum views."""
+    step = max(1, X.shape[1] // MAX_PLOT_POINTS)
+    ppm = X.columns.to_numpy(dtype=float)[::step]
+    palette = colors(style) if style else {}
+    fig = go.Figure()
+    for group in sorted(set(labels)):
+        median = np.median(X[(labels == group).to_numpy()].to_numpy(), axis=0)[::step]
+        line = {"color": palette.get(group), "width": style.line_width if style else 1.2}
+        fig.add_trace(go.Scatter(x=ppm, y=median, name=group, mode="lines", line=line))
+    fig.update_layout(
+        title=title,
+        template="plotly_white",
+        xaxis={"autorange": "reversed", "title": "δ¹H (ppm)"},
+        yaxis={"title": "Intensity"},
+    )
+    return fig
 
 
 def _numeric_columns(meta: pd.DataFrame) -> list[str]:

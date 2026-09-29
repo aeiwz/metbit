@@ -172,9 +172,19 @@ def _takes_style(make: Callable) -> bool:
         return False
 
 
-def render(make: Callable, result: Any, style: PlotStyle) -> go.Figure:
+def _declared(make: Callable, extra: dict) -> dict:
+    """The extras (such as ppm) this figure function names in its signature; None means not given."""
+    try:
+        names = inspect.signature(make).parameters
+    except (TypeError, ValueError):
+        return {}
+    return {k: v for k, v in extra.items() if v is not None and k in names}
+
+
+def render(make: Callable, result: Any, style: PlotStyle, **extra: Any) -> go.Figure:
     """Build a figure with the effective style: native metbit arguments when supported, else the fallback."""
     native = _takes_style(make)
-    fig = make(result, style) if native else make(result)
+    kwargs = _declared(make, extra)
+    fig = make(result, style, **kwargs) if native else make(result, **kwargs)
     apply_style(fig, style, recolor=not native)
     return lift_paper_annotations(fig, style.font_size)
