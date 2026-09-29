@@ -88,8 +88,9 @@ export function StyleForm({ effective, override, onChange, onReset }: Props) {
           checked={effective.show_ellipses}
           onClick={(e) => onChange({ show_ellipses: e.currentTarget.checked })}
         />
-        Confidence ellipses
+        Ellipse per group
       </label>
+      <span class="hint">Off draws one overall Hotelling ellipse (metbit's individual_ellipse).</span>
       {onReset && customized && (
         <button type="button" class="link" onClick={onReset}>
           Use global style

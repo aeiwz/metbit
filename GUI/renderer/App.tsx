@@ -74,9 +74,12 @@ export function App() {
     };
   }, [api, current, tab, hasResult, version]);
 
+  // refresh in place (no reset to null): unmounting would collapse the open Style section
   useEffect(() => {
-    setStageStyle(null);
-    if (!api || !stages.find((s) => s.id === current)?.views.length) return;
+    if (!api || !stages.find((s) => s.id === current)?.views.length) {
+      setStageStyle(null);
+      return;
+    }
     let live = true;
     api.getStageStyle(current).then((st) => live && setStageStyle(st));
     return () => {
@@ -92,6 +95,7 @@ export function App() {
   function select(id: string) {
     setShowGuide(false);
     setSideMode("params");
+    setStageStyle(null); // the next stage's style loads fresh
     setCurrent(id);
     setErrors({});
     setFailure(null);
