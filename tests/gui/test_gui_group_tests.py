@@ -17,7 +17,7 @@ BY_ID = {s.id: s for s in STAGES}
 
 def test_full_registry_order():
     assert [s.id for s in STAGES] == [
-        "import", "normalize", "align",
+        "import", "process", "normalize", "align",
         "pca", "opls", "plsr", "lda", "ica", "hca", "stocsy",
         "volcano", "grouptests",
     ]

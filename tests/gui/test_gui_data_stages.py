@@ -8,9 +8,9 @@ BY_ID = {s.id: s for s in STAGES}
 
 
 def test_data_stage_registration():
-    assert [s.id for s in STAGES][:3] == ["import", "normalize", "align"]
-    assert BY_ID["normalize"].after == ["import"]
-    assert BY_ID["align"].after == ["import", "normalize"]
+    assert [s.id for s in STAGES][:4] == ["import", "process", "normalize", "align"]
+    assert BY_ID["normalize"].after == ["import", "process"]
+    assert BY_ID["align"].after == ["import", "process", "normalize"]
     assert BY_ID["align"].ppm_views == {"spectra": "x", "before": "x"}
 
 

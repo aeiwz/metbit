@@ -55,6 +55,7 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
                 "views": list(s.figures),
                 "ppm_views": s.ppm_views,
                 "has_table": s.table is not None,
+                "blocked": s.blocked(session) if s.blocked else None,
                 "schema": resolve_schema(s, session),
                 "params": session.params.get(s.id),
             }
@@ -70,6 +71,9 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
             raise HTTPException(422, json.loads(e.json(include_url=False)))
         if stage.requires and session.status[stage.requires] != "done":
             raise HTTPException(409, f"Run '{stage.requires}' first")
+        reason = stage.blocked(session) if stage.blocked else None
+        if reason:
+            raise HTTPException(409, reason)
         try:
             job = start_job(session, stage, params)
         except Busy:

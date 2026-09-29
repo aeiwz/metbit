@@ -2,12 +2,15 @@
 import re
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Literal, Union
+from typing import Any, Literal, Optional, Union
 
+import numpy as np
 import pandas as pd
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from metbit.nmr.alignment import icoshift_align
+from metbit.nmr.calibrate import calibrate
+from metbit.nmr.preprocess import nmr_preprocessing
 from metbit.preprocessing.normalize import Normalization
 
 from ..session import Session
@@ -124,6 +127,74 @@ def _import_spectra(d: Union[Dataset, BrukerSource]):
     return spectra_figure(d.X, d.labels, "Spectra")
 
 
+# Process (Bruker) -------------------------------------------------------------
+
+PROCESS_CSV_REASON = "Process applies to Bruker imports only. CSV data is already processed."
+
+
+class ProcessParams(BaseModel):
+    bin_size: float = Field(
+        0.0003,
+        gt=0,
+        le=0.01,
+        title="Point spacing (ppm)",
+        description="Zero-filling target. 0.0003 gives about 67k points over a 20 ppm window.",
+    )
+    auto_phasing: bool = Field(
+        False, title="Automatic phasing", description="Off uses the phase stored with each experiment (PHC0 / PHC1)."
+    )
+    baseline: Literal["none", "corrector", "constant", "explicit", "median", "solvent filter"] = Field(
+        "none", title="Baseline correction"
+    )
+    calibration: Literal["tsp", "acetate", "glucose", "alanine", "formate", "none"] = Field(
+        "tsp", title="Calibration", description="TSP also covers DSS: both reference 0 ppm."
+    )
+
+
+def _process_one(path: str, p: ProcessParams) -> tuple[np.ndarray, np.ndarray]:
+    """metbit's own pipeline for one experiment, uncalibrated: (values, ppm)."""
+    d = nmr_preprocessing(
+        path,
+        bin_size=p.bin_size,
+        auto_phasing=p.auto_phasing,
+        baseline_correction=p.baseline != "none",
+        baseline_type=p.baseline,
+        calibration=False,
+    ).get_data()
+    return d.to_numpy()[0], d.columns.to_numpy(dtype=float)
+
+
+def run_process(p: ProcessParams, session: Session, progress: Progress) -> Dataset:
+    src = session.output("import")
+    if not isinstance(src, BrukerSource):
+        raise ValueError(PROCESS_CSV_REASON)
+    rows: list[np.ndarray] = []
+    ppm: Optional[np.ndarray] = None
+    for i, (name, path) in enumerate(src.experiments):
+        values, ppm = _process_one(path, p)
+        if rows and len(values) != len(rows[0]):
+            raise ValueError(
+                f"Experiment {name} has {len(values)} points but earlier ones have {len(rows[0])}. "
+                "metbit stacks spectra by position, so all experiments need the same sweep width."
+            )
+        rows.append(values)
+        progress(0.95 * (i + 1) / len(src.experiments))
+    # Same as metbit's nmr_preprocessing on the whole folder: rows stacked by position under the
+    # last experiment's ppm axis, then calibrated together (verified identical on MTBLS2052).
+    X = pd.DataFrame(np.vstack(rows), index=[n for n, _ in src.experiments], columns=ppm)
+    if p.calibration != "none":
+        X = calibrate(X, ppm, p.calibration)
+    X.columns = X.columns.astype(float)
+    progress(1.0)
+    return Dataset(X=X, meta=src.meta, labels=src.labels)
+
+
+def _process_blocked(session: Session) -> Optional[str]:
+    if session.status.get("import") == "done" and not isinstance(session.outputs.get("import"), BrukerSource):
+        return PROCESS_CSV_REASON
+    return None
+
+
 # Normalize ------------------------------------------------------------------
 
 NORMALIZERS = {
@@ -207,6 +278,18 @@ DATA_STAGES: list[Stage] = [
         ppm_views={"spectra": "x"},
     ),
     Stage(
+        id="process",
+        title="Process",
+        section="Data",
+        params=ProcessParams,
+        run=run_process,
+        figures={"spectra": lambda d: spectra_figure(d.X, d.labels, "Processed spectra")},
+        requires="import",
+        after=["import"],
+        ppm_views={"spectra": "x"},
+        blocked=_process_blocked,
+    ),
+    Stage(
         id="normalize",
         title="Normalize",
         section="Data",
@@ -214,7 +297,7 @@ DATA_STAGES: list[Stage] = [
         run=run_normalize,
         figures=_before_after("Normalized"),
         requires="import",
-        after=["import"],
+        after=["import", "process"],
         ppm_views={"spectra": "x", "before": "x"},
     ),
     Stage(
@@ -225,7 +308,7 @@ DATA_STAGES: list[Stage] = [
         run=run_align,
         figures=_before_after("Aligned"),
         requires="import",
-        after=["import", "normalize"],
+        after=["import", "process", "normalize"],
         ppm_views={"spectra": "x", "before": "x"},
     ),
 ]
