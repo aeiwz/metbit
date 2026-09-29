@@ -2,18 +2,35 @@
 import asyncio
 import json
 import secrets
+from contextlib import contextmanager
+from pathlib import Path
+from typing import Optional
 
 from fastapi import Body, Depends, FastAPI, HTTPException, Query, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError, field_validator
 
 from .jobs import Busy, Job, start_job
 from .session import Session
 from .stages import STAGES, Stage, resolve_schema
 
 
-def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
+class PathBody(BaseModel):
+    path: str
+
+    @field_validator("path")
+    @classmethod
+    def _usable(cls, v: str) -> str:
+        p = Path(v)
+        if not p.is_absolute():
+            raise ValueError("Use an absolute path")
+        if not p.parent.is_dir():
+            raise ValueError(f"Folder does not exist: {p.parent}")
+        return v
+
+
+def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str] = None) -> FastAPI:
     by_id = {s.id: s for s in stages}
     session = Session([s.id for s in stages], {s.id: s.after for s in stages})
     jobs: dict[str, Job] = {}
@@ -39,6 +56,15 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
             raise HTTPException(409, f"Stage '{sid}' has no result")
         return session.outputs[sid]
 
+    @contextmanager
+    def exclusive():
+        if not session.lock.acquire(blocking=False):
+            raise HTTPException(409, "Another job is running")
+        try:
+            yield
+        finally:
+            session.lock.release()
+
     @app.get("/health")
     def health():
         return {"ok": True}
@@ -55,6 +81,7 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
                 "views": list(s.figures),
                 "ppm_views": s.ppm_views,
                 "has_table": s.table is not None,
+                "exportable": (s.export or s.table) is not None,
                 "blocked": s.blocked(session) if s.blocked else None,
                 "schema": resolve_schema(s, session),
                 "params": session.params.get(s.id),
@@ -75,7 +102,7 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
         if reason:
             raise HTTPException(409, reason)
         try:
-            job = start_job(session, stage, params)
+            job = start_job(session, stage, params, on_done=autosave_now if autosave else None)
         except Busy:
             raise HTTPException(409, "Another job is running")
         jobs[job.id] = job
@@ -115,5 +142,18 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
         # double_precision=15 (the max): the default 10 rounds p-values like 3e-11 to 0
         page = json.loads(df.iloc[offset:offset + limit].to_json(orient="split", index=False, double_precision=15))
         return {"columns": [str(c) for c in page["columns"]], "rows": page["data"], "total": len(df)}
+
+    @app.post("/stages/{sid}/export")
+    def export(sid: str, body: PathBody):
+        stage = stage_or_404(sid)
+        make = stage.export or stage.table
+        if make is None:
+            raise HTTPException(404, f"Stage '{sid}' has nothing to export as CSV")
+        make(result_or_409(sid)).to_csv(body.path, index=False)
+        return {"path": body.path}
+
+    def autosave_now() -> None:
+        # replaced in Task 3 by a real save; kept as a no-op so Task 1 stands alone
+        return None
 
     return app

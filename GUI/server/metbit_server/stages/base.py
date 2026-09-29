@@ -31,6 +31,8 @@ class Stage:
     ppm_views: dict[str, str] = field(default_factory=dict)
     # reason the stage cannot run in this session (shown on the disabled rail item), or None
     blocked: Optional[Callable[[Session], Optional[str]]] = None
+    # CSV export; defaults to `table` when None
+    export: Optional[Callable[[Any], pd.DataFrame]] = None
 
 
 @dataclass
@@ -47,6 +49,11 @@ def not_run_figure(message: str) -> go.Figure:
     fig.update_xaxes(visible=False)
     fig.update_yaxes(visible=False)
     return fig
+
+
+def matrix_frame(d: Dataset) -> pd.DataFrame:
+    """Metadata then ppm columns, one row per sample: re-importable as a CSV."""
+    return pd.concat([d.meta.reset_index(drop=True), d.X.reset_index(drop=True)], axis=1)
 
 
 def working(session: Session, upto: Optional[str] = None) -> Dataset:

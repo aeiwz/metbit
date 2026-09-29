@@ -14,7 +14,7 @@ from metbit.nmr.preprocess import nmr_preprocessing
 from metbit.preprocessing.normalize import Normalization
 
 from ..session import Session
-from .base import Dataset, Progress, Stage, not_run_figure, spectra_figure, working
+from .base import Dataset, Progress, Stage, matrix_frame, not_run_figure, spectra_figure, working
 
 
 # Import ---------------------------------------------------------------------
@@ -119,6 +119,10 @@ def run_import(p: ImportParams, session: Session, progress: Progress) -> Union[D
     out = _import_bruker(p) if p.source == "bruker" else _import_csv(p)
     progress(1.0)
     return out
+
+
+def _import_export(d: Union[Dataset, BrukerSource]) -> pd.DataFrame:
+    return matrix_frame(d) if isinstance(d, Dataset) else d.meta
 
 
 def _import_spectra(d: Union[Dataset, BrukerSource]):
@@ -274,6 +278,7 @@ DATA_STAGES: list[Stage] = [
         params=ImportParams,
         run=run_import,
         table=lambda d: d.meta,
+        export=_import_export,
         figures={"spectra": _import_spectra},
         ppm_views={"spectra": "x"},
     ),
@@ -283,6 +288,7 @@ DATA_STAGES: list[Stage] = [
         section="Data",
         params=ProcessParams,
         run=run_process,
+        export=matrix_frame,
         figures={"spectra": lambda d: spectra_figure(d.X, d.labels, "Processed spectra")},
         requires="import",
         after=["import"],
@@ -295,6 +301,7 @@ DATA_STAGES: list[Stage] = [
         section="Data",
         params=NormalizeParams,
         run=run_normalize,
+        export=matrix_frame,
         figures=_before_after("Normalized"),
         requires="import",
         after=["import", "process"],
@@ -306,6 +313,7 @@ DATA_STAGES: list[Stage] = [
         section="Data",
         params=AlignParams,
         run=run_align,
+        export=matrix_frame,
         figures=_before_after("Aligned"),
         requires="import",
         after=["import", "process", "normalize"],

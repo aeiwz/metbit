@@ -1,11 +1,15 @@
 """Run one stage at a time on a worker thread and queue its events for SSE."""
+import logging
 import queue
 import threading
 import traceback
 import uuid
 from dataclasses import dataclass, field
+from typing import Callable, Optional
 
 from pydantic import BaseModel
+
+log = logging.getLogger(__name__)
 
 
 class Busy(Exception):
@@ -18,7 +22,7 @@ class Job:
     events: "queue.Queue[tuple[str, dict]]" = field(default_factory=queue.Queue)
 
 
-def start_job(session, stage, params: BaseModel) -> Job:
+def start_job(session, stage, params: BaseModel, on_done: Optional[Callable[[], None]] = None) -> Job:
     if not session.lock.acquire(blocking=False):
         raise Busy()
     job = Job(uuid.uuid4().hex)
@@ -32,6 +36,11 @@ def start_job(session, stage, params: BaseModel) -> Job:
             out = stage.run(params, session, progress)
             session.complete(stage.id, params.model_dump(), out)
             event = ("done", {"stage": stage.id})
+            if on_done:
+                try:
+                    on_done()  # still under the lock, so the saved state is consistent
+                except Exception:
+                    log.exception("autosave failed")
         except Exception as e:
             session.fail(stage.id)
             event = ("error", {"message": str(e), "traceback": traceback.format_exc()})
