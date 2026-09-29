@@ -9,17 +9,9 @@ from metbit import opls_da, pca
 from metbit.analysis.stocsy import STOCSY
 
 from ..session import Session
-from .base import DATA_ORDER, Progress, Stage, groups, two_groups, working
+from .base import DATA_ORDER, Progress, Stage, groups, not_run_figure, two_groups, working
 
 Scaling = Literal["pareto", "uv", "mean"]
-
-
-def not_run_figure(message: str) -> go.Figure:
-    fig = go.Figure()
-    fig.add_annotation(text=message, showarrow=False, x=0.5, y=0.5, xref="paper", yref="paper")
-    fig.update_xaxes(visible=False)
-    fig.update_yaxes(visible=False)
-    return fig
 
 
 # PCA ------------------------------------------------------------------------

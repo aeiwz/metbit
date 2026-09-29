@@ -16,7 +16,7 @@ def test_import_and_pca_registration():
     assert STAGES[0].id == "import" and STAGES[0].section == "Data"
     assert BY_ID["pca"].section == "Analysis"
     assert BY_ID["pca"].requires == "import"
-    assert BY_ID["pca"].after == ["import", "normalize", "align"]
+    assert BY_ID["pca"].after == ["import", "process", "normalize", "align"]
     assert BY_ID["pca"].ppm_views == {"loadings": "x"}
     assert ImportParams.model_json_schema()["properties"]["path"]["format"] == "file-path"
 

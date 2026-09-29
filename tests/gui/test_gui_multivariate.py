@@ -24,7 +24,7 @@ def test_analysis_rail_order():
     assert [s.id for s in STAGES if s.section == "Analysis"] == ["pca", "opls", "plsr", "lda", "ica", "hca", "stocsy"]
     for sid in ("plsr", "lda", "ica", "hca"):
         assert BY_ID[sid].requires == "import"
-        assert BY_ID[sid].after == ["import", "normalize", "align"]
+        assert BY_ID[sid].after == ["import", "process", "normalize", "align"]
 
 
 def test_plsr_target_defaults_to_numeric_column_and_runs(run_all, csv3):

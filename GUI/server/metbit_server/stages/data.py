@@ -1,22 +1,74 @@
-"""Data stages: Import (CSV), Normalize, Align."""
+"""Data stages: Import (CSV or Bruker), Normalize, Align."""
 import re
-from typing import Any, Literal
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Literal, Union
 
 import pandas as pd
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from metbit.nmr.alignment import icoshift_align
 from metbit.preprocessing.normalize import Normalization
 
 from ..session import Session
-from .base import Dataset, Progress, Stage, spectra_figure, working
+from .base import Dataset, Progress, Stage, not_run_figure, spectra_figure, working
 
 
-# Import (CSV) ---------------------------------------------------------------
+# Import ---------------------------------------------------------------------
+
+def _when(source: str) -> dict:
+    return {"show_if": {"source": source}}
+
 
 class ImportParams(BaseModel):
-    path: str = Field(title="CSV file", json_schema_extra={"format": "file-path"})
+    source: Literal["csv", "bruker"] = Field("csv", title="Source")
+    path: str = Field(
+        "",
+        title="CSV file",
+        description="Samples in rows, ppm values as column headers.",
+        json_schema_extra={"format": "file-path", **_when("csv")},
+    )
+    folder: str = Field(
+        "",
+        title="Bruker folder",
+        description="One folder per experiment, each containing a 'fid' file.",
+        json_schema_extra={"format": "dir-path", **_when("bruker")},
+    )
+    metadata_path: str = Field("", title="Metadata CSV", json_schema_extra={"format": "file-path", **_when("bruker")})
+    sample_column: str = Field(
+        "Sample",
+        title="Sample column",
+        description="Metadata column holding the experiment folder names.",
+        json_schema_extra=_when("bruker"),
+    )
     group_column: str = Field("Group", title="Group column")
+
+    @model_validator(mode="after")
+    def _paths_given(self) -> "ImportParams":
+        if self.source == "csv" and not self.path:
+            raise ValueError("Choose a CSV file")
+        if self.source == "bruker" and not (self.folder and self.metadata_path):
+            raise ValueError("Choose the Bruker folder and a metadata CSV")
+        return self
+
+
+@dataclass
+class BrukerSource:
+    experiments: list[tuple[str, str]]  # (folder name, path), sorted like metbit
+    meta: pd.DataFrame                  # one metadata row per experiment, same order
+    labels: pd.Series
+
+
+def find_experiments(folder: str) -> list[tuple[str, str]]:
+    """(name, path) for every experiment, searched like metbit: folder, one or two levels down."""
+    root = Path(folder)
+    if not root.is_dir():
+        raise ValueError(f"Folder not found: {folder}")
+    for pattern in ("fid", "*/fid", "*/*/fid"):
+        fids = sorted(root.glob(pattern), key=lambda f: f.parent.name)
+        if fids:
+            return [(f.parent.name, str(f.parent)) for f in fids]
+    raise ValueError(f"No Bruker experiments (folders containing 'fid') found in {folder}")
 
 
 def _is_ppm(name: Any) -> bool:
@@ -27,7 +79,7 @@ def _is_ppm(name: Any) -> bool:
         return False
 
 
-def run_import(p: ImportParams, session: Session, progress: Progress) -> Dataset:
+def _import_csv(p: ImportParams) -> Dataset:
     df = pd.read_csv(p.path)
     feats = [c for c in df.columns if _is_ppm(c)]
     if not feats:
@@ -39,8 +91,37 @@ def run_import(p: ImportParams, session: Session, progress: Progress) -> Dataset
     if X.isnull().values.any():
         raise ValueError("Spectral matrix contains missing values")
     X.columns = X.columns.astype(float)
-    progress(1.0)
     return Dataset(X=X, meta=meta, labels=meta[p.group_column].astype(str).reset_index(drop=True))
+
+
+def _import_bruker(p: ImportParams) -> BrukerSource:
+    experiments = find_experiments(p.folder)
+    meta = pd.read_csv(p.metadata_path)
+    for col in (p.sample_column, p.group_column):
+        if col not in meta.columns:
+            raise ValueError(f"Metadata column '{col}' not found. Columns: {list(meta.columns)}")
+    keyed = meta.assign(_key=meta[p.sample_column].astype(str)).drop_duplicates("_key").set_index("_key")
+    names = [n for n, _ in experiments]
+    missing = [n for n in names if n not in keyed.index]
+    if missing:
+        raise ValueError(
+            f"{len(missing)} experiment(s) have no metadata row, for example {missing[:5]}. "
+            f"Check the sample column ('{p.sample_column}')."
+        )
+    matched = keyed.loc[names].reset_index(drop=True)
+    return BrukerSource(experiments=experiments, meta=matched, labels=matched[p.group_column].astype(str))
+
+
+def run_import(p: ImportParams, session: Session, progress: Progress) -> Union[Dataset, BrukerSource]:
+    out = _import_bruker(p) if p.source == "bruker" else _import_csv(p)
+    progress(1.0)
+    return out
+
+
+def _import_spectra(d: Union[Dataset, BrukerSource]):
+    if isinstance(d, BrukerSource):
+        return not_run_figure("Run Process to see the spectra.")
+    return spectra_figure(d.X, d.labels, "Spectra")
 
 
 # Normalize ------------------------------------------------------------------
@@ -122,7 +203,7 @@ DATA_STAGES: list[Stage] = [
         params=ImportParams,
         run=run_import,
         table=lambda d: d.meta,
-        figures={"spectra": lambda d: spectra_figure(d.X, d.labels, "Spectra")},
+        figures={"spectra": _import_spectra},
         ppm_views={"spectra": "x"},
     ),
     Stage(

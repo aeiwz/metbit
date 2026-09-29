@@ -12,7 +12,7 @@ from ..session import Session
 
 Progress = Callable[[float], None]
 
-DATA_ORDER = ["import", "normalize", "align"]
+DATA_ORDER = ["import", "process", "normalize", "align"]
 MAX_PLOT_POINTS = 8000
 
 
@@ -29,6 +29,8 @@ class Stage:
     after: list[str] = field(default_factory=list)
     # view name -> where a clicked point keeps its ppm: "x" or "customdata" (index 0)
     ppm_views: dict[str, str] = field(default_factory=dict)
+    # reason the stage cannot run in this session (shown on the disabled rail item), or None
+    blocked: Optional[Callable[[Session], Optional[str]]] = None
 
 
 @dataclass
@@ -39,12 +41,23 @@ class Dataset:
     before: Optional[pd.DataFrame] = None  # input matrix, for before / after views
 
 
+def not_run_figure(message: str) -> go.Figure:
+    fig = go.Figure()
+    fig.add_annotation(text=message, showarrow=False, x=0.5, y=0.5, xref="paper", yref="paper")
+    fig.update_xaxes(visible=False)
+    fig.update_yaxes(visible=False)
+    return fig
+
+
 def working(session: Session, upto: Optional[str] = None) -> Dataset:
-    """Newest `done` data stage, considering only stages earlier than `upto`."""
+    """Newest `done` data stage holding a matrix, considering only stages earlier than `upto`."""
     order = DATA_ORDER if upto is None else DATA_ORDER[: DATA_ORDER.index(upto)]
     for sid in reversed(order):
-        if session.status.get(sid) == "done":
-            return session.outputs[sid]
+        out = session.outputs.get(sid)
+        if session.status.get(sid) == "done" and isinstance(out, Dataset):
+            return out
+    if session.status.get("import") == "done":
+        raise ValueError("Run Process first: Bruker data must be processed before analysis")
     raise ValueError("Import data first")
 
 
