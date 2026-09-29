@@ -166,3 +166,31 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 .link:hover { color: var(--text); }
 .link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .notice { color: var(--accent); font-size: 12px; }
+.guide { max-width: 880px; margin: 0 auto; padding: var(--s3); display: flex; flex-direction: column; gap: var(--s2); }
+.guide h3 { margin: 0; font-size: 15px; font-weight: 600; }
+.guide h4 { margin: var(--s1) 0 0; font-size: 13px; font-weight: 600; }
+.guide .lede { margin: 0; color: var(--muted); }
+.guide code { font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; background: var(--surface); padding: 1px 4px; border-radius: 4px; }
+.mock-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+.mock-table { border-collapse: collapse; width: 100%; font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.mock-table th, .mock-table td { padding: 6px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+.mock-table .meta { background: var(--surface); }
+.mock-table .spec { background: color-mix(in srgb, var(--accent) 8%, transparent); }
+.mock-table .bands th { font: 500 11px var(--font); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.steps { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.mock-files {
+  display: grid;
+  grid-template-columns: max-content 40px max-content;
+  row-gap: 4px;
+  padding: var(--s2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow-x: auto;
+  font: 12px/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+.mock-files .caption { font: 500 11px var(--font); letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+.mock-files .arrow { color: var(--accent); text-align: center; }
+.mock-files .cells { display: grid; grid-template-columns: 88px 64px 48px; }
+.mock-files .cells.head { color: var(--muted); border-bottom: 1px solid var(--border); }
+.mock-files .link { color: var(--accent); font-weight: 600; }
+.mock-actions { display: flex; align-items: center; gap: var(--s2); }
