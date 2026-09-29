@@ -9,9 +9,20 @@ export function defaults(schema: JsonSchema): Values {
   return Object.fromEntries(Object.entries(schema.properties).map(([k, f]) => [k, f.default ?? ""]));
 }
 
+const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
+
+// complete numbers (including 1e-7) become numbers; anything else stays as typed for the server to reject
+export function toNumber(raw: string): number | string {
+  const text = raw.trim();
+  return NUMBER.test(text) ? Number(text) : text;
+}
+
+const plain = (msg: string) =>
+  msg.startsWith("Input should be a valid number") ? "Enter a number, for example 0.0001 or 1e-7" : msg;
+
 export function fieldErrors(detail: unknown): FieldErrors {
   if (!Array.isArray(detail)) return { "": String(detail) };
-  return Object.fromEntries(detail.map((d: { loc: unknown[]; msg: string }) => [String(d.loc[0] ?? ""), d.msg]));
+  return Object.fromEntries(detail.map((d: { loc: unknown[]; msg: string }) => [String(d.loc[0] ?? ""), plain(d.msg)]));
 }
 
 const visible = (f: FieldSchema, values: Values) =>
@@ -88,12 +99,12 @@ function Field({ name, field, value, error, picked, onChange }: FieldProps) {
   } else if (field.type === "boolean") {
     // onClick, not onChange: click fires for mouse and Space and already carries the new state
     control = <input id={id} type="checkbox" checked={value === true} onClick={(e) => onChange(e.currentTarget.checked)} />;
-  } else if (field.type === "integer" || field.type === "number") {
+  } else if (field.type === "integer") {
     control = (
       <input
         id={id}
         type="number"
-        step={field.type === "integer" ? 1 : "any"}
+        step={1}
         min={field.minimum}
         max={field.maximum}
         value={value as number}
@@ -101,6 +112,20 @@ function Field({ name, field, value, error, picked, onChange }: FieldProps) {
           const raw = e.currentTarget.value;
           onChange(raw === "" ? "" : Number(raw));
         }}
+      />
+    );
+  } else if (field.type === "number") {
+    // text, not type="number": the browser reports half-typed values like "1e-" as empty, which would
+    // wipe the field mid-typing; keep what is typed and convert only complete numbers
+    control = (
+      <input
+        id={id}
+        type="text"
+        inputMode="decimal"
+        autoComplete="off"
+        spellcheck={false}
+        value={value === undefined || value === null ? "" : String(value)}
+        onInput={(e) => onChange(toNumber(e.currentTarget.value))}
       />
     );
   } else if (field.format === "file-path" || field.format === "dir-path") {

@@ -163,3 +163,28 @@ it("merges injected values without losing other edits", async () => {
   root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
   expect(onRun).toHaveBeenCalledWith({ anchor_ppm: 3.03, p_threshold: 0.01 });
 });
+
+it("accepts scientific notation in decimal fields and keeps unfinished input as typed", async () => {
+  const pSchema: JsonSchema = { properties: { p_threshold: { type: "number", title: "p threshold", default: 0.0001 } } };
+  const { root, onRun } = mount({ schema: pSchema });
+  const p = root.querySelector<HTMLInputElement>("#f-p_threshold")!;
+  const type = async (text: string) => {
+    p.value = text;
+    p.dispatchEvent(new Event("input"));
+    await tick();
+  };
+  await type("1e-");
+  expect(p.value).toBe("1e-"); // not wiped while typing
+  await type("1e-7");
+  root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+  expect(onRun).toHaveBeenLastCalledWith({ p_threshold: 1e-7 });
+  await type("abc");
+  root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+  expect(onRun).toHaveBeenLastCalledWith({ p_threshold: "abc" }); // the server's 422 explains it on the field
+});
+
+it("explains number errors in plain words", () => {
+  expect(fieldErrors([{ loc: ["p_threshold"], msg: "Input should be a valid number, unable to parse string as a number" }])).toEqual({
+    p_threshold: "Enter a number, for example 0.0001 or 1e-7",
+  });
+});
