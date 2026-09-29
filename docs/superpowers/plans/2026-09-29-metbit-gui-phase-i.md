@@ -1101,7 +1101,7 @@ test("annotator dashboard: add, switch, restyle, drag and export", async () => {
     .toBe("dot");
 
   // drag the label; the new offset comes back from the server after a refetch
-  const label = (await win.locator(".plot g.annotation", { hasText: "lactate" }).first().boundingBox())!;
+  const label = (await win.locator(".plot g.annotation-text-g", { hasText: "lactate" }).first().boundingBox())!;
   const cx = label.x + label.width / 2;
   const cy = label.y + label.height / 2;
   await win.mouse.move(cx, cy);

@@ -131,8 +131,8 @@ test("no overlapping, clipped or wrapped content in any view at large and minimu
   for (const [fx, fy, label] of [[0.2, 0.2, "aromatic"], [0.66, 0.6, "creatine"]] as const) {
     await win.mouse.move(box.x + box.width * fx, box.y + box.height * fy);
     await win.mouse.click(box.x + box.width * fx, box.y + box.height * fy);
-    await win.getByLabel("Label", { exact: true }).fill(label);
-    await win.getByLabel("Label", { exact: true }).press("Enter");
+    await win.fill("#annotate-label", label);
+    await win.locator("#annotate-label").press("Enter");
     await win.waitForTimeout(500);
   }
   for (const vp of [["L", 1400, 860], ["S", 960, 600]] as const) {

@@ -1,6 +1,6 @@
 import Plotly from "plotly.js-dist-min";
 import { useEffect, useState } from "preact/hooks";
-import { Api, ApiError, type Annotation, type PlotStyle, type StageInfo, type StageStyle, type StyleOverride, type TablePage } from "./api";
+import { Api, ApiError, type Annotation, type AnnotationSettings, type PlotStyle, type StageInfo, type StageStyle, type StyleOverride, type TablePage } from "./api";
 import { DataTable } from "./components/DataTable";
 import { FormatGuide } from "./components/FormatGuide";
 import { makeExampleCsv } from "./exampleData";
@@ -9,7 +9,8 @@ import { MoleculeLoader } from "./components/MoleculeLoader";
 import { ParamPanel, fieldErrors, type FieldErrors, type Values } from "./components/ParamPanel";
 import { PlotView, type PickPoint } from "./components/PlotView";
 import { AnnotationList } from "./components/AnnotationList";
-import { AnnotationPopover } from "./components/AnnotationPopover";
+import { AnnotatePanels } from "./components/AnnotatePanels";
+import { AnnotateToolbar } from "./components/AnnotateToolbar";
 import { Rail } from "./components/Rail";
 import { StocsyTools, type Anchor } from "./components/StocsyTools";
 import { StyleForm, applyPatch } from "./components/StyleForm";
@@ -44,7 +45,9 @@ export function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null); // caption while a project opens or a session restores
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  const [pending, setPending] = useState<{ ppm: number; x: number; y: number } | null>(null);
+  const [peak, setPeak] = useState<number | null>(null); // Annotate: the clicked peak
+  const [annotateMode, setAnnotateMode] = useState<"single" | "median" | null>(null);
+  const [annotSettings, setAnnotSettings] = useState<AnnotationSettings | null>(null);
   const [injected, setInjected] = useState<{ values: Values; n: number } | null>(null);
   const [recent, setRecent] = useState<Anchor[]>([]); // STOCSY anchors run this session, newest first
   const [importValues, setImportValues] = useState<Values>({});
@@ -66,9 +69,10 @@ export function App() {
         const v = Number(pickMode === "customdata" ? (pt.customdata as unknown[] | undefined)?.[0] : pt.x);
         if (!Number.isFinite(v)) return;
         setPicked(v);
-        // on the Annotate spectra a click opens the label popover at the click
-        if (current === "annotate" && tab === "spectra" && pt.clientX !== undefined && pt.clientY !== undefined) {
-          setPending({ ppm: v, x: pt.clientX, y: pt.clientY });
+        // on the Annotate spectra a click sets the current peak and focuses the label, as metbit's annotator
+        if (current === "annotate" && tab === "spectra") {
+          setPeak(v);
+          document.getElementById("annotate-label")?.focus();
         }
         // on the STOCSY spectra a click sets the anchor, as in metbit's STOCSY app
         if (current === "stocsy" && tab === "spectra") setInjected({ values: { anchor_ppm: Number(v.toFixed(4)) }, n: Date.now() });
@@ -92,13 +96,17 @@ export function App() {
     if (!api || (!hasResult && !preViews.includes(tab))) return;
     let live = true; // drop responses for a view the user already left
     const at = focusPpm ?? undefined;
-    const load = tab === "table" ? api.table(current).then((p) => live && setPage(p)) : api.figure(current, tab, at).then((f) => live && setFigure(f));
-    if (companion && hasResult) api.figure(current, companion, at).then((f) => live && setCompanionFigure(f));
+    const load = tab === "table" ? api.table(current).then((p) => live && setPage(p)) : api.figure(current, tab, { ppm: at, mode: current === "annotate" ? annotateMode ?? undefined : undefined }).then((f) => live && setFigure(f));
+    if (companion && hasResult) api.figure(current, companion, { ppm: at }).then((f) => live && setCompanionFigure(f));
     load.catch((e: Error) => live && setFailure({ message: e.message }));
     return () => {
       live = false;
     };
-  }, [api, current, tab, hasResult, version, focusPpm]);
+  }, [api, current, tab, hasResult, version, focusPpm, annotateMode]);
+
+  useEffect(() => {
+    if (api && current === "annotate") api.getAnnotationSettings().then(setAnnotSettings);
+  }, [api, current, version]);
 
   // refresh in place (no reset to null): unmounting would collapse the open Style section
   useEffect(() => {
@@ -122,7 +130,7 @@ export function App() {
     setShowGuide(false);
     setSideMode("params");
     setStageStyle(null); // the next stage's style loads fresh
-    setPending(null);
+    setPeak(null);
     setInjected(null);
     setFocusPpm(null);
     setCurrent(id);
@@ -234,9 +242,8 @@ export function App() {
 
   const addAnnotation = (label: string, angle: number) =>
     guarded(async () => {
-      if (!api || !pending) return;
-      await api.addAnnotation(pending.ppm, label, angle);
-      setPending(null);
+      if (!api || peak === null) return;
+      await api.addAnnotation(peak, label, angle);
       await annotationsChanged(api);
     });
 
@@ -261,6 +268,41 @@ export function App() {
       const path = await window.metbit.saveDialog("annotations.json", [{ name: "JSON", extensions: ["json"] }]);
       if (!path || !api) return;
       await api.exportAnnotations(path);
+      flash(`Saved ${basename(path)}`);
+    });
+
+  const annotateModeNow = annotateMode ?? ((stage?.params?.mode as "single" | "median" | undefined) ?? "single");
+
+  const saveAnnotSettings = (next: AnnotationSettings) =>
+    guarded(async () => {
+      if (!api) return;
+      setAnnotSettings(await api.putAnnotationSettings(next));
+      setVersion((v) => v + 1);
+    });
+
+  const setLabelSize = (font_size: number) => annotSettings && saveAnnotSettings({ ...annotSettings, font_size });
+
+  const applyLineStyle = (target: string, style: { color?: string; dash?: string; width?: number }) =>
+    annotSettings && saveAnnotSettings({ ...annotSettings, line_styles: { ...annotSettings.line_styles, [target]: style } });
+
+  const resetLineStyle = (target: string) => {
+    if (!annotSettings) return;
+    const { [target]: _removed, ...rest } = annotSettings.line_styles;
+    saveAnnotSettings({ ...annotSettings, line_styles: rest });
+  };
+
+  const moveLabel = (id: string, ax: number, ay: number) =>
+    guarded(async () => {
+      if (!api) return;
+      await api.patchAnnotation(id, { ax, ay }); // the plot already shows the new spot; just remember it
+      setAnnotations(await api.listAnnotations());
+    });
+
+  const exportHtml = () =>
+    guarded(async () => {
+      const path = await window.metbit.saveDialog("annotated-spectra.html", [{ name: "HTML", extensions: ["html"] }]);
+      if (!path || !api) return;
+      await api.exportHtml(current, path, "spectra", { mode: annotateModeNow });
       flash(`Saved ${basename(path)}`);
     });
 
@@ -356,7 +398,7 @@ export function App() {
       </div>
     );
   } else if (stage.status !== "running" && preViews.includes(tab)) {
-    body = figure && <PlotView figure={figure} onPick={onPick} />;
+    body = figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} />;
   } else if (!hasResult) {
     body =
       stage.status === "running" ? (
@@ -376,12 +418,12 @@ export function App() {
     };
     body = (
       <div class="split">
-        <div class="split-main">{figure && <PlotView figure={figure} onPick={onPick} />}</div>
+        <div class="split-main">{figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} />}</div>
         <div class="split-companion">{companionFigure && <PlotView figure={companionFigure} onPick={pickCompanion} />}</div>
       </div>
     );
   } else {
-    body = figure && <PlotView figure={figure} onPick={onPick} />;
+    body = figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} />;
   }
 
   return (
@@ -429,6 +471,15 @@ export function App() {
             )}
           </div>
         </div>
+        {current === "annotate" && hasResult && tab === "spectra" && (
+          <AnnotateToolbar
+            mode={annotateModeNow}
+            onMode={setAnnotateMode}
+            fontSize={annotSettings?.font_size ?? 14}
+            onFontSize={setLabelSize}
+            peak={peak}
+          />
+        )}
         <div class="view">{body}</div>
       </main>
       {sideMode === "style" && globalStyle ? (
@@ -463,13 +514,27 @@ export function App() {
             onClear={() => setInjected({ values: { anchor_ppm: "" }, n: Date.now() })}
           />
         )}
-        {current === "annotate" && (
-          <AnnotationList
-            items={annotations}
-            onDelete={deleteAnnotation}
-            onImport={importAnnotations}
-            onExport={exportAnnotations}
-          />
+        {current === "annotate" && annotSettings && (
+          <AnnotatePanels
+            peak={peak}
+            onAdd={addAnnotation}
+            targets={annotSettings.targets}
+            lineStyles={annotSettings.line_styles ?? {}}
+            onApplyStyle={applyLineStyle}
+            onResetStyle={resetLineStyle}
+            exports={
+              <>
+                <button type="button" class="link" disabled={!hasResult} onClick={exportCsv}>
+                  Intensity table (CSV)
+                </button>
+                <button type="button" class="link" disabled={!hasResult} onClick={exportHtml}>
+                  Download HTML
+                </button>
+              </>
+            }
+          >
+            <AnnotationList items={annotations} onDelete={deleteAnnotation} onImport={importAnnotations} onExport={exportAnnotations} />
+          </AnnotatePanels>
         )}
         {stageStyle && (
           <details class="style-override">
@@ -483,9 +548,6 @@ export function App() {
           </details>
         )}
       </ParamPanel>
-      )}
-      {pending && (
-        <AnnotationPopover ppm={pending.ppm} x={pending.x} y={pending.y} onAdd={addAnnotation} onCancel={() => setPending(null)} />
       )}
       {backendDown && (
         <div class="banner" role="alert">

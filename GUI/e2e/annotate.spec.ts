@@ -1,5 +1,5 @@
 import { _electron as electron, expect, test, type Page } from "@playwright/test";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -17,10 +17,13 @@ function makeCsv(dir: string): string {
 
 const plotLabels = (win: Page) =>
   win.evaluate(() => ((document.querySelector(".plot") as any)?.layout?.annotations ?? []).map((a: any) => a.text));
+const labelOffset = (win: Page, text: string) =>
+  win.evaluate((t) => ((document.querySelector(".plot") as any)?.layout?.annotations ?? []).find((a: any) => a.text === t)?.ay, text);
+const traces = (win: Page) => win.evaluate(() => ((document.querySelector(".plot") as any)?.data ?? []).map((t: any) => t.name));
 
-test("label a peak, see it on other spectra and in the intensity table", async () => {
+test("annotator dashboard: add, switch, restyle, drag and export", async () => {
   const dir = mkdtempSync(join(tmpdir(), "metbit-e2e-"));
-  const env = { ...process.env, METBIT_USER_DATA: join(dir, "user") } as Record<string, string>;
+  const env = { ...process.env, METBIT_E2E_DIR: dir, METBIT_USER_DATA: join(dir, "user") } as Record<string, string>;
   const app = await electron.launch({ args: ["."], env });
   const win = await app.firstWindow();
   const run = () => win.getByRole("button", { name: "Run", exact: true }).click();
@@ -29,21 +32,55 @@ test("label a peak, see it on other spectra and in the intensity table", async (
   await win.fill("#f-path", makeCsv(dir));
   await run();
   await expect(win.locator("table.data")).toContainText("s11");
-
   await win.locator(".rail button", { hasText: "Annotate" }).click();
   await run();
   await plot();
+
+  // click a peak: current peak pill + focused label field, then Add Label
   const box = (await win.locator(".plot .nsewdrag").first().boundingBox())!;
   await win.mouse.move(box.x + box.width * 0.2, box.y + box.height * 0.3);
   await win.mouse.click(box.x + box.width * 0.2, box.y + box.height * 0.3);
-  await win.getByLabel("Label", { exact: true }).fill("lactate");
-  await win.getByLabel("Label", { exact: true }).press("Enter");
-
+  await expect(win.locator(".peak-pill")).toContainText(" ppm");
+  await expect(win.locator("#annotate-label")).toBeFocused();
+  await win.fill("#annotate-label", "lactate");
+  await win.locator("#annotate-label").press("Enter");
   await expect(win.locator(".label-list")).toContainText("lactate");
   await expect.poll(() => plotLabels(win)).toContain("lactate");
+
+  // median switch: no re-run
+  await win.getByRole("button", { name: "Median spectra" }).click();
+  await expect.poll(() => traces(win)).toEqual(["A", "B"]);
+
+  // style group B dotted
+  await win.locator("summary", { hasText: "Style line" }).click();
+  await win.selectOption('[aria-label="Line to style"]', "B");
+  await win.selectOption('[aria-label="Line dash"]', "dot");
+  await win.getByRole("button", { name: "Apply Style" }).click();
+  await expect
+    .poll(() => win.evaluate(() => (document.querySelector(".plot") as any).data.find((t: any) => t.name === "B")?.line?.dash))
+    .toBe("dot");
+
+  // drag the label; the new offset comes back from the server after a refetch
+  // grab the text box: the middle of the whole annotation group is on the arrow, which does not drag
+  const label = (await win.locator(".plot g.annotation-text-g", { hasText: "lactate" }).first().boundingBox())!;
+  const cx = label.x + label.width / 2;
+  const cy = label.y + label.height / 2;
+  await win.mouse.move(cx, cy);
+  await win.mouse.down();
+  await win.mouse.move(cx + 30, cy - 40, { steps: 8 });
+  await win.mouse.up();
+  await win.getByRole("button", { name: "Single spectra" }).click();
+  await expect.poll(() => labelOffset(win, "lactate")).not.toBe(-40);
+
+  // self-contained HTML export
+  await win.getByRole("button", { name: "Download HTML" }).click();
+  const html = join(dir, "annotated-spectra.html");
+  await expect.poll(() => existsSync(html)).toBe(true);
+  expect(readFileSync(html, "utf8")).toContain("lactate");
+
+  // labels show on other spectra and in the intensity table
   await win.getByRole("tab", { name: "Table" }).click();
   await expect(win.locator("table.data thead")).toContainText("lactate_");
-
   await win.locator(".rail button", { hasText: "Normalize" }).click();
   await run();
   await plot();

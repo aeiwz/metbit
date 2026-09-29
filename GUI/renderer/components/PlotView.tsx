@@ -50,11 +50,22 @@ function themed(layout: Record<string, any>): Record<string, any> {
   return out;
 }
 
-export function PlotView({ figure, onPick }: { figure: Figure; onPick?: (point: PickPoint) => void }) {
+export function PlotView({
+  figure,
+  onPick,
+  onLabelMove,
+}: {
+  figure: Figure;
+  onPick?: (point: PickPoint) => void;
+  onLabelMove?: (id: string, ax: number, ay: number) => void;
+}) {
   const el = useRef<HTMLDivElement>(null);
   const pick = useRef(onPick);
   pick.current = onPick; // latest callback without re-binding plotly listeners
   const pickable = onPick !== undefined;
+  const move = useRef(onLabelMove);
+  move.current = onLabelMove;
+  const draggable = onLabelMove !== undefined;
 
   useEffect(() => {
     const node = el.current!;
@@ -66,15 +77,30 @@ export function PlotView({ figure, onPick }: { figure: Figure; onPick?: (point: 
     const layout = themed(figure.layout);
     if (pickable) layout.hoverdistance = -1; // any click in the plot picks the nearest point, not only within 20 px
     // toImage removed: the tab bar's PNG / SVG export saves the original white-background figure instead
-    const config = { responsive: true, displaylogo: false, modeBarButtonsToRemove: ["toImage"] };
+    const config = {
+      responsive: true,
+      displaylogo: false,
+      modeBarButtonsToRemove: ["toImage"],
+      // drag a label off a crowded peak, as metbit's annotator (Plotly editable annotations)
+      ...(draggable ? { edits: { annotationTail: true } } : {}),
+    };
     Plotly.react(node, figure.data, layout, config).then(() => {
       node.removeAllListeners?.("plotly_click");
       node.on("plotly_click", (e: { points?: PickPoint[]; event?: MouseEvent }) => {
         const p = e.points?.[0];
         if (p) pick.current?.({ x: p.x, customdata: p.customdata, clientX: e.event?.clientX, clientY: e.event?.clientY });
       });
+      node.removeAllListeners?.("plotly_relayout");
+      node.on("plotly_relayout", (e: Record<string, unknown>) => {
+        // a dragged label reports annotations[i].ax / .ay; our labels carry their id as the annotation name
+        for (const key of Object.keys(e)) {
+          const m = /^annotations\[(\d+)\]\.ax$/.exec(key);
+          const a = m ? node.layout.annotations?.[Number(m[1])] : undefined;
+          if (a?.name) move.current?.(a.name, Math.round(a.ax), Math.round(a.ay));
+        }
+      });
     });
-  }, [figure, pickable]);
+  }, [figure, pickable, draggable]);
 
   return <div ref={el} class="plot" />;
 }

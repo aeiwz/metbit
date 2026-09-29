@@ -62,6 +62,14 @@ export interface Annotation {
   ppm: number;
   label: string;
   angle: number;
+  ax?: number;
+  ay?: number;
+}
+
+export interface AnnotationSettings {
+  font_size?: number;
+  line_styles: Record<string, { color?: string; dash?: string; width?: number }>;
+  targets: { groups: string[]; samples: string[] };
 }
 
 export interface StageStyle {
@@ -119,9 +127,10 @@ export class Api {
     return this.req("/stages").then((r) => r.json());
   }
 
-  figure(id: string, view: string, ppm?: number): Promise<any> {
-    const at = ppm === undefined ? "" : `&ppm=${ppm}`;
-    return this.req(`/stages/${id}/figure?view=${encodeURIComponent(view)}${at}`).then((r) => r.json());
+  figure(id: string, view: string, opts: { ppm?: number; mode?: string } = {}): Promise<any> {
+    const at = opts.ppm === undefined ? "" : `&ppm=${opts.ppm}`;
+    const mode = opts.mode === undefined ? "" : `&mode=${encodeURIComponent(opts.mode)}`;
+    return this.req(`/stages/${id}/figure?view=${encodeURIComponent(view)}${at}${mode}`).then((r) => r.json());
   }
 
   table(id: string, offset = 0, limit = 100): Promise<TablePage> {
@@ -166,6 +175,22 @@ export class Api {
 
   importAnnotations(path: string): Promise<Annotation[]> {
     return this.post("/annotations/import", { path });
+  }
+
+  patchAnnotation(id: string, patch: Partial<Annotation>): Promise<Annotation> {
+    return this.req(`/annotations/${id}`, { method: "PATCH", body: JSON.stringify(patch) }).then((r) => r.json());
+  }
+
+  getAnnotationSettings(): Promise<AnnotationSettings> {
+    return this.req("/annotations/settings").then((r) => r.json());
+  }
+
+  putAnnotationSettings(settings: AnnotationSettings): Promise<AnnotationSettings> {
+    return this.put("/annotations/settings", settings);
+  }
+
+  exportHtml(id: string, path: string, view: string, opts: { ppm?: number; mode?: string } = {}): Promise<unknown> {
+    return this.post(`/stages/${id}/html`, { path, view, ...opts });
   }
 
   exportAnnotations(path: string): Promise<unknown> {
