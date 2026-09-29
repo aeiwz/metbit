@@ -11,3 +11,8 @@ xgboost>=1.7,<3; python_version < "3.14"
 # PyTorch CPU-only wheel (smaller, sufficient for tests)
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch
+
+# GUI sidecar tests (tests/gui)
+fastapi>=0.110
+uvicorn>=0.29
+httpx
