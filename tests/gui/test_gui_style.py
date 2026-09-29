@@ -94,3 +94,48 @@ def test_render_lifts_notes_for_every_figure():
     style = PlotStyle()
     fig = render(lambda r: go.Figure(layout={"annotations": [{"text": "Q2", "xref": "paper", "yref": "paper", "x": 0, "y": 1.2}]}), None, style)
     assert fig.layout.annotations[0].y == 1 and fig.layout.margin.t > 0
+
+
+def test_lifted_notes_push_the_title_to_the_top_of_the_figure():
+    from metbit_server.stages.style import lift_paper_annotations
+
+    fig = go.Figure(layout={"title": {"text": "OPLS-DA Scores Plot"}})
+    fig.add_annotation(text="Q2", xref="paper", yref="paper", x=0, y=1.1, showarrow=False)
+    lift_paper_annotations(fig, font_size=14)
+    assert (fig.layout.title.yref, fig.layout.title.y, fig.layout.title.yanchor) == ("container", 1, "top")
+
+
+def test_corner_notes_inside_the_plot_are_stacked_in_pixels():
+    from metbit_server.stages.style import lift_paper_annotations
+
+    fig = go.Figure()
+    fig.add_annotation(text="Q2X", xref="paper", yref="paper", x=1, y=0.0, showarrow=False, xanchor="right")
+    fig.add_annotation(text="R2X", xref="paper", yref="paper", x=1, y=0.05, showarrow=False, xanchor="right")
+    fig.add_annotation(text="lonely", xref="paper", yref="paper", x=0.5, y=0.5, showarrow=False)
+    lift_paper_annotations(fig, font_size=14)
+    notes = {a.text: a for a in fig.layout.annotations}
+    assert notes["Q2X"].y == notes["R2X"].y == 0.0
+    assert notes["R2X"].yshift > notes["Q2X"].yshift
+    assert notes["lonely"].y == 0.5 and notes["lonely"].yshift is None
+
+
+def test_crowded_point_labels_keep_only_the_most_significant():
+    from metbit_server.stages.style import declutter_point_labels
+
+    fig = go.Figure(go.Scatter(x=[-2, 2], y=[0, 20], mode="markers"))
+    for x, y, text in [(1.0, 18.5, "8.0"), (1.05, 19.0, "8.0167"), (1.02, 18.6, "7.9833"), (-1.5, 10.0, "3.3")]:
+        fig.add_annotation(x=x, y=y, text=text, showarrow=True)
+    fig.add_annotation(text="p=0.05", xref="paper", yref="paper", x=1, y=0.1, showarrow=False)
+    declutter_point_labels(fig)
+    assert sorted(a.text for a in fig.layout.annotations) == ["3.3", "8.0167", "p=0.05"]
+
+
+def test_lifted_notes_keep_their_order_when_nothing_else_shares_the_corner():
+    from metbit_server.stages.style import lift_paper_annotations
+
+    fig = go.Figure()  # exactly metbit's permutation plot: three notes above the plot, nothing inside
+    for y, text in [(1.25, "Number of permutation"), (1.18, "Accuracy score"), (1.11, "p-value")]:
+        fig.add_annotation(text=text, xref="paper", yref="paper", x=0, y=y, showarrow=False)
+    lift_paper_annotations(fig, font_size=14)
+    shift = {a.text: a.yshift for a in fig.layout.annotations}
+    assert shift["p-value"] < shift["Accuracy score"] < shift["Number of permutation"]

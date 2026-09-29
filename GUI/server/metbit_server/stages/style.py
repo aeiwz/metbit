@@ -100,23 +100,68 @@ def apply_style(fig: go.Figure, style: PlotStyle, recolor: bool = True) -> go.Fi
 
 
 def lift_paper_annotations(fig: go.Figure, font_size: int) -> go.Figure:
-    """Re-stack notes metbit places above the plot (paper y > 1) at fixed pixel offsets.
+    """Re-stack metbit's paper-positioned notes at fixed pixel offsets.
 
-    metbit sizes those offsets for its fixed figure height; in an autosized plot they scale with the
-    window, drift into the title and get clipped. Pixel offsets plus a matching top margin keep them
-    readable at any size, on screen and in exports.
+    metbit spaces its notes (Q2 / R2X blocks, permutation summaries) in paper units sized for its
+    fixed figure height. In an autosized plot those gaps scale with the window: notes above the plot
+    drift into the title and get clipped, and corner blocks inside the plot collide when it is short.
+    Pixel offsets keep them readable at any size, on screen and in exports.
     """
-    above = sorted(
-        (a for a in fig.layout.annotations if a.yref == "paper" and a.y is not None and a.y > 1),
-        key=lambda a: a.y,
-    )
-    if not above:
-        return fig
+    notes = [a for a in fig.layout.annotations if a.yref == "paper" and a.y is not None]
     step = round(font_size * 1.6)
-    for i, a in enumerate(above):
-        a.update(y=1, yanchor="bottom", yshift=6 + i * step)
-    needed = 6 + len(above) * step + 2 * font_size  # top note plus room for the title line
-    fig.update_layout(margin_t=max(fig.layout.margin.t or 0, needed))
+
+    above = sorted((a for a in notes if a.y > 1), key=lambda a: a.y)
+    if above:
+        for i, a in enumerate(above):
+            a.update(y=1, yanchor="bottom", yshift=6 + i * step)
+        title = fig.layout.title
+        title_room = 0
+        if title.text:
+            # the title goes to the very top so the stacked notes below it can never meet it
+            fig.update_layout(title_yref="container", title_y=1, title_yanchor="top", title_pad_t=8)
+            title_room = round((title.font.size or font_size * 1.4) * 1.3) + 16
+        needed = 6 + len(above) * step + title_room + 8
+        fig.update_layout(margin_t=max(fig.layout.margin.t or 0, needed))
+
+    # blocks of notes sharing a corner inside the plot: keep the lowest in place, stack the rest on it
+    # (lifted notes now sit at y=1 too; they are already stacked and must not be stacked again)
+    lifted = {id(a) for a in above}
+    corners: dict = {}
+    for a in notes:
+        if a.y <= 1 and id(a) not in lifted:
+            corners.setdefault((round(a.x or 0, 2), a.xanchor), []).append(a)
+    for block in corners.values():
+        block.sort(key=lambda a: a.y)
+        if len(block) < 2 or block[-1].y - block[0].y > 0.25:
+            continue
+        base = block[0].y
+        for i, a in enumerate(block):
+            a.update(y=base, yanchor="bottom", yshift=i * step)
+    return fig
+
+
+def declutter_point_labels(fig: go.Figure, x_frac: float = 0.1, y_frac: float = 0.05) -> go.Figure:
+    """Drop data-point labels that would sit on a more significant one (higher y wins).
+
+    metbit labels the top-n features; neighbouring points of one peak are all in the top n, so their
+    labels pile up. Keeps one label per crowded spot, sized in fractions of the data range.
+    """
+    xs, ys = [], []
+    for trace in fig.data:
+        try:
+            xs.extend(float(v) for v in (trace.x if trace.x is not None else ()))
+            ys.extend(float(v) for v in (trace.y if trace.y is not None else ()))
+        except (TypeError, ValueError):
+            continue
+    xr = (max(xs) - min(xs)) if xs else 1.0
+    yr = (max(ys) - min(ys)) if ys else 1.0
+    points = [a for a in fig.layout.annotations if a.showarrow and a.xref in (None, "x") and a.yref in (None, "y")]
+    kept: list = []
+    for a in sorted(points, key=lambda a: -(a.y or 0)):
+        if not any(abs(a.x - k.x) < x_frac * xr and abs(a.y - k.y) < y_frac * yr for k in kept):
+            kept.append(a)
+    others = [a for a in fig.layout.annotations if a not in points]
+    fig.layout.annotations = others + kept
     return fig
 
 

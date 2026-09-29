@@ -11,7 +11,7 @@ from scipy.stats import f_oneway, kruskal
 from metbit.stats.multitest import ANOVAStats, KruskalStats, VolcanoPlot, _apply_correction
 
 from ..session import Session
-from .style import colors
+from .style import colors, declutter_point_labels
 from .base import DATA_ORDER, Progress, Stage, groups, two_groups, working
 
 Correction = Literal["fdr_bh", "bonferroni", "none"]
@@ -136,7 +136,8 @@ STATS_STAGES: list[Stage] = [
         params=VolcanoParams,
         run=run_volcano,
         table=lambda v: v.get_table(),
-        figures={"volcano": lambda v: v.plot()},
+        # metbit labels the top 10 features; neighbours of one peak would stack their labels
+        figures={"volcano": lambda v: declutter_point_labels(v.plot())},
         requires="import",
         after=list(DATA_ORDER),
     ),
