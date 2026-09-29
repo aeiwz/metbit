@@ -16,7 +16,7 @@ from .jobs import Busy, Job, start_job
 from .project import ProjectError, load_project, save_project
 from .session import Session
 from .stages import STAGES, Stage, resolve_schema
-from .stages.base import option_values
+from .stages.base import option_values, working
 from .stages.style import PlotStyle, StyleOverride, merge, override_dict, render, with_groups
 
 
@@ -92,6 +92,7 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
                 "requires": s.requires,
                 "status": session.status[s.id],
                 "views": list(s.figures),
+                "pre_views": list(s.pre_views),
                 "ppm_views": s.ppm_views,
                 "has_table": s.table is not None,
                 "exportable": (s.export or s.table) is not None,
@@ -139,12 +140,20 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
 
     @app.get("/stages/{sid}/figure")
     def figure(sid: str, view: str):
-        out = result_or_409(sid)
-        make = by_id[sid].figures.get(view)
-        if make is None:
-            raise HTTPException(404, f"Unknown view '{view}'")
+        stage = stage_or_404(sid)
         style = effective_style(sid)
-        fig = render(make, out, style)
+        if view in stage.pre_views:
+            try:
+                data = working(session)  # pre-run views draw from the working matrix, no result needed
+            except ValueError as e:
+                raise HTTPException(409, str(e))
+            fig = render(stage.pre_views[view], data, style)
+        else:
+            out = result_or_409(sid)
+            make = stage.figures.get(view)
+            if make is None:
+                raise HTTPException(404, f"Unknown view '{view}'")
+            fig = render(make, out, style)
         if view in ANNOTATED_VIEWS and session.annotations:
             overlay(fig, session.annotations, style.font_size)
         fig.update_layout(width=None, height=None, autosize=True)  # renderer sizes the plot

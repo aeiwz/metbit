@@ -34,6 +34,8 @@ class Stage:
     blocked: Optional[Callable[[Session], Optional[str]]] = None
     # CSV export; defaults to `table` when None
     export: Optional[Callable[[Any], pd.DataFrame]] = None
+    # views drawn from the working matrix before the stage has a result (called with the Dataset)
+    pre_views: dict[str, Callable[..., go.Figure]] = field(default_factory=dict)
 
 
 @dataclass
@@ -42,6 +44,8 @@ class Dataset:
     meta: pd.DataFrame                     # every non-ppm column
     labels: pd.Series                      # group name per sample (str)
     before: Optional[pd.DataFrame] = None  # input matrix, for before / after views
+    # per-matrix result cache (STOCSY): new data is a new Dataset, so nothing stale survives
+    cache: dict = field(default_factory=dict, repr=False, compare=False)
 
 
 def not_run_figure(message: str) -> go.Figure:

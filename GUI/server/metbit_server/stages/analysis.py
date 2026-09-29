@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from typing import Any, Literal, Optional
 
+import numpy as np
 import plotly.graph_objects as go
 from pydantic import BaseModel, Field, model_validator
 
@@ -10,7 +11,7 @@ from metbit.analysis.stocsy import STOCSY
 
 from ..session import Session
 from .style import PlotStyle, colors, symbols
-from .base import DATA_ORDER, Progress, Stage, groups, not_run_figure, two_groups, working
+from .base import DATA_ORDER, Dataset, Progress, Stage, groups, not_run_figure, spectra_figure, two_groups, working
 
 Scaling = Literal["pareto", "uv", "mean"]
 
@@ -124,13 +125,30 @@ class STOCSYParams(BaseModel):
 
 
 def run_stocsy(p: STOCSYParams, session: Session, progress: Progress) -> go.Figure:
-    X = working(session).X
+    data = working(session)
+    X = data.X
     lo, hi = float(X.columns.min()), float(X.columns.max())
     if not lo <= p.anchor_ppm <= hi:
         raise ValueError(f"Anchor {p.anchor_ppm} ppm is outside the spectrum ({lo:.2f} to {hi:.2f} ppm)")
-    fig = STOCSY(X, p.anchor_ppm, p.p_threshold)
+    cache = data.cache.setdefault("stocsy", {})  # like the Dash app's lru_cache, scoped to this matrix
+    key = (p.anchor_ppm, p.p_threshold)
+    if key not in cache:
+        cache[key] = STOCSY(X, p.anchor_ppm, p.p_threshold)
     progress(1.0)
-    return fig
+    return cache[key]
+
+
+def sample_indices(n: int) -> list[int]:
+    """Spectra to draw, as metbit's STOCSY app: all up to 5, 20% from 100, else up to 30; seeded."""
+    if n <= 5:
+        return list(range(n))
+    k = int(0.2 * n) if n >= 100 else min(30, n)
+    return sorted(np.random.default_rng(0).choice(n, size=k, replace=False).tolist())
+
+
+def stocsy_spectra(d: Dataset, style=None) -> go.Figure:
+    idx = sample_indices(len(d.X))
+    return spectra_figure(d.X.iloc[idx], d.labels.iloc[idx], "Click a peak to set the anchor", style)
 
 
 ANALYSIS_STAGES: list[Stage] = [
@@ -172,9 +190,11 @@ ANALYSIS_STAGES: list[Stage] = [
         title="STOCSY",
         params=STOCSYParams,
         run=run_stocsy,
-        figures={"correlation": lambda fig: fig},
+        # a copy: rendering restyles and labels the figure, and the stored one is also the cache entry
+        figures={"correlation": lambda fig: go.Figure(fig)},
+        pre_views={"spectra": stocsy_spectra},
         requires="import",
         after=list(DATA_ORDER),
-        ppm_views={"correlation": "x"},
+        ppm_views={"spectra": "x", "correlation": "x"},
     ),
 ]
