@@ -1,0 +1,87 @@
+"""FastAPI sidecar for the metbit desktop GUI."""
+import asyncio
+import json
+import secrets
+
+from fastapi import Body, Depends, FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
+from pydantic import ValidationError
+
+from .jobs import Busy, Job, start_job
+from .session import Session
+from .stages import STAGES, Stage
+
+
+def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
+    by_id = {s.id: s for s in stages}
+    session = Session([s.id for s in stages])
+    jobs: dict[str, Job] = {}
+
+    def check_token(request: Request) -> None:
+        got = request.headers.get("authorization", "")
+        if not secrets.compare_digest(got, f"Bearer {token}"):
+            raise HTTPException(401, "Invalid token")
+
+    app = FastAPI(dependencies=[Depends(check_token)])
+    # ponytail: "*" is safe because every route needs the per-session bearer token;
+    # CORS answers preflight before routing, so OPTIONS needs no token.
+    app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+    def stage_or_404(sid: str) -> Stage:
+        if sid not in by_id:
+            raise HTTPException(404, f"Unknown stage '{sid}'")
+        return by_id[sid]
+
+    @app.get("/health")
+    def health():
+        return {"ok": True}
+
+    @app.get("/stages")
+    def list_stages():
+        return [
+            {
+                "id": s.id,
+                "title": s.title,
+                "requires": s.requires,
+                "status": session.status[s.id],
+                "views": list(s.figures),
+                "schema": s.params.model_json_schema(),
+                "params": session.params.get(s.id),
+            }
+            for s in stages
+        ]
+
+    @app.post("/stages/{sid}/run")
+    def run(sid: str, body: dict = Body(default={})):
+        stage = stage_or_404(sid)
+        try:
+            params = stage.params.model_validate(body)
+        except ValidationError as e:
+            raise HTTPException(422, json.loads(e.json(include_url=False)))
+        if stage.requires and session.status[stage.requires] != "done":
+            raise HTTPException(409, f"Run '{stage.requires}' first")
+        try:
+            job = start_job(session, stage, params)
+        except Busy:
+            raise HTTPException(409, "Another job is running")
+        jobs[job.id] = job
+        return {"job_id": job.id}
+
+    @app.get("/jobs/{job_id}/events")
+    async def events(job_id: str):
+        job = jobs.get(job_id)
+        if job is None:
+            raise HTTPException(404, "Unknown job")
+
+        async def stream():
+            while True:
+                kind, data = await asyncio.to_thread(job.events.get)
+                yield f"event: {kind}\ndata: {json.dumps(data)}\n\n"
+                if kind in ("done", "error"):
+                    jobs.pop(job_id, None)
+                    return
+
+        return StreamingResponse(stream(), media_type="text/event-stream")
+
+    return app
