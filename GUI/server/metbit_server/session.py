@@ -10,6 +10,8 @@ class Session:
         self.status: dict[str, str] = {sid: "empty" for sid in self.order}
         self.params: dict[str, dict] = {}
         self.outputs: dict[str, Any] = {}
+        self.style: dict = {}                    # global PlotStyle as stored (validated on use)
+        self.stage_styles: dict[str, dict] = {}  # per-stage StyleOverride dicts
         self.lock = threading.Lock()  # one job at a time
 
     def dependents(self, sid: str) -> list[str]:

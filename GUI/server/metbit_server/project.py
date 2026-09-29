@@ -38,7 +38,13 @@ def _read(zf: zipfile.ZipFile, name: str, ppm_columns: bool = False) -> pd.DataF
 
 
 def save_project(session: Session, path: str) -> None:
-    manifest: dict = {"format": FORMAT, "version": VERSION, "stages": {}}
+    manifest: dict = {
+        "format": FORMAT,
+        "version": VERSION,
+        "stages": {},
+        "style": session.style,
+        "stage_styles": session.stage_styles,
+    }
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
         for sid in session.order:
             if sid not in session.params:
@@ -117,3 +123,5 @@ def load_project(session: Session, stages: list[Stage], path: str) -> None:
         fresh.status[stage.id] = "stale" if slow else "done"
 
     session.status, session.params, session.outputs = fresh.status, fresh.params, fresh.outputs
+    session.style = manifest.get("style") or {}
+    session.stage_styles = manifest.get("stage_styles") or {}

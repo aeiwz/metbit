@@ -15,6 +15,8 @@ from .jobs import Busy, Job, start_job
 from .project import ProjectError, load_project, save_project
 from .session import Session
 from .stages import STAGES, Stage, resolve_schema
+from .stages.base import option_values
+from .stages.style import PlotStyle, StyleOverride, merge, override_dict, render, with_groups
 
 
 class PathBody(BaseModel):
@@ -65,6 +67,15 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
             yield
         finally:
             session.lock.release()
+
+    def global_style() -> PlotStyle:
+        return with_groups(PlotStyle.model_validate(session.style or {}), option_values(session, "groups") or [])
+
+    def effective_style(sid: str) -> PlotStyle:
+        return merge(global_style(), StyleOverride.model_validate(session.stage_styles.get(sid, {})))
+
+    def stage_style_body(sid: str) -> dict:
+        return {"override": session.stage_styles.get(sid, {}), "effective": effective_style(sid).model_dump()}
 
     @app.get("/health")
     def health():
@@ -131,9 +142,39 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
         make = by_id[sid].figures.get(view)
         if make is None:
             raise HTTPException(404, f"Unknown view '{view}'")
-        fig = make(out)
+        fig = render(make, out, effective_style(sid))
         fig.update_layout(width=None, height=None, autosize=True)  # renderer sizes the plot
         return Response(fig.to_json(), media_type="application/json")
+
+    @app.get("/style")
+    def get_style():
+        return global_style().model_dump()
+
+    @app.put("/style")
+    def put_style(body: dict = Body(...)):
+        try:
+            style = PlotStyle.model_validate(body)
+        except ValidationError as e:
+            raise HTTPException(422, json.loads(e.json(include_url=False)))
+        session.style = style.model_dump()
+        return global_style().model_dump()
+
+    @app.get("/stages/{sid}/style")
+    def get_stage_style(sid: str):
+        stage_or_404(sid)
+        return stage_style_body(sid)
+
+    @app.put("/stages/{sid}/style")
+    def put_stage_style(sid: str, body: dict = Body(...)):
+        stage_or_404(sid)
+        try:
+            override = StyleOverride.model_validate(body)
+        except ValidationError as e:
+            raise HTTPException(422, json.loads(e.json(include_url=False)))
+        session.stage_styles[sid] = override_dict(override)
+        if not session.stage_styles[sid]:
+            del session.stage_styles[sid]
+        return stage_style_body(sid)
 
     @app.get("/stages/{sid}/table")
     def table(sid: str, offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)):
