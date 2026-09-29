@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ValidationError, field_validator
 
+from .annotations import ANNOTATED_VIEWS, AnnotationIn, new_annotation, overlay, parse_annotation_file
 from .jobs import Busy, Job, start_job
 from .project import ProjectError, load_project, save_project
 from .session import Session
@@ -142,7 +143,10 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
         make = by_id[sid].figures.get(view)
         if make is None:
             raise HTTPException(404, f"Unknown view '{view}'")
-        fig = render(make, out, effective_style(sid))
+        style = effective_style(sid)
+        fig = render(make, out, style)
+        if view in ANNOTATED_VIEWS and session.annotations:
+            overlay(fig, session.annotations, style.font_size)
         fig.update_layout(width=None, height=None, autosize=True)  # renderer sizes the plot
         return Response(fig.to_json(), media_type="application/json")
 
@@ -192,6 +196,41 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
         if make is None:
             raise HTTPException(404, f"Stage '{sid}' has nothing to export as CSV")
         make(result_or_409(sid)).to_csv(body.path, index=False)
+        return {"path": body.path}
+
+    @app.get("/annotations")
+    def list_annotations():
+        return session.annotations
+
+    @app.post("/annotations")
+    def add_annotation(body: dict = Body(...)):
+        try:
+            item = new_annotation(AnnotationIn.model_validate(body))
+        except ValidationError as e:
+            raise HTTPException(422, json.loads(e.json(include_url=False)))
+        session.annotations.append(item)
+        return item
+
+    @app.delete("/annotations/{aid}")
+    def delete_annotation(aid: str):
+        for i, a in enumerate(session.annotations):
+            if a["id"] == aid:
+                del session.annotations[i]
+                return {"deleted": aid}
+        raise HTTPException(404, "Unknown annotation")
+
+    @app.post("/annotations/import")
+    def import_annotations(body: PathBody):
+        try:
+            items = parse_annotation_file(Path(body.path).read_text(encoding="utf-8"))
+        except (OSError, ValueError) as e:
+            raise HTTPException(422, f"Cannot read annotations: {e}")
+        session.annotations[:] = items  # in place: the Annotate result shares this list
+        return session.annotations
+
+    @app.post("/annotations/export")
+    def export_annotations(body: PathBody):
+        Path(body.path).write_text(json.dumps(session.annotations, indent=2), encoding="utf-8")
         return {"path": body.path}
 
     def autosave_now() -> None:

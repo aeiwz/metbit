@@ -1,4 +1,5 @@
 """Stage registry, in rail order."""
+from .annotate import ANNOTATE_STAGES, AnnotateParams
 from .analysis import ANALYSIS_STAGES, OPLSParams, OPLSResult, PCAParams, PCAResult, STOCSYParams
 from .base import DATA_ORDER, Dataset, Progress, Stage, resolve_schema
 from .data import DATA_STAGES, AlignParams, BrukerSource, ImportParams, NormalizeParams, ProcessParams, parse_windows
@@ -14,4 +15,5 @@ STAGES: list[Stage] = [
     *MULTIVARIATE_STAGES,
     _analysis["stocsy"],
     *STATS_STAGES,
+    *ANNOTATE_STAGES,
 ]

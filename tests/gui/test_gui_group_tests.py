@@ -19,7 +19,7 @@ def test_full_registry_order():
     assert [s.id for s in STAGES] == [
         "import", "process", "normalize", "align",
         "pca", "opls", "plsr", "lda", "ica", "hca", "stocsy",
-        "volcano", "grouptests",
+        "volcano", "grouptests", "annotate",
     ]
     assert BY_ID["grouptests"].section == "Statistics"
 

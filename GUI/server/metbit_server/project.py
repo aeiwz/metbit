@@ -10,6 +10,7 @@ import zipfile
 
 import pandas as pd
 
+from .annotations import parse_annotation_list
 from .session import Session
 from .stages import DATA_ORDER, BrukerSource, Dataset, Stage
 
@@ -44,6 +45,7 @@ def save_project(session: Session, path: str) -> None:
         "stages": {},
         "style": session.style,
         "stage_styles": session.stage_styles,
+        "annotations": session.annotations,
     }
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
         for sid in session.order:
@@ -85,6 +87,8 @@ def load_project(session: Session, stages: list[Stage], path: str) -> None:
     saved = manifest.get("stages", {})
     by_id = {s.id: s for s in stages}
     fresh = Session(session.order, session.after)  # swapped in only after everything loads
+    # before analyses re-run, so the Annotate result shares this list; re-sanitized like any import
+    fresh.annotations = parse_annotation_list(manifest.get("annotations") or [])
     with zf:
         for sid in session.order:
             entry = saved.get(sid)
@@ -124,4 +128,5 @@ def load_project(session: Session, stages: list[Stage], path: str) -> None:
 
     session.status, session.params, session.outputs = fresh.status, fresh.params, fresh.outputs
     session.style = manifest.get("style") or {}
+    session.annotations = fresh.annotations
     session.stage_styles = manifest.get("stage_styles") or {}
