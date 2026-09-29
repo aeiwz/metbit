@@ -27,6 +27,9 @@ test("Bruker folder to processed spectra to PCA", async () => {
 
   await win.locator(".rail button", { hasText: "Process" }).click();
   await run();
+  // per-sample progress drives the molecule loader's percentage while experiments process
+  await expect(win.locator(".loader .loader-caption")).toHaveText("Running Process…");
+  await expect(win.locator(".loader-progress")).toBeVisible({ timeout: 10_000 });
   await expect(win.locator(".plot .main-svg").first()).toBeVisible({ timeout: 60_000 });
 
   await win.locator(".rail button", { hasText: "PCA" }).click();

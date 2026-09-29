@@ -5,6 +5,7 @@ import { DataTable } from "./components/DataTable";
 import { FormatGuide } from "./components/FormatGuide";
 import { makeExampleCsv } from "./exampleData";
 import { JobBar } from "./components/JobBar";
+import { MoleculeLoader } from "./components/MoleculeLoader";
 import { ParamPanel, fieldErrors, type FieldErrors, type Values } from "./components/ParamPanel";
 import { PlotView, type PickPoint } from "./components/PlotView";
 import { Rail } from "./components/Rail";
@@ -36,6 +37,7 @@ export function App() {
   const [backendDown, setBackendDown] = useState(false);
   const [picked, setPicked] = useState<number | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState<string | null>(null); // caption while a project opens or a session restores
   const [importValues, setImportValues] = useState<Values>({});
   const [showGuide, setShowGuide] = useState(false);
   const [sideMode, setSideMode] = useState<"params" | "style">("params");
@@ -213,27 +215,50 @@ export function App() {
     guarded(async () => {
       const path = await window.metbit.openFile(PROJECT);
       if (!path || !api) return;
-      await api.loadProject(path);
-      await refresh(api);
+      setBusy("Opening project…");
+      try {
+        await api.loadProject(path);
+        await refresh(api);
+      } finally {
+        setBusy(null);
+      }
       select("import");
       flash(`Opened ${basename(path)}`);
     });
 
   async function restart() {
-    await window.metbit.restartBackend();
-    setBackendDown(false);
-    const next = await Api.connect();
-    const { restored } = await next.restore(); // before setApi, so the stage list reflects it
+    setBusy("Restoring session…");
+    let next: Api;
+    let restored = false;
+    try {
+      await window.metbit.restartBackend();
+      setBackendDown(false);
+      next = await Api.connect();
+      ({ restored } = await next.restore()); // before setApi, so the stage list reflects it
+    } finally {
+      setBusy(null);
+    }
     setApi(next);
     setFormKey((k) => k + 1);
     select("import");
     if (restored) flash("Session restored");
   }
 
-  if (!stage) return <div class="placeholder">Starting metbit…</div>;
+  if (!stage)
+    return (
+      <div class="placeholder">
+        <MoleculeLoader caption="Starting metbit…" />
+      </div>
+    );
 
   let body;
-  if (guideVisible) {
+  if (busy) {
+    body = (
+      <div class="placeholder">
+        <MoleculeLoader caption={busy} />
+      </div>
+    );
+  } else if (guideVisible) {
     body = <FormatGuide source={String(importValues.source ?? "csv")} onSaveExample={saveExample} />;
   } else if (failure) {
     body = (
@@ -250,7 +275,15 @@ export function App() {
       </div>
     );
   } else if (!hasResult) {
-    body = <div class="placeholder">{stage.status === "running" ? "Running…" : "Set parameters and press Run"}</div>;
+    body =
+      stage.status === "running" ? (
+        <div class="placeholder">
+          {/* 0.05 is the placeholder set when a run starts; show a percentage only after real progress */}
+          <MoleculeLoader caption={`Running ${stage.title}…`} progress={pct !== null && pct > 0.05 ? pct : null} />
+        </div>
+      ) : (
+        <div class="placeholder">Set parameters and press Run</div>
+      );
   } else if (tab === "table") {
     body = page && <DataTable page={page} />;
   } else {
