@@ -12,8 +12,7 @@ interface Props {
 
 export function AnnotationList({ items, onDelete, onImport, onExport }: Props) {
   return (
-    <div class="annotations">
-      <h3>Labels</h3>
+    <div class="labels">
       {items.length === 0 ? (
         <p class="hint">Click a peak on the spectra to add a label.</p>
       ) : (
