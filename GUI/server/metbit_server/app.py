@@ -10,12 +10,12 @@ from pydantic import ValidationError
 
 from .jobs import Busy, Job, start_job
 from .session import Session
-from .stages import STAGES, Stage
+from .stages import STAGES, Stage, resolve_schema
 
 
 def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
     by_id = {s.id: s for s in stages}
-    session = Session([s.id for s in stages])
+    session = Session([s.id for s in stages], {s.id: s.after for s in stages})
     jobs: dict[str, Job] = {}
 
     def check_token(request: Request) -> None:
@@ -33,6 +33,12 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
             raise HTTPException(404, f"Unknown stage '{sid}'")
         return by_id[sid]
 
+    def result_or_409(sid: str):
+        stage_or_404(sid)
+        if session.status[sid] not in ("done", "stale"):
+            raise HTTPException(409, f"Stage '{sid}' has no result")
+        return session.outputs[sid]
+
     @app.get("/health")
     def health():
         return {"ok": True}
@@ -43,10 +49,13 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
             {
                 "id": s.id,
                 "title": s.title,
+                "section": s.section,
                 "requires": s.requires,
                 "status": session.status[s.id],
                 "views": list(s.figures),
-                "schema": s.params.model_json_schema(),
+                "ppm_views": s.ppm_views,
+                "has_table": s.table is not None,
+                "schema": resolve_schema(s, session),
                 "params": session.params.get(s.id),
             }
             for s in stages
@@ -84,12 +93,6 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
 
         return StreamingResponse(stream(), media_type="text/event-stream")
 
-    def result_or_409(sid: str):
-        stage_or_404(sid)
-        if session.status[sid] not in ("done", "stale"):
-            raise HTTPException(409, f"Stage '{sid}' has no result")
-        return session.outputs[sid]
-
     @app.get("/stages/{sid}/figure")
     def figure(sid: str, view: str):
         out = result_or_409(sid)
@@ -102,6 +105,8 @@ def create_app(token: str, stages: list[Stage] = STAGES) -> FastAPI:
 
     @app.get("/stages/{sid}/table")
     def table(sid: str, offset: int = Query(0, ge=0), limit: int = Query(100, ge=1, le=1000)):
+        if stage_or_404(sid).table is None:
+            raise HTTPException(404, f"Stage '{sid}' has no table")
         df = by_id[sid].table(result_or_409(sid))
         page = json.loads(df.iloc[offset:offset + limit].to_json(orient="split", index=False))
         return {"columns": [str(c) for c in page["columns"]], "rows": page["data"], "total": len(df)}

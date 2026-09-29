@@ -1,0 +1,6 @@
+"""Stage registry, in rail order."""
+from .analysis import ANALYSIS_STAGES, PCAParams, PCAResult
+from .base import DATA_ORDER, Dataset, Progress, Stage, resolve_schema
+from .data import DATA_STAGES, ImportParams
+
+STAGES: list[Stage] = [*DATA_STAGES, *ANALYSIS_STAGES]

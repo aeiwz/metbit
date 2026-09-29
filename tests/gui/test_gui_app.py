@@ -38,19 +38,22 @@ def test_cors_preflight_needs_no_token(client):
 
 
 def test_stages_listing(client):
-    stages = client.get("/stages", headers=AUTH).json()
-    assert [s["id"] for s in stages] == ["import", "pca"]
-    assert stages[0]["status"] == "empty"
-    assert stages[0]["schema"]["properties"]["path"]["format"] == "file-path"
-    assert stages[1]["views"] == ["scores", "loadings", "variance"]
+    stages = {s["id"]: s for s in client.get("/stages", headers=AUTH).json()}
+    assert next(iter(stages)) == "import"
+    assert stages["import"]["status"] == "empty"
+    assert stages["import"]["section"] == "Data"
+    assert stages["import"]["has_table"] is True
+    assert stages["import"]["schema"]["properties"]["path"]["format"] == "file-path"
+    assert stages["pca"]["views"] == ["scores", "loadings", "variance"]
+    assert stages["pca"]["ppm_views"] == {"loadings": "x"}
 
 
 def test_import_then_pca_then_reimport_marks_stale(client, csv_path):
     assert run_stage(client, "import", {"path": csv_path})[-1] == "done"
     assert run_stage(client, "pca", {"n_components": 2})[-1] == "done"
-    assert statuses(client) == {"import": "done", "pca": "done"}
+    assert (statuses(client)["import"], statuses(client)["pca"]) == ("done", "done")
     run_stage(client, "import", {"path": csv_path})
-    assert statuses(client) == {"import": "done", "pca": "stale"}
+    assert (statuses(client)["import"], statuses(client)["pca"]) == ("done", "stale")
     assert client.get("/stages", headers=AUTH).json()[0]["params"]["path"] == csv_path
 
 
