@@ -99,6 +99,27 @@ def apply_style(fig: go.Figure, style: PlotStyle, recolor: bool = True) -> go.Fi
     return fig
 
 
+def lift_paper_annotations(fig: go.Figure, font_size: int) -> go.Figure:
+    """Re-stack notes metbit places above the plot (paper y > 1) at fixed pixel offsets.
+
+    metbit sizes those offsets for its fixed figure height; in an autosized plot they scale with the
+    window, drift into the title and get clipped. Pixel offsets plus a matching top margin keep them
+    readable at any size, on screen and in exports.
+    """
+    above = sorted(
+        (a for a in fig.layout.annotations if a.yref == "paper" and a.y is not None and a.y > 1),
+        key=lambda a: a.y,
+    )
+    if not above:
+        return fig
+    step = round(font_size * 1.6)
+    for i, a in enumerate(above):
+        a.update(y=1, yanchor="bottom", yshift=6 + i * step)
+    needed = 6 + len(above) * step + 2 * font_size  # top note plus room for the title line
+    fig.update_layout(margin_t=max(fig.layout.margin.t or 0, needed))
+    return fig
+
+
 def _takes_style(make: Callable) -> bool:
     try:
         return len(inspect.signature(make).parameters) >= 2
@@ -110,4 +131,5 @@ def render(make: Callable, result: Any, style: PlotStyle) -> go.Figure:
     """Build a figure with the effective style: native metbit arguments when supported, else the fallback."""
     native = _takes_style(make)
     fig = make(result, style) if native else make(result)
-    return apply_style(fig, style, recolor=not native)
+    apply_style(fig, style, recolor=not native)
+    return lift_paper_annotations(fig, style.font_size)

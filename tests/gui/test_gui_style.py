@@ -73,3 +73,24 @@ def test_render_passes_style_to_native_figures_and_skips_their_recolor():
     assert seen == [style]
     assert native.data[0].line.color == "rgba(1,2,3,0.5)"
     assert native.layout.font.size == 20
+
+
+def test_notes_above_the_plot_are_restacked_in_pixels_with_room_for_them():
+    from metbit_server.stages.style import lift_paper_annotations
+
+    fig = go.Figure()
+    for y, text in [(1.25, "Number of permutation: 10"), (1.18, "Accuracy score"), (1.11, "p-value"), (0.5, "inside")]:
+        fig.add_annotation(text=text, xref="paper", yref="paper", x=0, y=y, showarrow=False)
+    lift_paper_annotations(fig, font_size=14)
+    notes = {a.text: a for a in fig.layout.annotations}
+    stacked = [notes["p-value"], notes["Accuracy score"], notes["Number of permutation: 10"]]
+    assert all(a.y == 1 and a.yanchor == "bottom" for a in stacked)
+    assert [a.yshift for a in stacked] == sorted(a.yshift for a in stacked)  # original order kept, bottom up
+    assert notes["inside"].y == 0.5 and notes["inside"].yshift is None
+    assert fig.layout.margin.t >= stacked[-1].yshift + 2 * 14  # the top note fits inside the margin
+
+
+def test_render_lifts_notes_for_every_figure():
+    style = PlotStyle()
+    fig = render(lambda r: go.Figure(layout={"annotations": [{"text": "Q2", "xref": "paper", "yref": "paper", "x": 0, "y": 1.2}]}), None, style)
+    assert fig.layout.annotations[0].y == 1 and fig.layout.margin.t > 0
