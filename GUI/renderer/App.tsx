@@ -3,7 +3,7 @@ import { Api, ApiError, type StageInfo, type TablePage } from "./api";
 import { DataTable } from "./components/DataTable";
 import { JobBar } from "./components/JobBar";
 import { ParamPanel, fieldErrors, type FieldErrors, type Values } from "./components/ParamPanel";
-import { PlotView } from "./components/PlotView";
+import { PlotView, type PickPoint } from "./components/PlotView";
 import { Rail } from "./components/Rail";
 
 interface Failure {
@@ -11,7 +11,8 @@ interface Failure {
   traceback?: string;
 }
 
-const label = (t: string) => t[0].toUpperCase() + t.slice(1);
+const LABELS: Record<string, string> = { vip: "VIP", "s-plot": "S-plot" };
+const label = (t: string) => LABELS[t] ?? t[0].toUpperCase() + t.slice(1);
 
 export function App() {
   const [api, setApi] = useState<Api | null>(null);
@@ -25,10 +26,18 @@ export function App() {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [failure, setFailure] = useState<Failure | null>(null);
   const [backendDown, setBackendDown] = useState(false);
+  const [picked, setPicked] = useState<number | null>(null);
 
   const stage = stages.find((s) => s.id === current);
   const hasResult = stage?.status === "done" || stage?.status === "stale";
-  const tabs = stage ? [...stage.views, "table"] : [];
+  const tabs = stage ? [...stage.views, ...(stage.has_table ? ["table"] : [])] : [];
+  const pickMode = stage?.ppm_views[tab];
+  const onPick = pickMode
+    ? (pt: PickPoint) => {
+        const v = Number(pickMode === "customdata" ? (pt.customdata as unknown[] | undefined)?.[0] : pt.x);
+        if (Number.isFinite(v)) setPicked(v);
+      }
+    : undefined;
 
   useEffect(() => {
     Api.connect().then(setApi);
@@ -107,7 +116,7 @@ export function App() {
   } else if (tab === "table") {
     body = page && <DataTable page={page} />;
   } else {
-    body = figure && <PlotView figure={figure} />;
+    body = figure && <PlotView figure={figure} onPick={onPick} />;
   }
 
   return (
@@ -122,6 +131,11 @@ export function App() {
                 {label(t)}
               </button>
             ))}
+          {picked !== null && (
+            <span class="picked" aria-live="polite">
+              δ {picked.toFixed(3)} ppm
+            </span>
+          )}
         </div>
         <div class="view">{body}</div>
       </main>
@@ -133,6 +147,7 @@ export function App() {
         errors={errors}
         busy={pct !== null}
         onRun={run}
+        picked={picked}
       />
       {backendDown && (
         <div class="banner" role="alert">

@@ -6,6 +6,11 @@ interface Figure {
   layout: Record<string, any>;
 }
 
+export interface PickPoint {
+  x: unknown;
+  customdata: unknown;
+}
+
 const BLACK = new Set(["black", "#000", "#000000", "rgb(0,0,0)", "rgb(0, 0, 0)"]);
 
 // metbit figures use plotly_white with hard-coded black lines and labels; recolor them from the CSS tokens
@@ -33,8 +38,11 @@ function themed(layout: Record<string, any>): Record<string, any> {
   return out;
 }
 
-export function PlotView({ figure }: { figure: Figure }) {
+export function PlotView({ figure, onPick }: { figure: Figure; onPick?: (point: PickPoint) => void }) {
   const el = useRef<HTMLDivElement>(null);
+  const pick = useRef(onPick);
+  pick.current = onPick; // latest callback without re-binding plotly listeners
+  const pickable = onPick !== undefined;
 
   useEffect(() => {
     const node = el.current!;
@@ -42,8 +50,17 @@ export function PlotView({ figure }: { figure: Figure }) {
   }, []);
 
   useEffect(() => {
-    Plotly.react(el.current!, figure.data, themed(figure.layout), { responsive: true, displaylogo: false });
-  }, [figure]);
+    const node: any = el.current!;
+    const layout = themed(figure.layout);
+    if (pickable) layout.hoverdistance = -1; // any click in the plot picks the nearest point, not only within 20 px
+    Plotly.react(node, figure.data, layout, { responsive: true, displaylogo: false }).then(() => {
+      node.removeAllListeners?.("plotly_click");
+      node.on("plotly_click", (e: { points?: PickPoint[] }) => {
+        const p = e.points?.[0];
+        if (p) pick.current?.({ x: p.x, customdata: p.customdata });
+      });
+    });
+  }, [figure, pickable]);
 
   return <div ref={el} class="plot" />;
 }
