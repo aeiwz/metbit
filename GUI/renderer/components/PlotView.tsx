@@ -27,7 +27,14 @@ function themed(layout: Record<string, any>): Record<string, any> {
   };
   for (const key of Object.keys(layout)) {
     if (/^[xy]axis\d*$/.test(key)) {
-      out[key] = { ...layout[key], gridcolor: border, linecolor: text, zerolinecolor: border, tickfont: { ...layout[key].tickfont, color: text } };
+      out[key] = {
+        ...layout[key],
+        automargin: true, // long tick labels (heatmap group names) get room instead of clipping
+        gridcolor: border,
+        linecolor: text,
+        zerolinecolor: border,
+        tickfont: { ...layout[key].tickfont, color: text },
+      };
     }
   }
   if (layout.title) out.title = { ...layout.title, font: { ...layout.title.font, color: text } };

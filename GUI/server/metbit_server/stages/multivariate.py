@@ -157,6 +157,12 @@ def run_hca(p: HCAParams, session: Session, progress: Progress) -> HCAResult:
     return HCAResult(model=model, n_clusters=p.n_clusters, table=table)
 
 
+def _hca_heatmap(r: HCAResult) -> go.Figure:
+    fig = r.model.plot_heatmap(n_clusters=r.n_clusters)
+    fig.update_yaxes(anchor="x2")  # sample labels left of the cluster strip instead of drawn over it
+    return fig
+
+
 def _analysis(**kw) -> Stage:
     return Stage(requires="import", after=list(DATA_ORDER), **kw)
 
@@ -202,7 +208,7 @@ MULTIVARIATE_STAGES: list[Stage] = [
         table=lambda r: r.table,
         figures={
             "dendrogram": lambda r: r.model.plot_dendrogram(),
-            "heatmap": lambda r: r.model.plot_heatmap(n_clusters=r.n_clusters),
+            "heatmap": _hca_heatmap,
         },
     ),
 ]

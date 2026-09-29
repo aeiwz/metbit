@@ -84,3 +84,8 @@ def test_hca_validation(run_all):
     assert HCAParams(method="average", metric="correlation").metric == "correlation"
     with pytest.raises(ValueError, match="exceeds the number of samples"):
         run_all(("hca", {"n_clusters": 20}))
+
+
+def test_hca_heatmap_labels_sit_left_of_the_cluster_strip(run_all):
+    r = run_all(("hca", {"n_clusters": 2})).output("hca")
+    assert BY_ID["hca"].figures["heatmap"](r).layout.yaxis.anchor == "x2"
