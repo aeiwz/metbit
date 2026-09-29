@@ -217,6 +217,22 @@ meaningfully).
   `Group`.
 - E2E: save the example CSV via the test seam, import it, see the table.
 
+## 5. Loading animation (molecule)
+
+- `components/MoleculeLoader.tsx`: inline SVG + CSS keyframes, no dependency.
+  A benzene ring (six atoms, six bonds, six inner double-bond strokes in two
+  alternating Kekule sets) in the accent color on thin strokes. The ring
+  turns once every 8 s, a brightness pulse travels around the atoms, and the
+  two double-bond sets cross-fade (resonance).
+- Caption below (`Starting metbit…`, `Running <stage title>…`,
+  `Opening project…`, `Restoring session…`) and a percentage when the backend
+  has reported real progress (for example per sample in Process).
+- `prefers-reduced-motion: reduce` stops all animation; caption and
+  percentage still update. The container is `role="status"`.
+- Shown at startup, in the center view while a stage runs, while a project
+  opens, and while a session restores after a backend restart. The 2 px
+  top bar stays.
+
 ## Testing
 
 - Server: style merge (stage beats global), native args reach metbit (trace
@@ -236,6 +252,7 @@ meaningfully).
    example CSV).
 1. **Phase E**: styling (model, endpoints, native args + fallback, style panel,
    per-stage overrides, project persistence).
+1b. **Phase E1**: molecule loading animation.
 2. **Phase F**: annotation (model, endpoints, Annotate stage, overlay, popover,
    label list, JSON import / export, project persistence).
 3. **Phase G**: STOCSY rework (pre-views, click-to-anchor, clear, cache,
