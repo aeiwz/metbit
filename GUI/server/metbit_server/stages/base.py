@@ -71,20 +71,36 @@ def spectra_figure(X: pd.DataFrame, labels: pd.Series, title: str) -> go.Figure:
     return SpectraPlot(X.iloc[:, ::step], label=list(labels)).overlay(title=title)
 
 
+def _numeric_columns(meta: pd.DataFrame) -> list[str]:
+    return [str(c) for c in meta.columns if pd.to_numeric(meta[c], errors="coerce").notna().all()]
+
+
 def option_values(session: Session, kind: str) -> Optional[list[str]]:
     if session.status.get("import") != "done":
         return None
+    meta = session.output("import").meta
     if kind == "groups":
         return sorted(set(groups(session)))
     if kind == "columns":
-        return [str(c) for c in session.output("import").meta.columns]
+        return [str(c) for c in meta.columns]
+    if kind == "numeric_columns":
+        return _numeric_columns(meta) or None
     return None
+
+
+def _flatten_nullable(prop: dict) -> None:
+    """Optional[X] arrives as anyOf [X, null]; give the form the plain X schema."""
+    options = prop.get("anyOf")
+    if options and len(options) == 2 and {"type": "null"} in options:
+        prop.update(next(o for o in options if o != {"type": "null"}))
+        del prop["anyOf"]
 
 
 def resolve_schema(stage: Stage, session: Session) -> dict:
     """Param JSON schema with data-driven `enum` and `default` for tagged fields."""
     schema = stage.params.model_json_schema()
     for prop in schema.get("properties", {}).values():
+        _flatten_nullable(prop)
         values = option_values(session, prop.get("options", ""))
         if values:
             prop["enum"] = values
