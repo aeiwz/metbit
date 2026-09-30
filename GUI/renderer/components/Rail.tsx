@@ -1,5 +1,6 @@
 import { Fragment } from "preact";
 import type { StageInfo } from "../api";
+import { Lockup } from "./Brand";
 
 interface Props {
   stages: StageInfo[];
@@ -18,10 +19,12 @@ export function Rail({ stages, current, onSelect, onOpen, onSave, onStyle, onHom
     <nav class="rail" aria-label="Pipeline">
       {onHome ? (
         <button class="rail-brand" title="Home" onClick={onHome}>
-          metbit
+          <Lockup gui />
         </button>
       ) : (
-        <div class="rail-brand">metbit</div>
+        <div class="rail-brand">
+          <Lockup gui />
+        </div>
       )}
       {/* the stage list scrolls on short windows; the footer stays pinned */}
       <div class="rail-stages">

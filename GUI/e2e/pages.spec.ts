@@ -16,10 +16,14 @@ const shots = process.env.SHOTS; // optional: save each page at both window size
 async function snap(win: import("@playwright/test").Page, name: string) {
   if (!shots) return;
   mkdirSync(join(shots, "pages"), { recursive: true });
-  for (const [w, h] of [[1400, 860], [960, 600]]) {
-    await win.setViewportSize({ width: w, height: h });
-    await win.screenshot({ path: join(shots, "pages", `${name}-${w}.png`) });
+  for (const scheme of ["light", "dark"] as const) {
+    await win.emulateMedia({ colorScheme: scheme });
+    for (const [w, h] of [[1400, 860], [960, 600]]) {
+      await win.setViewportSize({ width: w, height: h });
+      await win.screenshot({ path: join(shots, "pages", `${name}-${scheme}-${w}.png`) });
+    }
   }
+  await win.emulateMedia({ colorScheme: null });
 }
 
 test("landing, project management and About & License", async () => {

@@ -1,4 +1,5 @@
 import type { ComponentChildren } from "preact";
+import { Lockup } from "./Brand";
 
 export type Page = "home" | "projects" | "about";
 
@@ -30,7 +31,9 @@ export function PageShell({ page, onNavigate, onWorkspace, children }: Props) {
   return (
     <div class="page">
       <header class="page-bar">
-        <span class="rail-brand">metbit</span>
+        <span class="rail-brand">
+          <Lockup gui />
+        </span>
         <nav aria-label="Pages">
           {LINKS.map((l) => (
             <button key={l.page} type="button" aria-current={l.page === page ? "page" : undefined} onClick={() => onNavigate(l.page)}>

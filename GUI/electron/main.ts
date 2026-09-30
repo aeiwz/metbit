@@ -88,6 +88,9 @@ ipcMain.handle("projects:trash", async (_e, path: string) => {
   await projects.remove(path);
 });
 
+// the identity's application tile (GUI/assets/identity); packaged builds also set it in the installer config
+const APP_ICON = join(__dirname, "..", "assets", "icon.png");
+
 async function boot() {
   try {
     await launchBackend();
@@ -96,7 +99,9 @@ async function boot() {
     app.quit();
     return;
   }
+  if (process.platform === "darwin" && !app.isPackaged) app.dock?.setIcon(APP_ICON); // dev: a packaged app uses its bundle icon
   win = new BrowserWindow({
+    icon: APP_ICON, // Windows and Linux title bar and taskbar
     width: 1400,
     height: 900,
     minWidth: 960,

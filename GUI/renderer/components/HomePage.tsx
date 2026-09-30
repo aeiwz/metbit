@@ -1,3 +1,4 @@
+import { BrandMark } from "./Brand";
 import { fmtDate, type Page } from "./PageNav";
 
 interface Props {
@@ -18,20 +19,13 @@ const STEPS = [
   { title: "Time series", text: "Trajectories, time profiles, ASCA and mixed models." },
 ];
 
-// benzene mark, like the loading animation
-const HEX = Array.from({ length: 6 }, (_, k) => {
-  const a = (Math.PI / 3) * k - Math.PI / 2;
-  return `${50 + 34 * Math.cos(a)},${50 + 34 * Math.sin(a)}`;
-}).join(" ");
-
 export function HomePage({ version, recent, hasSession, onNew, onContinue, onOpenFile, onOpenPath, onNavigate }: Props) {
   return (
     <div class="home">
       <section class="hero">
-        <svg class="hero-mark" viewBox="0 0 100 100" aria-hidden="true">
-          <polygon points={HEX} />
-          <circle cx="50" cy="50" r="18" />
-        </svg>
+        <span class="hero-mark">
+          <BrandMark size={172} />
+        </span>
         <div>
           <h1>metbit</h1>
           <p class="lead">NMR metabolomics, from raw spectra to biomarkers.</p>

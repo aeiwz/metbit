@@ -1,4 +1,5 @@
 import licenseText from "../../../LICENSE?raw"; // the repository's LICENSE, verbatim
+import { Lockup } from "./Brand";
 
 interface Props {
   version: string;
@@ -29,6 +30,9 @@ export function AboutPage({ version }: Props) {
   return (
     <div class="about">
       <section class="credit">
+        <div class="about-lockup">
+          <Lockup gui size={64} />
+        </div>
         <h1>About metbit</h1>
         <p class="lead">NMR metabolomics analysis, from raw spectra to biomarkers.</p>
         <dl class="facts">
