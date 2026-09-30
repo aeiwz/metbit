@@ -4,7 +4,7 @@
 
 **Goal:** Let users keep their work: export tables and matrices as CSV and plots as PNG / SVG, save and reopen `.metbit` projects, and get their session back automatically after a backend crash.
 
-**Architecture:** The sidecar gains a CSV export route (data stages export the full matrix with metadata, re-importable as a CSV; other stages export their table), a `project.py` module that writes a zip of `params.json` plus Parquet for data-stage outputs (never pickle) and restores by loading data directly and re-running analyses, and an autosave hook that saves after every successful job to a path Electron passes on the command line. Electron adds a save dialog and an image writer; plots are exported in the renderer with `Plotly.toImage` from the original metbit figure. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-design.md` (sections "Project file" and "Error handling").
+**Architecture:** The sidecar gains a CSV export route (data stages export the full matrix with metadata, re-importable as a CSV; other stages export their table), a `project.py` module that writes a zip of `params.json` plus Parquet for data-stage outputs (never pickle) and restores by loading data directly and re-running analyses, and an autosave hook that saves after every successful job to a path Electron passes on the command line. Electron adds a save dialog and an image writer; plots are exported in the renderer with `Plotly.toImage` from the original metbit figure. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-design.md` (sections "Project file" and "Error handling").
 
 **Tech Stack:** Same as Phase C, plus `pyarrow` (Parquet) on the Python side.
 

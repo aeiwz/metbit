@@ -4,7 +4,7 @@
 
 **Goal:** Replace the plain "Starting metbit…" / "Running…" text with a scientific loading animation: a rotating benzene ring with resonance and an atom pulse, a caption, and a progress percentage.
 
-**Architecture:** One renderer component, `MoleculeLoader`, drawn as inline SVG and animated with CSS keyframes (no dependency). `App` shows it at startup, while a stage runs (with real progress), while a project opens, and while a session restores. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 5).
+**Architecture:** One renderer component, `MoleculeLoader`, drawn as inline SVG and animated with CSS keyframes (no dependency). `App` shows it at startup, while a stage runs (with real progress), while a project opens, and while a session restores. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 5).
 
 **Tech Stack:** Preact, SVG, CSS, Vitest, Playwright.
 

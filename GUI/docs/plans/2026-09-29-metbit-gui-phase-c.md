@@ -4,7 +4,7 @@
 
 **Goal:** Let users start from raw Bruker FID experiments: pick a folder plus a metadata CSV, then run a Process stage (zero-fill, FFT, phasing, baseline, calibration) with per-sample progress, producing the same matrix metbit's `nmr_preprocessing` produces.
 
-**Architecture:** `ImportParams` gains `source: csv | bruker` with fields shown conditionally (`show_if`). A Bruker import only lists experiments and joins metadata (`BrukerSource`); the new `process` data stage runs `nmr_preprocessing` once per experiment (calibration off) for progress, stacks rows by position with the last experiment's ppm axis exactly as metbit does, then calibrates the whole matrix with metbit's `calibrate`. This was verified to be identical to `nmr_preprocessing(folder)` on the MTBLS2052 heart subset. A new `Stage.blocked` hook disables Process after a CSV import. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-design.md`.
+**Architecture:** `ImportParams` gains `source: csv | bruker` with fields shown conditionally (`show_if`). A Bruker import only lists experiments and joins metadata (`BrukerSource`); the new `process` data stage runs `nmr_preprocessing` once per experiment (calibration off) for progress, stacks rows by position with the last experiment's ppm axis exactly as metbit does, then calibrates the whole matrix with metbit's `calibrate`. This was verified to be identical to `nmr_preprocessing(folder)` on the MTBLS2052 heart subset. A new `Stage.blocked` hook disables Process after a CSV import. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-design.md`.
 
 **Tech Stack:** Same as Phase B. New calls: `metbit.nmr.preprocess.nmr_preprocessing`, `metbit.nmr.calibrate.calibrate`. Electron `dialog.showOpenDialog` with `openDirectory`.
 

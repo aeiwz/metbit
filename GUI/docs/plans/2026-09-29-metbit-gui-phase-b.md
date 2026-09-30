@@ -4,7 +4,7 @@
 
 **Goal:** Add metbit's extended multivariate methods (PLS-R, LDA, ICA, HCA) and multi-group statistics (ANOVA / Kruskal-Wallis with ranked features and boxplots) to the GUI.
 
-**Architecture:** New `stages/multivariate.py` holds PLS-R, LDA, ICA and HCA; `stages/stats.py` gains a Group tests stage. The registry interleaves them in rail order. `resolve_schema` learns two things: flattening `Optional[X]` (`anyOf [X, null]`) into plain `X` so the form renders a normal input, and a `numeric_columns` option kind for the PLS-R target. Group tests rank features with the same scipy tests metbit uses (`f_oneway`, `kruskal`), vectorized across a binned matrix, then use metbit's `ANOVAStats` / `KruskalStats` for the chosen feature's boxplot. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-design.md`.
+**Architecture:** New `stages/multivariate.py` holds PLS-R, LDA, ICA and HCA; `stages/stats.py` gains a Group tests stage. The registry interleaves them in rail order. `resolve_schema` learns two things: flattening `Optional[X]` (`anyOf [X, null]`) into plain `X` so the form renders a normal input, and a `numeric_columns` option kind for the PLS-R target. Group tests rank features with the same scipy tests metbit uses (`f_oneway`, `kruskal`), vectorized across a binned matrix, then use metbit's `ANOVAStats` / `KruskalStats` for the chosen feature's boxplot. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-design.md`.
 
 **Tech Stack:** Same as Phase A. New calls: `metbit.analysis.multivariate.{plsr, lda, ica, hca}`, `metbit.stats.multitest.{ANOVAStats, KruskalStats, _apply_correction}`, `scipy.stats.{f_oneway, kruskal}` (scipy 1.18, `axis=0`).
 

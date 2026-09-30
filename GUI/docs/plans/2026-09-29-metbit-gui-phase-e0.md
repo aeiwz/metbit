@@ -4,7 +4,7 @@
 
 **Goal:** Show users, inside the Import stage, mock-up visuals of compliant input files and how to prepare them (processed data table, raw Bruker + metadata), plus a one-click synthetic example CSV.
 
-**Architecture:** Renderer-only. `exampleData.ts` generates a deterministic example CSV. `FormatGuide.tsx` renders static mock-ups (an HTML table for the CSV; an aligned folder-tree / metadata grid for Bruker) and numbered checklists. `ParamPanel` reports live form values through `onValuesChange`, so `App` shows the guide matching the chosen Source. The example is saved through the existing `saveImage` data-URL writer and then prefilled into the form. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 4).
+**Architecture:** Renderer-only. `exampleData.ts` generates a deterministic example CSV. `FormatGuide.tsx` renders static mock-ups (an HTML table for the CSV; an aligned folder-tree / metadata grid for Bruker) and numbered checklists. `ParamPanel` reports live form values through `onValuesChange`, so `App` shows the guide matching the chosen Source. The example is saved through the existing `saveImage` data-URL writer and then prefilled into the form. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 4).
 
 **Tech Stack:** Preact, TypeScript, plain CSS, Vitest, Playwright.
 

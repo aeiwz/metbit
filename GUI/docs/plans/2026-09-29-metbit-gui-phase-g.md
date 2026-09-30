@@ -4,7 +4,7 @@
 
 **Goal:** Make the STOCSY stage work like metbit's Dash app: spectra visible before any run, click a peak to set the anchor, Run, cached results per anchor and threshold, a Recent anchors list and a Clear action.
 
-**Architecture:** Stages gain `pre_views`, figures rendered from the working matrix without a result; STOCSY declares a seeded `spectra` sample like the Dash app. Results are cached on the `Dataset` object itself, so new data automatically starts an empty cache. The renderer shows pre-views before a run, injects the clicked ppm into the form (`ParamPanel.injected`), switches to Correlation after a successful run, and keeps a Recent anchors list. The correlation figure is now copied per request, fixing labels piling up on the stored figure. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 3).
+**Architecture:** Stages gain `pre_views`, figures rendered from the working matrix without a result; STOCSY declares a seeded `spectra` sample like the Dash app. Results are cached on the `Dataset` object itself, so new data automatically starts an empty cache. The renderer shows pre-views before a run, injects the clicked ppm into the form (`ParamPanel.injected`), switches to Correlation after a successful run, and keeps a Recent anchors list. The correlation figure is now copied per request, fixing labels piling up on the stored figure. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 3).
 
 **Tech Stack:** FastAPI, numpy, Plotly; Preact, Vitest, Playwright.
 

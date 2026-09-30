@@ -4,7 +4,7 @@
 
 **Goal:** A runnable Electron desktop app that starts a local metbit Python backend, imports a CSV spectral matrix, runs PCA, and shows interactive Plotly results in a minimal three-column UI.
 
-**Architecture:** Electron main spawns a FastAPI sidecar (`python -m metbit_server` in dev) on a random localhost port with a per-session bearer token, waits for `/health`, then opens a sandboxed renderer. The Preact renderer talks to the sidecar over `fetch`; stage outputs stay in Python memory and only Plotly figure JSON and small tables cross the wire. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-design.md`.
+**Architecture:** Electron main spawns a FastAPI sidecar (`python -m metbit_server` in dev) on a random localhost port with a per-session bearer token, waits for `/health`, then opens a sandboxed renderer. The Preact renderer talks to the sidecar over `fetch`; stage outputs stay in Python memory and only Plotly figure JSON and small tables cross the wire. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-design.md`.
 
 **Tech Stack:** Python 3.10+, FastAPI, uvicorn, Pydantic v2, metbit, pytest + FastAPI TestClient. Node 20+, Electron, Vite, Preact, TypeScript, plotly.js-dist-min, @fontsource-variable/inter, Vitest + jsdom, Playwright (Electron).
 

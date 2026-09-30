@@ -4,7 +4,7 @@
 
 **Goal:** Show the group median spectra under the Group tests boxplot; clicking a peak redraws the boxplot at that ppm (no re-run) with its statistics in the title.
 
-**Architecture:** Figure requests accept an optional `ppm` query, forwarded by `render()` to figure functions that declare a `ppm` parameter. Stages may declare `companions` (main view -> companion view); the renderer hides companion views from the tab bar and draws them under their main view in a split layout, and a click on the companion sets `ppm` for both. Group tests gains a `spectra` companion built from the working matrix. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 6).
+**Architecture:** Figure requests accept an optional `ppm` query, forwarded by `render()` to figure functions that declare a `ppm` parameter. Stages may declare `companions` (main view -> companion view); the renderer hides companion views from the tab bar and draws them under their main view in a split layout, and a click on the companion sets `ppm` for both. Group tests gains a `spectra` companion built from the working matrix. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 6).
 
 **Tech Stack:** FastAPI, Plotly, numpy; Preact, Playwright.
 

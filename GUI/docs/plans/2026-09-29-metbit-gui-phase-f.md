@@ -4,7 +4,7 @@
 
 **Goal:** Bring metbit's peak annotator into the GUI: label peaks by clicking a spectrum, see the labels on every spectrum view and in exports, manage them in a list with JSON import / export, and export an intensity table.
 
-**Architecture:** `metbit_server/annotations.py` holds label sanitizing (same rules as `metbit.apps.annotate`, reimplemented because that module imports Dash), metbit-compatible JSON parsing, the spectrum overlay and the intensity table. Annotations are a global list on the session, edited through `/annotations` routes (no jobs) and saved in projects. A new `annotate` stage shows single or median spectra; its result shares the session's list, so the intensity table follows label changes without re-running. The renderer adds a click popover, a label list and arrow-color theming. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 2).
+**Architecture:** `metbit_server/annotations.py` holds label sanitizing (same rules as `metbit.apps.annotate`, reimplemented because that module imports Dash), metbit-compatible JSON parsing, the spectrum overlay and the intensity table. Annotations are a global list on the session, edited through `/annotations` routes (no jobs) and saved in projects. A new `annotate` stage shows single or median spectra; its result shares the session's list, so the intensity table follows label changes without re-running. The renderer adds a click popover, a label list and arrow-color theming. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-style-annotation-stocsy-design.md` (section 2).
 
 **Tech Stack:** FastAPI, Pydantic, Plotly, pandas; Preact, Vitest, Playwright.
 

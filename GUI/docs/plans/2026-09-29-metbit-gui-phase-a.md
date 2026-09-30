@@ -4,7 +4,7 @@
 
 **Goal:** Turn the stage 1 app into a real metabolomics workbench: dependency-graph staleness, a sectioned rail, data-driven dropdowns, Normalize and Align data stages, OPLS-DA, STOCSY with click-to-pick ppm, and a Volcano plot.
 
-**Architecture:** The sidecar's single `stages.py` becomes a `stages/` package (`base`, `data`, `analysis`, `stats`). Each `Stage` declares its rail `section`, the stages it depends on (`after`), and which views have a ppm x-axis (`ppm_views`). Analyses read the "working matrix" (newest `done` data stage). The server injects group names into schemas for fields tagged `options: "groups"`. The renderer adds rail sections, field hints, a "Use picked ppm" button, and plot click capture. Spec: `docs/superpowers/specs/2026-09-29-metbit-gui-design.md` (sections "Pipeline model" and "Screens").
+**Architecture:** The sidecar's single `stages.py` becomes a `stages/` package (`base`, `data`, `analysis`, `stats`). Each `Stage` declares its rail `section`, the stages it depends on (`after`), and which views have a ppm x-axis (`ppm_views`). Analyses read the "working matrix" (newest `done` data stage). The server injects group names into schemas for fields tagged `options: "groups"`. The renderer adds rail sections, field hints, a "Use picked ppm" button, and plot click capture. Spec: `GUI/docs/specs/2026-09-29-metbit-gui-design.md` (sections "Pipeline model" and "Screens").
 
 **Tech Stack:** Same as stage 1. New metbit calls: `metbit.preprocessing.normalize.Normalization`, `metbit.nmr.alignment.icoshift_align`, `metbit.opls_da`, `metbit.analysis.stocsy.STOCSY`, `metbit.stats.multitest.VolcanoPlot`, `metbit.viz.spectra.SpectraPlot`.
 

@@ -2,7 +2,7 @@
 
 Date: 2026-09-29
 Status: Approved design, pending implementation plans
-Builds on: `docs/superpowers/specs/2026-09-29-metbit-gui-design.md` (phases A to D implemented)
+Builds on: `GUI/docs/specs/2026-09-29-metbit-gui-design.md` (phases A to D implemented)
 
 ## Goals
 
