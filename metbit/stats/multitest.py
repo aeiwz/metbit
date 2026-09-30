@@ -11,6 +11,8 @@ __status__ = "Development"
 from itertools import combinations
 from typing import Dict, List, Optional
 
+import warnings
+
 import numpy as np
 import pandas as pd
 import plotly.express as px
@@ -182,31 +184,26 @@ class VolcanoPlot:
         data_a = self.df.loc[mask_a, self.value_cols]
         data_b = self.df.loc[mask_b, self.value_cols]
 
-        rows = []
-        for feat in self.value_cols:
-            a_vals = data_a[feat].dropna().values
-            b_vals = data_b[feat].dropna().values
+        # every feature at once (one call per feature cost ~0.4 ms of SciPy overhead: 13 s for 33,000);
+        # the rules are the per-feature ones: NaN dropped per feature, log2FC 0 when both means are 0
+        A = data_a.to_numpy(dtype=float)
+        B = data_b.to_numpy(dtype=float)
+        n_a, n_b = (~np.isnan(A)).sum(axis=0), (~np.isnan(B)).sum(axis=0)
+        with np.errstate(invalid="ignore", divide="ignore"), warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)  # all-NaN features: mean NaN, as before
+            mean_a, mean_b = np.nanmean(A, axis=0), np.nanmean(B, axis=0)
+            log2fc = np.where(
+                (mean_a > 0) & (mean_b > 0),
+                np.log2(mean_b / mean_a),
+                np.where((mean_a == 0) & (mean_b == 0), 0.0, np.nan),
+            )
+            nan_policy = "omit" if np.isnan(A).any() or np.isnan(B).any() else "propagate"
+            p_val = np.asarray(
+                stats.ttest_ind(A, B, equal_var=False, axis=0, nan_policy=nan_policy).pvalue, dtype=float
+            )
+        p_val[(n_a < 2) | (n_b < 2)] = np.nan  # Welch's test needs two values a group
 
-            mean_a = np.mean(a_vals) if len(a_vals) else np.nan
-            mean_b = np.mean(b_vals) if len(b_vals) else np.nan
-
-            # log2FC: log2(mean_b / mean_a)
-            if mean_a > 0 and mean_b > 0:
-                log2fc = np.log2(mean_b / mean_a)
-            elif mean_a == 0 and mean_b == 0:
-                log2fc = 0.0
-            else:
-                log2fc = np.nan
-
-            # Welch t-test
-            if len(a_vals) >= 2 and len(b_vals) >= 2:
-                _, p_val = stats.ttest_ind(a_vals, b_vals, equal_var=False)
-            else:
-                p_val = np.nan
-
-            rows.append({"feature": feat, "log2FC": log2fc, "p_value": p_val})
-
-        result = pd.DataFrame(rows)
+        result = pd.DataFrame({"feature": self.value_cols, "log2FC": log2fc, "p_value": p_val})
 
         # Multiple testing correction
         p_raw = result["p_value"].values.astype(float)
