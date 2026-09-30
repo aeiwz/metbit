@@ -29,6 +29,10 @@ test("click the spectrum under the boxplot to test another ppm", async () => {
   await run();
   await expect(win.locator("table.data")).toContainText("s11");
   await win.locator(".rail button", { hasText: "Group tests" }).click();
+  // typed key by key, as a person does: "0." must not collapse to "0"
+  await win.fill("#f-bin_width", "");
+  await win.locator("#f-bin_width").pressSequentially("0.05");
+  await expect(win.locator("#f-bin_width")).toHaveValue("0.05");
   await win.fill("#f-bin_width", "0");
   await run();
 

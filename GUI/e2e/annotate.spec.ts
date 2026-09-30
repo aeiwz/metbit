@@ -79,7 +79,9 @@ test("annotator dashboard: add, switch, restyle, drag and export", async () => {
   await expect(win.locator(".dash-panel summary").first()).toContainText("Edit annotation");
   await expect(win.locator("#annotate-label")).toHaveValue("lactate");
   await win.fill("#annotate-label", "lactic acid");
-  await win.fill('[aria-label="Angle"]', "-30");
+  await win.fill('[aria-label="Angle"]', "");
+  await win.locator('[aria-label="Angle"]').pressSequentially("-30");
+  await expect(win.locator('[aria-label="Angle"]')).toHaveValue("-30");
   await win.getByRole("button", { name: "Save", exact: true }).click();
   await expect.poll(async () => (await note("lactic acid"))?.textangle).toBe(-30);
   await expect(win.locator(".dash-panel summary").first()).toContainText("Add annotation");

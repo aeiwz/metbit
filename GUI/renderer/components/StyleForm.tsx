@@ -1,4 +1,5 @@
 import type { PlotStyle, StyleOverride } from "../api";
+import { DecimalInput } from "./DecimalInput";
 
 export const SYMBOLS = ["circle", "square", "diamond", "triangle-up", "triangle-down", "cross", "x", "star"];
 
@@ -68,18 +69,16 @@ export function StyleForm({ effective, override, onChange, onReset }: Props) {
       {NUMBERS.map((f) => (
         <div key={f.key} class={`field${mark(override?.[f.key] !== undefined)}`}>
           <label for={`style-${f.key}`}>{f.label}</label>
-          <input
+          <DecimalInput
             id={`style-${f.key}`}
-            type="number"
-            min={f.min}
-            max={f.max}
-            step={f.step}
             value={effective[f.key]}
-            onChange={(e) => {
-              const v = Number(e.currentTarget.value);
-              if (e.currentTarget.value !== "" && Number.isFinite(v)) onChange({ [f.key]: clamp(v, f.min, f.max) });
+            onValue={(v) => {
+              if (typeof v === "number") onChange({ [f.key]: clamp(v, f.min, f.max) });
             }}
           />
+          <span class="hint">
+            {f.min} to {f.max}
+          </span>
         </div>
       ))}
       <label class={`check${mark(override?.show_ellipses !== undefined)}`}>

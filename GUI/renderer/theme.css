@@ -295,7 +295,7 @@ table.data th { color: var(--muted); font-weight: 500; position: sticky; top: 0;
 .dash-panel[open] summary { border-bottom: 1px solid var(--border); }
 .dash-panel-body { display: flex; flex-direction: column; gap: var(--s1); padding: 10px 12px; }
 .field-inline { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
-.field-inline input, .dash-panel select, .dash-panel input[type="number"] {
+.field-inline input, .dash-panel select, .dash-panel input[inputmode="decimal"] {
   font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 6px var(--s1); min-width: 0;
 }
 .dash-panel input[type="color"] { flex: none; width: 32px; height: 30px; padding: 0; border: 1px solid var(--border); border-radius: 6px; background: none; }

@@ -16,7 +16,7 @@ function makeCsv(dir: string): string {
 }
 
 // read the rendered Plotly trace for a group straight from the graph div
-const groupMarker = (win: Page, group: string, prop: "color" | "size") =>
+const groupMarker = (win: Page, group: string, prop: "color" | "size" | "opacity") =>
   win.evaluate(
     ([g, p]) => {
       const gd = document.querySelector(".plot") as any;
@@ -53,6 +53,13 @@ test("global style recolors a group; a stage override changes marker size", asyn
   await expect.poll(() => groupMarker(win, "B", "size")).toBe(30);
   await expect(win.locator("details.style-override summary")).toContainText("(custom)");
   await expect(win.locator("details.style-override")).toHaveAttribute("open", ""); // stays open while editing
+
+  // a decimal typed key by key keeps its point, and Enter applies it
+  await win.fill("#style-marker_opacity", "");
+  await win.locator("#style-marker_opacity").pressSequentially("0.35");
+  await expect(win.locator("#style-marker_opacity")).toHaveValue("0.35");
+  await win.locator("#style-marker_opacity").press("Enter");
+  await expect.poll(() => groupMarker(win, "B", "opacity")).toBe(0.35);
 
   await app.close();
 });

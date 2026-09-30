@@ -1,20 +1,13 @@
 import { useEffect, useState } from "preact/hooks";
 import type { ComponentChildren } from "preact";
 import type { FieldSchema, JsonSchema } from "../api";
+import { DecimalInput } from "./DecimalInput";
 
 export type Values = Record<string, unknown>;
 export type FieldErrors = Record<string, string>;
 
 export function defaults(schema: JsonSchema): Values {
   return Object.fromEntries(Object.entries(schema.properties).map(([k, f]) => [k, f.default ?? ""]));
-}
-
-const NUMBER = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
-
-// complete numbers (including 1e-7) become numbers; anything else stays as typed for the server to reject
-export function toNumber(raw: string): number | string {
-  const text = raw.trim();
-  return NUMBER.test(text) ? Number(text) : text;
 }
 
 const plain = (msg: string) =>
@@ -115,19 +108,7 @@ function Field({ name, field, value, error, picked, onChange }: FieldProps) {
       />
     );
   } else if (field.type === "number") {
-    // text, not type="number": the browser reports half-typed values like "1e-" as empty, which would
-    // wipe the field mid-typing; keep what is typed and convert only complete numbers
-    control = (
-      <input
-        id={id}
-        type="text"
-        inputMode="decimal"
-        autoComplete="off"
-        spellcheck={false}
-        value={value === undefined || value === null ? "" : String(value)}
-        onInput={(e) => onChange(toNumber(e.currentTarget.value))}
-      />
-    );
+    control = <DecimalInput id={id} value={value} live onValue={onChange} />;
   } else if (field.format === "file-path" || field.format === "dir-path") {
     const directory = field.format === "dir-path";
     const browse = async () => {

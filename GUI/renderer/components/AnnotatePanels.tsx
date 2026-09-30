@@ -2,6 +2,7 @@ import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import type { Annotation } from "../api";
 import { decode } from "./AnnotationList";
+import { DecimalInput } from "./DecimalInput";
 
 export interface LineStyleValue {
   color?: string;
@@ -27,8 +28,9 @@ type FormProps = Pick<Props, "peak" | "editing" | "onAdd" | "onSave" | "onCancel
 
 function LabelForm({ peak, editing, onAdd, onSave, onCancelEdit }: FormProps) {
   const [label, setLabel] = useState(editing ? decode(editing.label) : "");
-  const [angle, setAngle] = useState(editing ? editing.angle : 0);
-  const canAdd = (editing !== null || peak !== null) && label.trim() !== "";
+  const [angle, setAngle] = useState<number | string>(editing ? editing.angle : 0);
+  const angleOk = typeof angle === "number" && angle >= -180 && angle <= 180;
+  const canAdd = (editing !== null || peak !== null) && label.trim() !== "" && angleOk;
   return (
     <form
       class="dash-panel-body"
@@ -36,10 +38,10 @@ function LabelForm({ peak, editing, onAdd, onSave, onCancelEdit }: FormProps) {
         e.preventDefault();
         if (!canAdd) return;
         if (editing) {
-          onSave(editing.id, label.trim(), angle);
+          onSave(editing.id, label.trim(), angle as number);
           return;
         }
-        onAdd(label.trim(), angle);
+        onAdd(label.trim(), angle as number);
         setLabel("");
       }}
     >
@@ -56,16 +58,9 @@ function LabelForm({ peak, editing, onAdd, onSave, onCancelEdit }: FormProps) {
       </label>
       <label class="field-inline">
         Angle (°)
-        <input
-          type="number"
-          aria-label="Angle"
-          min={-180}
-          max={180}
-          step={5}
-          value={angle}
-          onInput={(e) => setAngle(Number(e.currentTarget.value) || 0)}
-        />
+        <DecimalInput aria-label="Angle" value={angle} live onValue={setAngle} />
       </label>
+      {!angleOk && <span class="err">Angle must be a number from -180 to 180</span>}
       <div class="row">
         <button class="btn primary" type="submit" disabled={!canAdd}>
           {editing ? "Save" : "Add Label"}
@@ -124,14 +119,10 @@ export function AnnotatePanels({ peak, onAdd, editing, onSave, onCancelEdit, tar
                 </option>
               ))}
             </select>
-            <input
-              type="number"
+            <DecimalInput
               aria-label="Line width"
-              min={0.1}
-              max={10}
-              step={0.1}
               value={width}
-              onChange={(e) => setWidth(Number(e.currentTarget.value) || 1.5)}
+              onValue={(v) => typeof v === "number" && setWidth(Math.min(10, Math.max(0.1, v)))}
             />
           </div>
           <div class="row">

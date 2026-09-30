@@ -188,3 +188,18 @@ it("explains number errors in plain words", () => {
     p_threshold: "Enter a number, for example 0.0001 or 1e-7",
   });
 });
+
+it("types decimals one key at a time, as a person does", async () => {
+  const s: JsonSchema = { properties: { bin_width: { type: "number", title: "Bin width", default: 0.01 } } };
+  const { root, onRun } = mount({ schema: s });
+  const input = root.querySelector<HTMLInputElement>("#f-bin_width")!;
+  input.value = "";
+  for (const ch of "0.05") {
+    input.value += ch;
+    input.dispatchEvent(new Event("input"));
+    await tick();
+  }
+  expect(input.value).toBe("0.05"); // "0." used to collapse to "0"
+  root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+  expect(onRun).toHaveBeenLastCalledWith({ bin_width: 0.05 });
+});
