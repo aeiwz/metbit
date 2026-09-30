@@ -56,3 +56,14 @@ def test_correlation_figure_is_not_mutated_by_repeated_fetches(csv_path):
     for _ in range(3):
         fig = c.get("/stages/stocsy/figure?view=correlation", headers=AUTH).json()
     assert [n.get("text") for n in fig["layout"]["annotations"]].count("anchor") == 1
+
+
+def test_stocsy_draws_a_gradient_line_or_the_classic_markers(run_all):
+    stage = next(s for s in __import__("metbit_server.stages", fromlist=["STAGES"]).STAGES if s.id == "stocsy")
+    line = stage.figures["correlation"](run_all(("stocsy", {"anchor_ppm": 8.75, "colorscale": "Viridis"})).output("stocsy"))
+    assert line.data[-1].marker.showscale is True and line.data[-1].marker.colorscale[0][1].lower() == "#440154"
+    assert any(t.mode == "lines" for t in line.data)
+    classic = stage.figures["correlation"](run_all(("stocsy", {"anchor_ppm": 8.75, "plot": "markers"})).output("stocsy"))
+    assert {t.mode for t in classic.data} == {"markers"}
+    props = stage.params.model_json_schema()["properties"]
+    assert props["colorscale"]["show_if"] == {"plot": "line"}

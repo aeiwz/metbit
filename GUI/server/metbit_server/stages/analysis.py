@@ -122,6 +122,12 @@ def _permutation_view(r: OPLSResult) -> go.Figure:
 class STOCSYParams(BaseModel):
     anchor_ppm: float = Field(title="Anchor (ppm)", json_schema_extra={"pick_ppm": True})
     p_threshold: float = Field(1e-4, gt=0, lt=1, title="p threshold")
+    plot: Literal["line", "markers"] = Field(
+        "line", title="Plot", description="Line: the median spectrum coloured by r². Markers: grey and red points."
+    )
+    colorscale: Literal["Jet", "Turbo", "Viridis", "Plasma", "Inferno", "Cividis"] = Field(
+        "Jet", title="Colour scale", json_schema_extra={"show_if": {"plot": "line"}}
+    )
 
 
 def run_stocsy(p: STOCSYParams, session: Session, progress: Progress) -> go.Figure:
@@ -131,9 +137,9 @@ def run_stocsy(p: STOCSYParams, session: Session, progress: Progress) -> go.Figu
     if not lo <= p.anchor_ppm <= hi:
         raise ValueError(f"Anchor {p.anchor_ppm} ppm is outside the spectrum ({lo:.2f} to {hi:.2f} ppm)")
     cache = data.cache.setdefault("stocsy", {})  # like the Dash app's lru_cache, scoped to this matrix
-    key = (p.anchor_ppm, p.p_threshold)
+    key = (p.anchor_ppm, p.p_threshold, p.plot, p.colorscale)
     if key not in cache:
-        cache[key] = STOCSY(X, p.anchor_ppm, p.p_threshold)
+        cache[key] = STOCSY(X, p.anchor_ppm, p.p_threshold, plot=p.plot, colorscale=p.colorscale)
     progress(1.0)
     return cache[key]
 

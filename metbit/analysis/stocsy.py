@@ -36,100 +36,127 @@ def _stocsy_statistics(spectra: pd.DataFrame, anchor_index: int):
     return correlations, p_values
 
 
-def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001):
+GREY = "#b0b0b0"
+PLOT_TYPES = ("line", "markers")
+
+
+def _segments(x: np.ndarray, y: np.ndarray, starts: np.ndarray):
+    """x / y for line segments i -> i+1 (for each i in `starts`), separated by gaps (None)."""
+    xs = np.empty(len(starts) * 3, dtype=object)
+    ys = np.empty(len(starts) * 3, dtype=object)
+    xs[0::3], xs[1::3], xs[2::3] = x[starts], x[starts + 1], None
+    ys[0::3], ys[1::3], ys[2::3] = y[starts], y[starts + 1], None
+    return xs, ys
+
+
+def stocsy_figure(ppm, y, correlations, p_values, anchor_ppm_value, p_value_threshold=0.0001,
+                  plot="line", colorscale="Jet", n_levels=64, title="STOCSY"):
+    """
+    Draw STOCSY results.
+
+    ``plot="line"`` (default) draws ``y`` (the median spectrum) as a line whose colour follows r^2
+    (the squared correlation with the anchor), with a colour bar; segments with no significant end
+    (p >= ``p_value_threshold`` at both ends) are grey. Plotly gives one line trace a single colour,
+    so segments are grouped into ``n_levels`` colour levels, one trace per level. An invisible marker
+    layer carries the colour bar and hover values (delta, r^2, r, p).
+
+    ``plot="markers"`` keeps the classic plot: grey and red points for non-significant and significant.
+    """
+    if plot not in PLOT_TYPES:
+        raise ValueError(f"plot must be one of {PLOT_TYPES}, got {plot!r}")
+    from plotly.colors import get_colorscale, sample_colorscale
+
+    x = np.asarray(ppm, dtype=float)
+    y = np.asarray(y, dtype=float)
+    r = np.asarray(correlations, dtype=float)
+    p = np.asarray(p_values, dtype=float)
+    r2 = np.nan_to_num(r ** 2)
+    significant = p < p_value_threshold
+    anchor = np.round(anchor_ppm_value, decimals=4)
+    fig = go.Figure()
+
+    if plot == "markers":
+        for mask, colour, name in ((~significant, "gray", "Non-significant"),
+                                   (significant, "red", f"Significant (<i>p</i> < {p_value_threshold})")):
+            fig.add_trace(go.Scatter(x=x[mask], y=y[mask], mode="markers", marker=dict(size=3, color=colour), name=name))
+        y_title = f"Median intensity (red: <i>p</i> < {p_value_threshold})"
+    else:
+        starts = np.arange(len(x) - 1)
+        coloured = significant[:-1] | significant[1:]  # a segment touching a significant point
+        level = np.minimum(((r2[:-1] + r2[1:]) / 2 * n_levels).astype(int), n_levels - 1)
+        palette = sample_colorscale(get_colorscale(colorscale), (np.arange(n_levels) + 0.5) / n_levels, colortype="rgb")
+        grey = starts[~coloured]
+        if len(grey):
+            gx, gy = _segments(x, y, grey)
+            fig.add_trace(go.Scatter(x=gx, y=gy, mode="lines", line=dict(color=GREY, width=1.2),
+                                     name=f"Not significant (<i>p</i> ≥ {p_value_threshold})", hoverinfo="skip",
+                                     showlegend=False))  # the colour bar title explains grey
+        for k in np.unique(level[coloured]):
+            lx, ly = _segments(x, y, starts[coloured & (level == k)])
+            fig.add_trace(go.Scatter(x=lx, y=ly, mode="lines", line=dict(color=palette[k], width=1.6),
+                                     showlegend=False, hoverinfo="skip", name=f"r² ≈ {(k + 0.5) / n_levels:.2f}"))
+        fig.add_trace(go.Scatter(
+            x=x, y=y, mode="markers", name="r²", showlegend=False,
+            marker=dict(size=6, opacity=0, color=r2, colorscale=colorscale, cmin=0, cmax=1, showscale=True,
+                        colorbar=dict(title=dict(text=f"r²<br><sup>grey: p ≥ {p_value_threshold:g}</sup>"), thickness=14)),
+            customdata=np.column_stack([r, p]),
+            hovertemplate="δ %{x:.4f}<br>r² %{marker.color:.3f}<br>r %{customdata[0]:.3f}"
+                          "<br>p %{customdata[1]:.2g}<extra></extra>",
+        ))
+        y_title = "Median intensity (colour: r²)"
+        fig.add_vline(x=float(anchor_ppm_value), line_dash="dot", line_color="#888888")
+
+    fig.update_layout(
+        title={'text': f'<b>{title}: δ {anchor}</b>', 'y': 0.9, 'x': 0.5, 'xanchor': 'center', 'yanchor': 'top'},
+        xaxis_title='<b>δ<sup>1</sup>H</b>',
+        yaxis_title=y_title,
+        showlegend=plot == "markers",  # the line plot explains itself with the colour bar
+    )
+    fig.update_xaxes(autorange="reversed")
+    return fig
+
+
+def STOCSY(spectra: pd.DataFrame, anchor_ppm_value, p_value_threshold=0.0001, plot="line", colorscale="Jet"):
 
     """
     Performs a STOCSY (Statistic Total Correlation Spectroscopy) analysis on NMR spectra data.
 
-    This function calculates the Pearson correlation between a specified anchor signal 
-    (identified by its PPM value) and all other signals in the NMR spectra. It identifies 
-    significant correlations based on the specified p-value threshold and visualizes 
-    the results in a scatter plot.
+    This function calculates the Pearson correlation between a specified anchor signal
+    (identified by its PPM value) and all other signals in the NMR spectra, and draws the
+    median spectrum coloured by the squared correlation (r^2) with the anchor.
 
     Parameters:
     -----------
     spectra : pd.DataFrame
-        A DataFrame containing the NMR spectra data, where each column represents a 
+        A DataFrame containing the NMR spectra data, where each column represents a
         chemical shift in ppm and each row represents a sample.
 
     anchor_ppm_value : float
         The PPM value of the anchor signal used for correlation analysis.
 
     p_value_threshold : float, optional
-        The threshold for determining significance. Correlations with a p-value less than 
-        this threshold will be marked as significant. Default is 0.0001.
+        The threshold for determining significance. Segments with a p-value at or above
+        this threshold are drawn grey. Default is 0.0001.
+
+    plot : {"line", "markers"}, optional
+        "line" (default): the median spectrum as a line with an r^2 colour gradient and colour bar.
+        "markers": the classic plot with grey (non-significant) and red (significant) points.
+
+    colorscale : str, optional
+        Any Plotly colour scale name for the r^2 gradient, e.g. "Jet" (default), "Turbo", "Viridis".
 
     Returns:
     --------
     fig : go.Figure
-        A Plotly figure object containing the scatter plot of the correlation results.
+        A Plotly figure object of the correlation results.
 
     Example:
     ---------
     >>> fig = STOCSY(spectra=spectra, anchor_ppm_value=1.29275, p_value_threshold=0.0000001)
     >>> fig.show()
     """
-    # Step 1: Load NMR spectra data
-
-    ppm = spectra.columns.astype(float).to_list()  # Convert column names to floats (ppm values)
-
-    # Step 2: NMR spectra data (X is already a DataFrame)
-    X = spectra
-
-    # Step 3: Find the index of the anchor ppm in the list of ppm values
-    anchor_index = np.argmin(np.abs(np.array(ppm) - anchor_ppm_value))
-
-    # Step 4: Calculate correlations and p-values in one matrix pass.
-    correlations, p_values = _stocsy_statistics(X, anchor_index)
-
-    # Step 5: Calculate r^2 (squared correlation) for each point
-    r_squared = correlations ** 2
-
-    # Step 6: Prepare plotly scatter plot
-    fig = go.Figure()
-
-    # Scatter plot of non-significant points
-    non_significant_mask = p_values >= p_value_threshold
-    fig.add_trace(go.Scatter(
-        x=np.array(ppm)[non_significant_mask],
-        y=X.median()[non_significant_mask],
-        mode='markers',
-        marker=dict(
-            size=3,
-            color='gray',
-        ),
-        name='Non-significant'
-    ))
-
-    # Scatter plot of significant points (marked in red)
-    significant_mask = p_values < p_value_threshold
-    fig.add_trace(go.Scatter(
-        x=np.array(ppm)[significant_mask],
-        y=X.median()[significant_mask],
-        mode='markers',
-        marker=dict(
-            size=3,
-            color='red',  # Red color for significant points
-        ),
-        name=f'Significant (<i>p</i> < {p_value_threshold})'
-    ))
-
-    # Add labels and title
-    fig.update_layout(
-        title={'text':f'<b>STOCSY: δ {np.round(anchor_ppm_value, decimals=4)}</b>',
-                'y':0.9,
-                'x':0.5,
-                'xanchor':'center',
-                'yanchor':'top'},
-        xaxis_title='<b>δ<sup>1</sup>H</b>',
-        yaxis_title=f'Correlation (r<sup>2</sup>) δ = {np.round(anchor_ppm_value, decimals=4)}',
-        showlegend=True
-    )
-
-    #invert x-axis
-    fig.update_xaxes(autorange="reversed")
-    # Display the interactive plot
-    return fig
-
-# Example usage
-#plot_nmr_correlation(spectra=spectra, anchor_ppm_value=1.29275, p_value_threshold=0.0000001)
+    ppm = spectra.columns.astype(float).to_numpy()
+    anchor_index = int(np.argmin(np.abs(ppm - anchor_ppm_value)))
+    correlations, p_values = _stocsy_statistics(spectra, anchor_index)
+    return stocsy_figure(ppm, spectra.median().to_numpy(), correlations, p_values, anchor_ppm_value,
+                         p_value_threshold, plot=plot, colorscale=colorscale)

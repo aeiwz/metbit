@@ -332,7 +332,7 @@ class TestChunkedSTOCSYBackend:
 
         ppm = [float(c) for c in spectra.columns]
         stocsy = ChunkedSTOCSY(p_value_threshold=0.05)
-        fig = stocsy.plot(spectra, anchor_ppm_value=ppm[60])
+        fig = stocsy.plot(spectra, anchor_ppm_value=ppm[60], plot="markers")
 
         assert isinstance(fig, go.Figure)
         total_points = sum(len(t.x) for t in fig.data)
