@@ -46,7 +46,7 @@ class CrossValidation:
 
     """
 
-    def __init__(self, estimator="opls", kfold=10, scaler="pareto") -> None:
+    def __init__(self, estimator="opls", kfold=10, scaler="pareto", max_components=15) -> None:
         
         from .pls import PLS
         from .opls import OPLS
@@ -58,6 +58,10 @@ class CrossValidation:
 
         # number of folds
         self.kfold = kfold
+        # most components cross-validated. Q2 plateaus within a few; past roughly
+        # 20-30, test-set correction compounds rounding error and predictions blow
+        # up (|Q2| > 1), so the misclassification minimum would be picked from noise.
+        self.max_components = max_components
         # estimator
         if estimator == "pls":
             self.estimator = PLS()
@@ -109,7 +113,7 @@ class CrossValidation:
         # matrix dimension
         n, p = x.shape
         # max number of principal components
-        npc0 = min(n, p)
+        npc0 = min(n, p, self.max_components)
         # preallocation
         ssx = collections.defaultdict(lambda: collections.defaultdict(list))
         ssy = []
@@ -131,19 +135,31 @@ class CrossValidation:
             ssx_tot = (xte_scale ** 2).sum()
 
             # fit the model
-            npc = min(xtr.shape)
+            npc = min(min(xtr.shape), self.max_components)
             self.estimator.fit(xtr_scale.copy(), ytr_scale, n_comp=npc)
             if npc < npc0:
                 npc0 = npc
+
+            # the test block with orthogonal components 1..k removed, built
+            # one component at a time: the same operations, in the same order,
+            # as estimator.correct(n_component=k), which would redo 1..k from
+            # scratch for every k (quadratic in the number of components)
+            if self.estimator_id == "opls":
+                xte_corr = xte_scale.copy()
+                tcorr1 = None
 
             # do prediction iterating through components
             for k in range(1, npc+1):
                 # if OPLS is used, the test matrix should be corrected to
                 # remove orthogonal components
                 if self.estimator_id == "opls":
-                    xte_corr, tcorr = self.estimator.correct(
-                        xte_scale, n_component=k, return_scores=True
-                    )
+                    t_k = np.dot(xte_corr, self.estimator._Wortho[:, k-1])
+                    if xte_corr.ndim == 1:
+                        xte_corr -= t_k * self.estimator._Portho[:, k-1]
+                    else:
+                        xte_corr -= t_k[:, np.newaxis] * self.estimator._Portho[:, k-1]
+                    if tcorr1 is None:
+                        tcorr1 = t_k  # first orthogonal score, the same for every k
                     # prediction
                     yp_k, tp_k = self.estimator.predict(
                         xte_corr, n_component=k, return_scores=True
@@ -151,18 +167,12 @@ class CrossValidation:
 
                     # save the parameters for model quality assessments
                     # Orthogonal and predictive scores
-                    if xte_scale.ndim == 1:
-                        tortho[test_index, k-1] = tcorr[0]
-                    else:
-                        tortho[test_index, k-1] = tcorr[:, 0]
+                    tortho[test_index, k-1] = tcorr1
                     tpred[test_index, k-1] = tp_k
 
-                    # sum of squares
+                    # sum of squares; the orthogonal part is what was removed
                     ssx[k]["corr"].append((xte_corr ** 2).sum())
-                    xte_ortho = np.dot(
-                        tcorr, self.estimator.orthogonal_loadings[:, :k].T
-                    )
-                    ssx[k]["xyo"].append((xte_ortho ** 2).sum())
+                    ssx[k]["xyo"].append(((xte_scale - xte_corr) ** 2).sum())
                     ssx[k]["total"].append(ssx_tot)
 
                     # covariances from fitting

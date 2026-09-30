@@ -607,36 +607,29 @@ def nipals(
         t = np.frombuffer(t_b, dtype=np.float64).copy()
         return w, u, c, t
 
-    # pure-NumPy fallback
+    # pure-NumPy fallback.
+    # PLS1 (one y column) needs a single pass: w = X'y / |X'y| is the loop's fixed point, and a second
+    # pass only reproduces it (c > 0 always, since t'y = |X'y|). Iterating to `tol` adds nothing, and once
+    # deflation has used up X (X'y at rounding level) the loop never meets `tol` and runs all `max_iter`
+    # passes on noise: that made OPLS-DA cross-validation take minutes. Early exits match the old loop's.
     import numpy.linalg as _la
     u = y_c.copy()
-    w = np.zeros(p)
-    t = np.zeros(n)
-    c = 0.0
-    d = tol * 10.0 + 1.0
-    for _ in range(max_iter):
-        utu = np.dot(u, u)
-        if utu < 1e-300:
-            break
-        w = x_c.T @ u / utu
-        wnorm = _la.norm(w)
-        if wnorm < 1e-300:
-            break
-        w /= wnorm
-        t = x_c @ w
-        ttt = np.dot(t, t)
-        if ttt < 1e-300:
-            break
-        c = np.dot(t, y_c) / ttt
-        if abs(c) < 1e-300:
-            break
-        u_new = y_c / c
-        unorm = _la.norm(u_new)
-        d = _la.norm(u_new - u) / unorm if unorm > 1e-300 else 0.0
-        u = u_new
-        if d <= tol:
-            break
-    return w, u, c, t
+    utu = np.dot(u, u)
+    if utu < 1e-300:
+        return np.zeros(p), u, 0.0, np.zeros(n)
+    w = x_c.T @ u / utu
+    wnorm = _la.norm(w)
+    if wnorm < 1e-300:
+        return w, u, 0.0, np.zeros(n)
+    w /= wnorm
+    t = x_c @ w
+    ttt = np.dot(t, t)
+    if ttt < 1e-300:  # pragma: no cover - t'y = |X'y| > 0 here, so t cannot vanish
+        return w, u, 0.0, t
+    c = np.dot(t, y_c) / ttt
+    if abs(c) < 1e-300:  # pragma: no cover - c = |X'y| / t't, positive unless underflow
+        return w, u, c, t
+    return w, y_c / c, c, t
 
 
 # ---------------------------------------------------------------------------
