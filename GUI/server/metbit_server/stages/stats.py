@@ -12,7 +12,7 @@ from metbit.stats.multitest import ANOVAStats, KruskalStats, VolcanoPlot, _apply
 
 from ..session import Session
 from .style import colors, declutter_point_labels
-from .base import median_spectra_figure
+from .base import mark_feature, median_spectra_figure
 from .base import DATA_ORDER, Progress, Stage, groups, two_groups, working
 
 Correction = Literal["fdr_bh", "bonferroni", "none"]
@@ -90,6 +90,7 @@ class GroupTestResult:
     feature: str         # column of `data` shown in the boxplot by default
     correction: str = "none"
     spectra: Any = None  # working Dataset at full resolution, for the companion spectrum
+    bin_width: float = 0.0
 
 
 def run_group_tests(p: GroupTestParams, session: Session, progress: Progress) -> GroupTestResult:
@@ -121,7 +122,8 @@ def run_group_tests(p: GroupTestParams, session: Session, progress: Progress) ->
     data.insert(0, "Group", labels.to_numpy())
     progress(1.0)
     return GroupTestResult(
-        table=table, data=data, test=p.test, feature=str(target), correction=p.correction, spectra=working(session)
+        table=table, data=data, test=p.test, feature=str(target), correction=p.correction, spectra=working(session),
+        bin_width=p.bin_width,
     )
 
 
@@ -157,8 +159,7 @@ def _boxplot(r: GroupTestResult, style=None, ppm: Optional[float] = None) -> go.
 
 def _group_spectra(r: GroupTestResult, style=None, ppm: Optional[float] = None) -> go.Figure:
     fig = median_spectra_figure(r.spectra.X, r.spectra.labels, "Click a peak to show its boxplot", style)
-    fig.add_vline(x=float(_feature_for(r, ppm)), line_dash="dot", line_color="#888888")
-    return fig
+    return mark_feature(fig, float(_feature_for(r, ppm)), r.bin_width)
 
 
 STATS_STAGES: list[Stage] = [

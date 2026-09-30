@@ -121,6 +121,15 @@ def median_spectra_figure(X: pd.DataFrame, labels: pd.Series, title: str, style:
     return fig
 
 
+def mark_feature(fig: go.Figure, center: float, bin_width: float = 0.0) -> go.Figure:
+    """Dotted line at the tested feature; with binning, also shade the whole bin it averages."""
+    if bin_width > 0:
+        fig.add_vrect(x0=center - bin_width / 2, x1=center + bin_width / 2, fillcolor="#888888", opacity=0.18, line_width=0)
+        fig.update_layout(title_text=f"{fig.layout.title.text} · {bin_width:g} ppm bins")
+    fig.add_vline(x=center, line_dash="dot", line_color="#888888")
+    return fig
+
+
 def _numeric_columns(meta: pd.DataFrame) -> list[str]:
     return [str(c) for c in meta.columns if pd.to_numeric(meta[c], errors="coerce").notna().all()]
 

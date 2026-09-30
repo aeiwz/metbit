@@ -124,6 +124,8 @@ def test_mixed_model_and_friedman(ts_path):
     assert np.isclose(table["ppm"].iloc[0], peak_ppm).any()  # the peak ranks first
     assert table["p_interaction_adj"].iloc[0] < 0.001
     assert stage.figures["pvalues"](r).data and stage.figures["profile"](r, None, SPIKE_PPM).data
+    binned = session_with(ts_path, ("mixedmodel", {**BASE, "bin_width": 0.5})).output("mixedmodel")
+    assert [sh for sh in stage.figures["pvalues"](binned).layout.shapes if sh.type == "rect"]
     from metbit_server.stages.longitudinal import _short_p
 
     assert (_short_p(0.0), _short_p(0.01234), _short_p(float("nan"))) == ("<1e-16", "0.012", "n/a")

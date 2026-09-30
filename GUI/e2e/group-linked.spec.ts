@@ -35,11 +35,21 @@ test("click the spectrum under the boxplot to test another ppm", async () => {
   await expect(win.locator(".split-companion .plot .main-svg").first()).toBeVisible({ timeout: 30_000 });
   await expect(win.getByRole("tab", { name: "Spectra" })).toHaveCount(0); // companion is not a tab
   await expect.poll(() => boxTitle(win)).toContain("8.7500 ppm · ANOVA p = "); // top feature: the spiked peak
+  // drag-zoom first: picking a peak must keep the zoom
+  const range = () => win.evaluate(() => (document.querySelector(".split-companion .plot") as any)?.layout?.xaxis?.range);
   const box = (await win.locator(".split-companion .nsewdrag").first().boundingBox())!;
+  await win.mouse.move(box.x + box.width * 0.05, box.y + box.height * 0.5);
+  await win.mouse.down();
+  await win.mouse.move(box.x + box.width * 0.9, box.y + box.height * 0.6, { steps: 6 });
+  await win.mouse.up();
+  await expect.poll(async () => (await range())?.[0]).toBeLessThan(9.9);
+  const zoomed = await range();
+  await win.waitForTimeout(500); // a click right after the zoom would count as a double-click (reset zoom)
   await win.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.5);
   await win.mouse.click(box.x + box.width * 0.75, box.y + box.height * 0.5);
   await expect.poll(() => boxTitle(win)).not.toContain("8.7500 ppm");
   await expect.poll(() => boxTitle(win)).toContain(" ppm · ANOVA p = ");
+  expect(await range()).toEqual(zoomed); // zoom kept
 
   await app.close();
 });

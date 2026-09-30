@@ -54,10 +54,14 @@ export function PlotView({
   figure,
   onPick,
   onLabelMove,
+  onLabelClick,
+  uirevision,
 }: {
   figure: Figure;
   onPick?: (point: PickPoint) => void;
   onLabelMove?: (id: string, ax: number, ay: number) => void;
+  onLabelClick?: (id: string) => void;
+  uirevision?: string; // same value across figure updates keeps the user's zoom
 }) {
   const el = useRef<HTMLDivElement>(null);
   const pick = useRef(onPick);
@@ -66,6 +70,10 @@ export function PlotView({
   const move = useRef(onLabelMove);
   move.current = onLabelMove;
   const draggable = onLabelMove !== undefined;
+  // the user's zoom per uirevision; Plotly's own uirevision drops it on reversed (ppm) axes
+  const zoom = useRef<{ rev?: string; ranges: Record<string, unknown[]> }>({ ranges: {} });
+  const labelClick = useRef(onLabelClick);
+  labelClick.current = onLabelClick;
 
   useEffect(() => {
     const node = el.current!;
@@ -75,6 +83,8 @@ export function PlotView({
   useEffect(() => {
     const node: any = el.current!;
     const layout = themed(figure.layout);
+    if (!uirevision || zoom.current.rev !== uirevision) zoom.current = { rev: uirevision, ranges: {} };
+    for (const [axis, range] of Object.entries(zoom.current.ranges)) layout[axis] = { ...layout[axis], range, autorange: false };
     if (pickable) layout.hoverdistance = -1; // any click in the plot picks the nearest point, not only within 20 px
     // toImage removed: the tab bar's PNG / SVG export saves the original white-background figure instead
     const config = {
@@ -90,17 +100,30 @@ export function PlotView({
         const p = e.points?.[0];
         if (p) pick.current?.({ x: p.x, customdata: p.customdata, clientX: e.event?.clientX, clientY: e.event?.clientY });
       });
+      node.removeAllListeners?.("plotly_clickannotation");
+      node.on("plotly_clickannotation", (e: { annotation?: { name?: string } }) => {
+        if (e.annotation?.name) labelClick.current?.(e.annotation.name);
+      });
       node.removeAllListeners?.("plotly_relayout");
       node.on("plotly_relayout", (e: Record<string, unknown>) => {
-        // a dragged label reports annotations[i].ax / .ay; our labels carry their id as the annotation name
         for (const key of Object.keys(e)) {
+          if (uirevision) {
+            // zooms report "xaxis.range" (an array) or "xaxis.range[0]" / "[1]", depending on the gesture
+            const whole = /^([xy]axis\d*)\.range$/.exec(key);
+            if (whole) zoom.current.ranges[whole[1]] = e[key] as unknown[];
+            const zoomed = /^([xy]axis\d*)\.range\[0\]$/.exec(key);
+            if (zoomed) zoom.current.ranges[zoomed[1]] = [e[key], e[`${zoomed[1]}.range[1]`]];
+            const reset = /^([xy]axis\d*)\.autorange$/.exec(key);
+            if (reset) delete zoom.current.ranges[reset[1]];
+          }
+          // a dragged label reports annotations[i].ax / .ay; our labels carry their id as the annotation name
           const m = /^annotations\[(\d+)\]\.ax$/.exec(key);
           const a = m ? node.layout.annotations?.[Number(m[1])] : undefined;
           if (a?.name) move.current?.(a.name, Math.round(a.ax), Math.round(a.ay));
         }
       });
     });
-  }, [figure, pickable, draggable]);
+  }, [figure, pickable, draggable, uirevision]);
 
   return <div ref={el} class="plot" />;
 }

@@ -15,7 +15,7 @@ from metbit.stats.multitest import _apply_correction
 
 from ..session import Session
 from .analysis import Scaling
-from .base import DATA_ORDER, Progress, Stage
+from .base import DATA_ORDER, Progress, Stage, mark_feature
 from .stats import Correction, bin_matrix
 from .timeseries import SECTION, Design, TimeParams, design, need_subject, profile_figure
 
@@ -207,6 +207,7 @@ class MixedResult:
     des: Design
     feature: float
     test: str
+    bin_width: float = 0.0
 
 
 def _mixed_pvalues(Y: np.ndarray, des: Design, numeric: bool, progress: Progress) -> dict[str, np.ndarray]:
@@ -275,7 +276,7 @@ def run_mixed(p: MixedParams, session: Session, progress: Progress) -> MixedResu
     table = table.iloc[np.argsort(rank.fillna(np.inf).to_numpy(), kind="stable")].reset_index(drop=True)
     feature = table["ppm"].iloc[0] if p.feature_ppm is None else p.feature_ppm
     progress(1.0)
-    return MixedResult(table, Xb, des, float(feature), p.test)
+    return MixedResult(table, Xb, des, float(feature), p.test, p.bin_width)
 
 
 P_FLOOR = 1e-16  # display only: below double precision, p-values are "zero"; keeps the plot's scale useful
@@ -304,11 +305,11 @@ def _pvalues(r: MixedResult, style=None, ppm: Optional[float] = None) -> go.Figu
     for c in [c for c in t.columns if c.endswith("_adj")]:
         fig.add_trace(go.Scatter(x=t["ppm"], y=-np.log10(t[c].clip(lower=P_FLOOR)), name=c[2:-4], mode="lines+markers", marker={"size": 4}))
     fig.add_hline(y=-np.log10(0.05), line_dash="dash", line_color="#888888")
-    fig.add_vline(x=float(r.data.columns[_column_at(r, ppm)]), line_dash="dot", line_color="#888888")
-    return fig.update_layout(
+    fig.update_layout(
         title="Click a feature to show its time profile", template="plotly_white",
         xaxis={"autorange": "reversed", "title": "δ¹H (ppm)"}, yaxis_title="-log10 adjusted p",
     )
+    return mark_feature(fig, float(r.data.columns[_column_at(r, ppm)]), r.bin_width)
 
 
 _common = {"section": SECTION, "requires": "import", "after": list(DATA_ORDER)}

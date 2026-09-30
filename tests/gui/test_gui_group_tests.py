@@ -86,3 +86,14 @@ def test_schema_and_http_run(run_all, csv_path):
         assert "event: done" in c.get(f"/jobs/{job}/events", headers=AUTH).text
     page = c.get("/stages/grouptests/table", headers=AUTH).json()
     assert page["columns"] == ["ppm", "statistic", "p_value", "p_adj"]
+
+
+def test_companion_spectrum_shades_the_tested_bin(run_all):
+    s = run_all(("grouptests", {"bin_width": 0.5}))
+    r = s.output("grouptests")
+    fig = BY_ID["grouptests"].figures["spectra"](r, None, 3.1)
+    band = [sh for sh in fig.layout.shapes if sh.type == "rect"]
+    assert len(band) == 1 and np.isclose(band[0].x0, 3.0) and np.isclose(band[0].x1, 3.5)
+    assert "0.5 ppm bins" in fig.layout.title.text
+    unbinned = run_all(("grouptests", {"bin_width": 0})).output("grouptests")
+    assert not [sh for sh in BY_ID["grouptests"].figures["spectra"](unbinned).layout.shapes if sh.type == "rect"]
