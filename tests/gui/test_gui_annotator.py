@@ -88,3 +88,29 @@ def test_settings_survive_a_project_roundtrip(run_all, tmp_path):
     load_project(t, STAGES, str(tmp_path / "p.metbit"))
     assert t.annotation_settings == {"font_size": 18, "line_styles": {"A": {"dash": "dash"}}}
     assert BY_ID["annotate"].figures["spectra"](t.output("annotate")).data[0].line.dash == "dash"
+
+
+def test_label_font_family_and_style(csv_path):
+    c = annotated(csv_path)
+    c.post("/annotations", json={"ppm": 5.0, "label": "lac"}, headers=AUTH)
+    body = c.put(
+        "/annotations/settings",
+        json={"font_family": "Times New Roman", "font_weight": "bold", "font_style": "italic"},
+        headers=AUTH,
+    ).json()
+    assert (body["font_family"], body["font_weight"], body["font_style"]) == ("Times New Roman", "bold", "italic")
+    note = notes(spectra(c), "lac")[0]
+    assert note["font"]["family"] == "Times New Roman"
+    assert (note["font"]["weight"], note["font"]["style"]) == ("bold", "italic")
+    assert note["captureevents"] is True  # a click on the label opens it for editing
+    bad = c.put("/annotations/settings", json={"font_weight": "heavy"}, headers=AUTH)
+    assert bad.status_code == 422
+
+
+def test_labels_can_be_edited(csv_path):
+    c = annotated(csv_path)
+    a = c.post("/annotations", json={"ppm": 5.0, "label": "lac"}, headers=AUTH).json()
+    edited = c.patch(f"/annotations/{a['id']}", json={"label": "lactate", "angle": -45}, headers=AUTH).json()
+    assert (edited["label"], edited["angle"]) == ("lactate", -45)
+    assert notes(spectra(c), "lactate")[0]["textangle"] == -45
+    assert c.patch(f"/annotations/{a['id']}", json={"label": "  "}, headers=AUTH).status_code == 422

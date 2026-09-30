@@ -68,6 +68,9 @@ export interface Annotation {
 
 export interface AnnotationSettings {
   font_size?: number;
+  font_family?: string;
+  font_weight?: string;
+  font_style?: string;
   line_styles: Record<string, { color?: string; dash?: string; width?: number }>;
   targets: { groups: string[]; samples: string[] };
 }

@@ -93,7 +93,10 @@ def _peak_height(fig: go.Figure, ppm: float) -> Optional[float]:
     return best
 
 
-def overlay(fig: go.Figure, annotations: list[dict], font_size: int) -> go.Figure:
+def overlay(fig: go.Figure, annotations: list[dict], font_size: int, settings: Optional[dict] = None) -> go.Figure:
+    settings = settings or {}
+    font = {"size": font_size}
+    font.update({k: settings[f"font_{k}"] for k in ("family", "weight", "style") if settings.get(f"font_{k}")})
     for a in annotations:
         y = _peak_height(fig, a["ppm"])
         fig.add_annotation(
@@ -108,7 +111,8 @@ def overlay(fig: go.Figure, annotations: list[dict], font_size: int) -> go.Figur
             ay=a.get("ay", -40),
             name=a["id"],  # lets the renderer map a dragged label back to its annotation
             textangle=a["angle"],
-            font={"size": font_size},
+            captureevents=True,  # a click on the label reaches the renderer (to edit it)
+            font=font,
         )
     return fig
 
@@ -150,8 +154,14 @@ class LineStyle(BaseModel):
     width: Optional[float] = Field(None, ge=0.1, le=10)
 
 
+FONT_FAMILIES = ("Arial", "Helvetica", "Times New Roman", "Georgia", "Courier New", "Verdana")
+
+
 class AnnotatorSettings(BaseModel):
     font_size: Optional[int] = Field(None, ge=6, le=48)
+    font_family: Optional[Literal[FONT_FAMILIES]] = None  # None: the app font
+    font_weight: Optional[Literal["normal", "bold"]] = None
+    font_style: Optional[Literal["normal", "italic"]] = None
     line_styles: dict[str, LineStyle] = {}
 
 

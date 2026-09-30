@@ -1,16 +1,18 @@
 import type { Annotation } from "../api";
 
 // labels are stored HTML-escaped (for Plotly); show the plain text
-const decode = (s: string) => new DOMParser().parseFromString(s, "text/html").documentElement.textContent ?? s;
+export const decode = (s: string) => new DOMParser().parseFromString(s, "text/html").documentElement.textContent ?? s;
 
 interface Props {
   items: Annotation[];
   onDelete: (id: string) => void;
   onImport: () => void;
   onExport: () => void;
+  onEdit: (id: string) => void;
+  editingId?: string | null;
 }
 
-export function AnnotationList({ items, onDelete, onImport, onExport }: Props) {
+export function AnnotationList({ items, onDelete, onImport, onExport, onEdit, editingId }: Props) {
   return (
     <div class="labels">
       {items.length === 0 ? (
@@ -18,8 +20,10 @@ export function AnnotationList({ items, onDelete, onImport, onExport }: Props) {
       ) : (
         <ul class="label-list">
           {items.map((a) => (
-            <li key={a.id}>
-              <span>{decode(a.label)}</span>
+            <li key={a.id} class={a.id === editingId ? "editing" : undefined}>
+              <button type="button" class="label-name" title="Edit text and angle" onClick={() => onEdit(a.id)}>
+                {decode(a.label)}
+              </button>
               <span class="ppm-tag">{a.ppm.toFixed(3)} ppm</span>
               <button type="button" class="link" onClick={() => onDelete(a.id)}>
                 Delete

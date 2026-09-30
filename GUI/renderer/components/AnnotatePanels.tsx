@@ -1,5 +1,7 @@
 import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
+import type { Annotation } from "../api";
+import { decode } from "./AnnotationList";
 
 export interface LineStyleValue {
   color?: string;
@@ -10,6 +12,9 @@ export interface LineStyleValue {
 interface Props {
   peak: number | null;
   onAdd: (label: string, angle: number) => void;
+  editing: Annotation | null; // a label picked on the plot or in the list
+  onSave: (id: string, label: string, angle: number) => void;
+  onCancelEdit: () => void;
   targets: { groups: string[]; samples: string[] };
   lineStyles: Record<string, LineStyleValue>;
   onApplyStyle: (target: string, style: LineStyleValue) => void;
@@ -18,51 +23,78 @@ interface Props {
   children: ComponentChildren; // the current labels list
 }
 
+type FormProps = Pick<Props, "peak" | "editing" | "onAdd" | "onSave" | "onCancelEdit">;
+
+function LabelForm({ peak, editing, onAdd, onSave, onCancelEdit }: FormProps) {
+  const [label, setLabel] = useState(editing ? decode(editing.label) : "");
+  const [angle, setAngle] = useState(editing ? editing.angle : 0);
+  const canAdd = (editing !== null || peak !== null) && label.trim() !== "";
+  return (
+    <form
+      class="dash-panel-body"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!canAdd) return;
+        if (editing) {
+          onSave(editing.id, label.trim(), angle);
+          return;
+        }
+        onAdd(label.trim(), angle);
+        setLabel("");
+      }}
+    >
+      <span class="hint">
+        {editing
+          ? `Label at ${editing.ppm.toFixed(3)} ppm`
+          : peak === null
+            ? "Click a peak on the spectra, or a label to edit it."
+            : `Current peak: ${peak.toFixed(3)} ppm`}
+      </span>
+      <label class="field-inline">
+        Label
+        <input id="annotate-label" placeholder="Enter peak label" value={label} onInput={(e) => setLabel(e.currentTarget.value)} />
+      </label>
+      <label class="field-inline">
+        Angle (°)
+        <input
+          type="number"
+          aria-label="Angle"
+          min={-180}
+          max={180}
+          step={5}
+          value={angle}
+          onInput={(e) => setAngle(Number(e.currentTarget.value) || 0)}
+        />
+      </label>
+      <div class="row">
+        <button class="btn primary" type="submit" disabled={!canAdd}>
+          {editing ? "Save" : "Add Label"}
+        </button>
+        {editing && (
+          <button class="link" type="button" onClick={onCancelEdit}>
+            Cancel
+          </button>
+        )}
+      </div>
+    </form>
+  );
+}
+
 const DASHES = ["solid", "dash", "dot", "dashdot"];
 
 // the collapsible panels of metbit's annotate_peak dashboard
-export function AnnotatePanels({ peak, onAdd, targets, lineStyles, onApplyStyle, onResetStyle, exports, children }: Props) {
-  const [label, setLabel] = useState("");
-  const [angle, setAngle] = useState(0);
+export function AnnotatePanels({ peak, onAdd, editing, onSave, onCancelEdit, targets, lineStyles, onApplyStyle, onResetStyle, exports, children }: Props) {
   const [target, setTarget] = useState("");
   const [color, setColor] = useState("#2563eb");
   const [dash, setDash] = useState("solid");
   const [width, setWidth] = useState(1.5);
   const chosen = target || targets.groups[0] || "";
-  const canAdd = peak !== null && label.trim() !== "";
   return (
     <div class="annotate-panels">
       <details class="dash-panel" open>
-        <summary>📍 Add annotation</summary>
-        <form
-          class="dash-panel-body"
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (!canAdd) return;
-            onAdd(label.trim(), angle);
-            setLabel("");
-          }}
-        >
-          <span class="hint">{peak === null ? "Click a peak on the spectra." : `Current peak: ${peak.toFixed(3)} ppm`}</span>
-          <label class="field-inline">
-            Label
-            <input id="annotate-label" placeholder="Enter peak label" value={label} onInput={(e) => setLabel(e.currentTarget.value)} />
-          </label>
-          <label class="field-inline">
-            Angle (°)
-            <input
-              type="number"
-              min={-180}
-              max={180}
-              step={5}
-              value={angle}
-              onInput={(e) => setAngle(Number(e.currentTarget.value) || 0)}
-            />
-          </label>
-          <button class="btn primary" type="submit" disabled={!canAdd}>
-            Add Label
-          </button>
-        </form>
+        <summary>{editing ? "✏️ Edit annotation" : "📍 Add annotation"}</summary>
+        {/* keyed: picking another label starts the form from that label's text and angle */}
+        <LabelForm key={editing?.id ?? "new"} peak={peak} editing={editing} onAdd={onAdd} onSave={onSave} onCancelEdit={onCancelEdit} />
       </details>
       <details class="dash-panel">
         <summary>🎨 Style line</summary>

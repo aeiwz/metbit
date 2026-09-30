@@ -1,17 +1,19 @@
 import { render } from "preact";
 import { expect, it, vi } from "vitest";
+import type { Annotation } from "../api";
 import { AnnotatePanels } from "./AnnotatePanels";
 
 const tick = () => new Promise((r) => setTimeout(r));
 
-function mount(peak: number | null, lineStyles = {}) {
+function mount(peak: number | null, lineStyles = {}, editing: Annotation | null = null) {
   const root = document.createElement("div");
-  const handlers = { onAdd: vi.fn(), onApplyStyle: vi.fn(), onResetStyle: vi.fn() };
+  const handlers = { onAdd: vi.fn(), onApplyStyle: vi.fn(), onResetStyle: vi.fn(), onSave: vi.fn(), onCancelEdit: vi.fn() };
   render(
     <AnnotatePanels
       peak={peak}
       targets={{ groups: ["A", "B"], samples: ["s0", "s1"] }}
       lineStyles={lineStyles}
+      editing={editing}
       exports={<button>Download HTML</button>}
       {...handlers}
     >
@@ -43,7 +45,7 @@ it("needs a clicked peak before adding", async () => {
   type(root.querySelector<HTMLInputElement>("#annotate-label")!, "lactate");
   await tick();
   expect(button(root, "Add Label").disabled).toBe(true);
-  expect(root.textContent).toContain("Click a peak on the spectra.");
+  expect(root.textContent).toContain("Click a peak on the spectra, or a label to edit it.");
 });
 
 it("styles a group or a sample line and can reset it", async () => {
@@ -61,4 +63,20 @@ it("styles a group or a sample line and can reset it", async () => {
   button(root, "Reset").click();
   expect(onResetStyle).toHaveBeenCalledWith("B");
   expect(root.textContent).toContain("Download HTML");
+});
+
+it("edits a picked label's text and angle", async () => {
+  const { root, onSave, onCancelEdit, onAdd } = mount(null, {}, { id: "a1", ppm: 2.5, label: "&lt;lac", angle: 30 });
+  expect(root.textContent).toContain("Edit annotation");
+  const label = root.querySelector<HTMLInputElement>("#annotate-label")!;
+  await tick();
+  expect(label.value).toBe("<lac"); // decoded for editing
+  expect(root.querySelector<HTMLInputElement>('[aria-label="Angle"]')!.value).toBe("30");
+  type(label, "lactate");
+  await tick();
+  root.querySelector("form")!.dispatchEvent(new Event("submit", { cancelable: true }));
+  expect(onSave).toHaveBeenCalledWith("a1", "lactate", 30);
+  expect(onAdd).not.toHaveBeenCalled();
+  button(root, "Cancel").click();
+  expect(onCancelEdit).toHaveBeenCalled();
 });

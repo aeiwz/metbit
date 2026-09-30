@@ -72,6 +72,31 @@ test("annotator dashboard: add, switch, restyle, drag and export", async () => {
   await win.getByRole("button", { name: "Single spectra" }).click();
   await expect.poll(() => labelOffset(win, "lactate")).not.toBe(-40);
 
+  // pick the label in the list to edit its text and angle
+  const note = (text: string) =>
+    win.evaluate((t) => ((document.querySelector(".plot") as any)?.layout?.annotations ?? []).find((a: any) => a.text === t), text);
+  await win.locator(".label-list .label-name", { hasText: "lactate" }).click();
+  await expect(win.locator(".dash-panel summary").first()).toContainText("Edit annotation");
+  await expect(win.locator("#annotate-label")).toHaveValue("lactate");
+  await win.fill("#annotate-label", "lactic acid");
+  await win.fill('[aria-label="Angle"]', "-30");
+  await win.getByRole("button", { name: "Save", exact: true }).click();
+  await expect.poll(async () => (await note("lactic acid"))?.textangle).toBe(-30);
+  await expect(win.locator(".dash-panel summary").first()).toContainText("Add annotation");
+
+  // click the label on the plot to edit it
+  const text = (await win.locator(".plot g.annotation-text-g", { hasText: "lactic acid" }).first().boundingBox())!;
+  await win.mouse.click(text.x + text.width / 2, text.y + text.height / 2);
+  await expect(win.locator("#annotate-label")).toHaveValue("lactic acid");
+  await win.fill("#annotate-label", "lactate");
+  await win.getByRole("button", { name: "Save", exact: true }).click();
+  await expect.poll(async () => (await note("lactate"))?.textangle).toBe(-30);
+
+  // label font and style
+  await win.selectOption('[aria-label="Label font"]', "Georgia");
+  await win.selectOption('[aria-label="Label style"]', "bold-italic");
+  await expect.poll(async () => (await note("lactate"))?.font).toMatchObject({ family: "Georgia", weight: "bold", style: "italic" });
+
   // self-contained HTML export
   await win.getByRole("button", { name: "Download HTML" }).click();
   const html = join(dir, "annotated-spectra.html");

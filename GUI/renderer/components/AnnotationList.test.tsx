@@ -5,7 +5,7 @@ import { AnnotationList } from "./AnnotationList";
 
 function mount(items: Annotation[]) {
   const root = document.createElement("div");
-  const handlers = { onDelete: vi.fn(), onImport: vi.fn(), onExport: vi.fn() };
+  const handlers = { onDelete: vi.fn(), onImport: vi.fn(), onExport: vi.fn(), onEdit: vi.fn() };
   render(<AnnotationList items={items} {...handlers} />, root);
   return { root, ...handlers };
 }
@@ -33,4 +33,10 @@ it("offers import and export", () => {
   button(root, "Export labels…").click();
   expect(onImport).toHaveBeenCalledOnce();
   expect(onExport).toHaveBeenCalledOnce();
+});
+
+it("picks a label to edit", () => {
+  const { root, onEdit } = mount([{ id: "a1", ppm: 1, label: "lac", angle: 0 }]);
+  button(root, "lac").click();
+  expect(onEdit).toHaveBeenCalledWith("a1");
 });

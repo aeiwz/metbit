@@ -171,7 +171,8 @@ def create_app(token: str, stages: list[Stage] = STAGES, autosave: Optional[str]
                 raise HTTPException(404, f"Unknown view '{view}'")
             fig = render(make, out, style, ppm=ppm, mode=mode)
         if view in ANNOTATED_VIEWS and session.annotations:
-            overlay(fig, session.annotations, session.annotation_settings.get("font_size") or style.font_size)
+            settings = session.annotation_settings
+            overlay(fig, session.annotations, settings.get("font_size") or style.font_size, settings)
         fig.update_layout(width=None, height=None, autosize=True)  # renderer sizes the plot
         return fig
 

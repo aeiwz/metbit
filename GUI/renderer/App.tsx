@@ -1,5 +1,5 @@
 import Plotly from "plotly.js-dist-min";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { Api, ApiError, type Annotation, type AnnotationSettings, type PlotStyle, type StageInfo, type StageStyle, type StyleOverride, type TablePage } from "./api";
 import { DataTable } from "./components/DataTable";
 import { FormatGuide } from "./components/FormatGuide";
@@ -48,6 +48,8 @@ export function App() {
   const [peak, setPeak] = useState<number | null>(null); // Annotate: the clicked peak
   const [annotateMode, setAnnotateMode] = useState<"single" | "median" | null>(null);
   const [annotSettings, setAnnotSettings] = useState<AnnotationSettings | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null); // Annotate: label open for editing
+  const loadedView = useRef(""); // the view the shown figures belong to
   const [injected, setInjected] = useState<{ values: Values; n: number } | null>(null);
   const [recent, setRecent] = useState<Anchor[]>([]); // STOCSY anchors run this session, newest first
   const [importValues, setImportValues] = useState<Values>({});
@@ -90,9 +92,14 @@ export function App() {
   }, [api]);
 
   useEffect(() => {
-    setFigure(null);
-    setCompanionFigure(null);
-    setPage(null);
+    // a new ppm on the same view keeps the shown figures (and their zoom) until the new ones arrive
+    const view = `${current}|${tab}|${hasResult}|${version}|${annotateMode}`;
+    if (loadedView.current !== view) {
+      setFigure(null);
+      setCompanionFigure(null);
+      setPage(null);
+    }
+    loadedView.current = view;
     if (!api || (!hasResult && !preViews.includes(tab))) return;
     let live = true; // drop responses for a view the user already left
     const at = focusPpm ?? undefined;
@@ -131,6 +138,7 @@ export function App() {
     setSideMode("params");
     setStageStyle(null); // the next stage's style loads fresh
     setPeak(null);
+    setEditingId(null);
     setInjected(null);
     setFocusPpm(null);
     setCurrent(id);
@@ -291,6 +299,17 @@ export function App() {
     saveAnnotSettings({ ...annotSettings, line_styles: rest });
   };
 
+  const saveLabel = (id: string, label: string, angle: number) =>
+    guarded(async () => {
+      if (!api) return;
+      await api.patchAnnotation(id, { label, angle });
+      setEditingId(null);
+      await annotationsChanged(api);
+    });
+
+  const setLabelFont = (f: { family?: string; weight?: string; style?: string }) =>
+    annotSettings && saveAnnotSettings({ ...annotSettings, font_family: f.family, font_weight: f.weight, font_style: f.style });
+
   const moveLabel = (id: string, ax: number, ay: number) =>
     guarded(async () => {
       if (!api) return;
@@ -398,7 +417,7 @@ export function App() {
       </div>
     );
   } else if (stage.status !== "running" && preViews.includes(tab)) {
-    body = figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} />;
+    body = figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} onLabelClick={setEditingId} />;
   } else if (!hasResult) {
     body =
       stage.status === "running" ? (
@@ -418,12 +437,14 @@ export function App() {
     };
     body = (
       <div class="split">
-        <div class="split-main">{figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} />}</div>
-        <div class="split-companion">{companionFigure && <PlotView figure={companionFigure} onPick={pickCompanion} />}</div>
+        <div class="split-main">{figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} onLabelClick={setEditingId} />}</div>
+        <div class="split-companion">
+          {companionFigure && <PlotView figure={companionFigure} onPick={pickCompanion} uirevision={`${current}:${companion}`} />}
+        </div>
       </div>
     );
   } else {
-    body = figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} />;
+    body = figure && <PlotView figure={figure} onPick={onPick} onLabelMove={moveLabel} onLabelClick={setEditingId} />;
   }
 
   return (
@@ -477,6 +498,8 @@ export function App() {
             onMode={setAnnotateMode}
             fontSize={annotSettings?.font_size ?? 14}
             onFontSize={setLabelSize}
+            font={{ family: annotSettings?.font_family, weight: annotSettings?.font_weight, style: annotSettings?.font_style }}
+            onFont={setLabelFont}
             peak={peak}
           />
         )}
@@ -518,6 +541,9 @@ export function App() {
           <AnnotatePanels
             peak={peak}
             onAdd={addAnnotation}
+            editing={annotations.find((a) => a.id === editingId) ?? null}
+            onSave={saveLabel}
+            onCancelEdit={() => setEditingId(null)}
             targets={annotSettings.targets}
             lineStyles={annotSettings.line_styles ?? {}}
             onApplyStyle={applyLineStyle}
@@ -533,7 +559,14 @@ export function App() {
               </>
             }
           >
-            <AnnotationList items={annotations} onDelete={deleteAnnotation} onImport={importAnnotations} onExport={exportAnnotations} />
+            <AnnotationList
+              items={annotations}
+              onDelete={deleteAnnotation}
+              onImport={importAnnotations}
+              onExport={exportAnnotations}
+              onEdit={setEditingId}
+              editingId={editingId}
+            />
           </AnnotatePanels>
         )}
         {stageStyle && (

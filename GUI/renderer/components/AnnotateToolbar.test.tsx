@@ -6,8 +6,20 @@ function mount(peak: number | null = 3.0251) {
   const root = document.createElement("div");
   const onMode = vi.fn();
   const onFontSize = vi.fn();
-  render(<AnnotateToolbar mode="single" onMode={onMode} fontSize={14} onFontSize={onFontSize} peak={peak} />, root);
-  return { root, onMode, onFontSize };
+  const onFont = vi.fn();
+  render(
+    <AnnotateToolbar
+      mode="single"
+      onMode={onMode}
+      fontSize={14}
+      onFontSize={onFontSize}
+      font={{ family: "Georgia", weight: "bold" }}
+      onFont={onFont}
+      peak={peak}
+    />,
+    root,
+  );
+  return { root, onMode, onFontSize, onFont };
 }
 
 it("switches mode and shows the current peak", () => {
@@ -26,4 +38,18 @@ it("reports the label font size when the slider is released", () => {
   slider.value = "22";
   slider.dispatchEvent(new Event("change"));
   expect(onFontSize).toHaveBeenCalledWith(22);
+});
+
+it("sets the label font family and style", () => {
+  const { root, onFont } = mount();
+  const family = root.querySelector<HTMLSelectElement>('[aria-label="Label font"]')!;
+  const style = root.querySelector<HTMLSelectElement>('[aria-label="Label style"]')!;
+  expect(family.value).toBe("Georgia");
+  expect(style.value).toBe("bold");
+  style.value = "bold-italic";
+  style.dispatchEvent(new Event("change"));
+  expect(onFont).toHaveBeenLastCalledWith({ family: "Georgia", weight: "bold", style: "italic" });
+  family.value = "";
+  family.dispatchEvent(new Event("change"));
+  expect(onFont).toHaveBeenLastCalledWith({ family: undefined, weight: "bold" });
 });
