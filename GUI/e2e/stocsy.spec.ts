@@ -20,6 +20,7 @@ test("STOCSY: click the spectra to set the anchor, run, reuse and clear", async 
   const env = { ...process.env, METBIT_USER_DATA: join(dir, "user") } as Record<string, string>;
   const app = await electron.launch({ args: ["."], env });
   const win = await app.firstWindow();
+  await win.getByRole("button", { name: "New analysis" }).click(); // past the landing page
   const run = () => win.getByRole("button", { name: "Run", exact: true }).click();
   const plot = () => expect(win.locator(".plot .main-svg").first()).toBeVisible({ timeout: 30_000 });
 

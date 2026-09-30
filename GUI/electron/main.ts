@@ -1,7 +1,8 @@
-import { app, BrowserWindow, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
 import { writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { dataUrlToBuffer } from "./files";
+import { ProjectRegistry } from "./projects";
 import { startSidecar, type Backend, type SidecarCommand } from "./sidecar";
 
 // test seams: Playwright cannot drive native dialogs, and tests keep their own userData
@@ -67,6 +68,24 @@ ipcMain.handle("file:saveImage", async (_e, defaultName: string, dataUrl: string
   const path = await chooseSavePath(defaultName, [{ name: ext === "csv" ? "CSV" : "Image", extensions: [ext] }]);
   if (path) await writeFile(path, dataUrlToBuffer(dataUrl));
   return path;
+});
+
+// saved / opened projects; file actions only ever touch paths already in this list
+const projects = new ProjectRegistry(join(app.getPath("userData"), "projects.json"));
+const knownPath = async (path: string) => {
+  if (!(await projects.list()).some((p) => p.path === path)) throw new Error("That file is not in the project list");
+  return path;
+};
+ipcMain.handle("app:version", () => app.getVersion());
+ipcMain.handle("projects:list", () => projects.list());
+ipcMain.handle("projects:add", (_e, path: string) => projects.add(path));
+ipcMain.handle("projects:remove", (_e, path: string) => projects.remove(path));
+ipcMain.handle("projects:rename", (_e, path: string, name: string) => projects.rename(path, name));
+ipcMain.handle("projects:duplicate", (_e, path: string) => projects.duplicate(path));
+ipcMain.handle("projects:reveal", async (_e, path: string) => shell.showItemInFolder(await knownPath(path)));
+ipcMain.handle("projects:trash", async (_e, path: string) => {
+  await shell.trashItem(await knownPath(path)); // the Trash / Recycle Bin, so it can be restored
+  await projects.remove(path);
 });
 
 async function boot() {

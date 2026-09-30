@@ -8,6 +8,7 @@ test("format guide follows Source and its example CSV imports", async () => {
   const env = { ...process.env, METBIT_E2E_DIR: dir, METBIT_USER_DATA: join(dir, "user") } as Record<string, string>;
   const app = await electron.launch({ args: ["."], env });
   const win = await app.firstWindow();
+  await win.getByRole("button", { name: "New analysis" }).click(); // past the landing page
   const guide = win.locator(".guide");
 
   await expect(guide).toContainText("Processed data table");

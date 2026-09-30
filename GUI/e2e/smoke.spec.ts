@@ -23,6 +23,7 @@ const plot = (win: Page) => expect(win.locator(".plot .main-svg").first()).toBeV
 async function launchWithImport(csv: string) {
   const app = await electron.launch({ args: ["."] });
   const win = await app.firstWindow();
+  await win.getByRole("button", { name: "New analysis" }).click(); // past the landing page
   await win.fill("#f-path", csv);
   await run(win);
   await expect(win.locator("table.data")).toContainText("s11");

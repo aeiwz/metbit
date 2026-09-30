@@ -36,6 +36,7 @@ test("time series: trajectory, time profile, ASCA and mixed model", async () => 
   const dir = mkdtempSync(join(tmpdir(), "metbit-e2e-"));
   const app = await electron.launch({ args: ["."], env: { ...process.env, METBIT_USER_DATA: join(dir, "user") } as Record<string, string> });
   const win = await app.firstWindow();
+  await win.getByRole("button", { name: "New analysis" }).click(); // past the landing page
   const run = () => win.getByRole("button", { name: "Run", exact: true }).click();
   const open = (name: string) => win.locator(".rail button", { hasText: name }).first().click();
 

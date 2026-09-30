@@ -26,6 +26,7 @@ async function launch(env: Record<string, string>) {
 }
 
 async function importAndPca(win: Page, csv: string) {
+  await win.getByRole("button", { name: "New analysis" }).click(); // past the landing page
   await win.fill("#f-path", csv);
   await run(win);
   await expect(win.locator("table.data")).toContainText("s11");

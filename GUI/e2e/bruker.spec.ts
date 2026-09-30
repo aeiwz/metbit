@@ -15,6 +15,7 @@ test("Bruker folder to processed spectra to PCA", async () => {
 
   const app = await electron.launch({ args: ["."] });
   const win = await app.firstWindow();
+  await win.getByRole("button", { name: "New analysis" }).click(); // past the landing page
   const run = () => win.getByRole("button", { name: "Run", exact: true }).click();
 
   await win.selectOption("#f-source", "bruker");

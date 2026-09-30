@@ -23,6 +23,7 @@ test("click the spectrum under the boxplot to test another ppm", async () => {
   const env = { ...process.env, METBIT_USER_DATA: join(dir, "user") } as Record<string, string>;
   const app = await electron.launch({ args: ["."], env });
   const win = await app.firstWindow();
+  await win.getByRole("button", { name: "New analysis" }).click(); // past the landing page
   const run = () => win.getByRole("button", { name: "Run", exact: true }).click();
 
   await win.fill("#f-path", makeCsv(dir));

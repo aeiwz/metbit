@@ -14,6 +14,10 @@ import { AnnotateToolbar } from "./components/AnnotateToolbar";
 import { Rail } from "./components/Rail";
 import { StocsyTools, type Anchor } from "./components/StocsyTools";
 import { StyleForm, applyPatch } from "./components/StyleForm";
+import { AboutPage } from "./components/AboutPage";
+import { HomePage } from "./components/HomePage";
+import { PageShell, type Page } from "./components/PageNav";
+import { ProjectsPage } from "./components/ProjectsPage";
 
 interface Failure {
   message: string;
@@ -33,6 +37,9 @@ export function App() {
   const [tab, setTab] = useState("table");
   const [version, setVersion] = useState(0); // bumps after every run to refetch views
   const [formKey, setFormKey] = useState(0); // bumps when a project replaces the params
+  const [screen, setScreen] = useState<Page | null>("home"); // landing / projects / about; null = the workspace
+  const [projectList, setProjectList] = useState<ProjectEntry[]>([]);
+  const [appVersion, setAppVersion] = useState("");
   const [figure, setFigure] = useState<any>(null);
   const [companionFigure, setCompanionFigure] = useState<any>(null);
   const [focusPpm, setFocusPpm] = useState<number | null>(null); // set by clicking a companion view
@@ -228,8 +235,24 @@ export function App() {
       const path = await window.metbit.saveDialog("analysis.metbit", PROJECT);
       if (!path || !api) return;
       await api.saveProject(path);
+      await window.metbit.projects.add(path);
       flash(`Saved ${basename(path)}`);
     });
+
+  const loadProjects = () => window.metbit.projects.list().then(setProjectList);
+
+  useEffect(() => {
+    window.metbit.appVersion().then(setAppVersion);
+  }, []);
+
+  useEffect(() => {
+    if (screen === "home" || screen === "projects") loadProjects();
+  }, [screen]);
+
+  const toWorkspace = (id?: string) => {
+    setScreen(null);
+    if (id) select(id);
+  };
 
   const saveExample = () =>
     guarded(async () => {
@@ -356,7 +379,13 @@ export function App() {
   const openProject = () =>
     guarded(async () => {
       const path = await window.metbit.openFile(PROJECT);
-      if (!path || !api) return;
+      if (path) await openProjectAt(path);
+    });
+
+  const openProjectAt = (path: string) =>
+    guarded(async () => {
+      if (!api) return;
+      setScreen(null); // progress and any error show in the workspace
       setBusy("Opening project…");
       try {
         await api.loadProject(path);
@@ -364,6 +393,7 @@ export function App() {
       } finally {
         setBusy(null);
       }
+      await window.metbit.projects.add(path);
       select("import");
       flash(`Opened ${basename(path)}`);
     });
@@ -391,6 +421,28 @@ export function App() {
       <div class="placeholder">
         <MoleculeLoader caption="Starting metbit…" />
       </div>
+    );
+
+  if (screen)
+    return (
+      <PageShell page={screen} onNavigate={setScreen} onWorkspace={() => toWorkspace()}>
+        {screen === "home" && (
+          <HomePage
+            version={appVersion}
+            recent={projectList}
+            hasSession={stages.some((s) => s.status === "done")}
+            onNew={() => toWorkspace(current === "import" ? undefined : "import")} // re-selecting would reset the tab
+            onContinue={() => toWorkspace()}
+            onOpenFile={openProject}
+            onOpenPath={openProjectAt}
+            onNavigate={setScreen}
+          />
+        )}
+        {screen === "projects" && (
+          <ProjectsPage projects={projectList} api={window.metbit.projects} onOpen={openProjectAt} onOpenFile={openProject} onChanged={loadProjects} />
+        )}
+        {screen === "about" && <AboutPage version={appVersion} />}
+      </PageShell>
     );
 
   let body;
@@ -450,7 +502,16 @@ export function App() {
   return (
     <div class="layout">
       <JobBar pct={pct} />
-      <Rail stages={stages} current={current} onSelect={select} onOpen={openProject} onSave={saveProject} onStyle={openStyle} />
+      <Rail
+        stages={stages}
+        current={current}
+        onSelect={select}
+        onOpen={openProject}
+        onSave={saveProject}
+        onStyle={openStyle}
+        onHome={() => setScreen("home")}
+        onAbout={() => setScreen("about")}
+      />
       <main class="center">
         <div class="tabs" role="tablist">
           {tabs.length > 0 &&
