@@ -1,5 +1,6 @@
 import Plotly from "plotly.js-dist-min";
-import { useEffect, useRef } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
+import { onThemeChange } from "../themePref";
 
 interface Figure {
   data: unknown[];
@@ -80,6 +81,10 @@ export function PlotView({
     return () => Plotly.purge(node);
   }, []);
 
+  // the plot's colours come from the CSS tokens: redraw when the theme changes
+  const [themeTick, setThemeTick] = useState(0);
+  useEffect(() => onThemeChange(() => setThemeTick((t) => t + 1)), []);
+
   useEffect(() => {
     const node: any = el.current!;
     const layout = themed(figure.layout);
@@ -123,7 +128,7 @@ export function PlotView({
         }
       });
     });
-  }, [figure, pickable, draggable, uirevision]);
+  }, [figure, pickable, draggable, uirevision, themeTick]);
 
   return <div ref={el} class="plot" />;
 }

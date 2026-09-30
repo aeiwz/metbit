@@ -13,20 +13,34 @@
   --s1: 8px;
   --s2: 16px;
   --s3: 24px;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
+/* dark: chosen in the theme switch, or the OS is dark and Light was not chosen */
+:root[data-theme="dark"] {
+  --bg: #060b14; /* identity near-black ink */
+  --surface: #0f1a2b;
+  --border: #1c2a40;
+  --text: #edf4ff; /* identity cool white */
+  --muted: #8fa3bf;
+  --accent: #3b82f6; /* 5.4:1 on the ink */
+  --accent-fill: #2563eb;
+  --brand: #3b82f6;
+  --danger: #f87171;
+  color-scheme: dark;
+}
 @media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #060b14; /* identity near-black ink */
+  :root:not([data-theme="light"]) {
+    --bg: #060b14;
     --surface: #0f1a2b;
     --border: #1c2a40;
-    --text: #edf4ff; /* identity cool white */
+    --text: #edf4ff;
     --muted: #8fa3bf;
-    --accent: #3b82f6; /* 5.4:1 on the ink */
+    --accent: #3b82f6;
     --accent-fill: #2563eb;
     --brand: #3b82f6;
     --danger: #f87171;
+    color-scheme: dark;
   }
 }
 
@@ -376,3 +390,12 @@ button.rail-brand:focus-visible { outline: 2px solid var(--accent); border-radiu
 .about-lockup .lockup { gap: 14px; }
 .about-lockup .lockup-name { font-size: 30px; }
 .about-lockup .lockup-gui { font-size: 13px; margin-bottom: 6px; }
+
+/* colour theme switch: system / light / dark */
+.theme-toggle { display: inline-flex; border: 1px solid var(--border); border-radius: 999px; padding: 2px; gap: 2px; }
+.theme-toggle button { all: unset; cursor: pointer; display: grid; place-items: center; width: 26px; height: 22px; border-radius: 999px; color: var(--muted); }
+.theme-toggle button:hover { color: var(--text); }
+.theme-toggle button[aria-pressed="true"] { color: var(--text); background: var(--surface); }
+.theme-toggle button:focus-visible { outline: 2px solid var(--accent); }
+.theme-toggle svg { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
+.rail-footer .theme-toggle { margin: 4px var(--s1) 0; align-self: flex-start; }

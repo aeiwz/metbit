@@ -1,5 +1,6 @@
 import type { ComponentChildren } from "preact";
 import { Lockup } from "./Brand";
+import { ThemeToggle } from "./ThemeToggle";
 
 export type Page = "home" | "projects" | "about";
 
@@ -41,6 +42,7 @@ export function PageShell({ page, onNavigate, onWorkspace, children }: Props) {
             </button>
           ))}
         </nav>
+        <ThemeToggle />
         <button type="button" class="btn" onClick={onWorkspace}>
           Workspace →
         </button>

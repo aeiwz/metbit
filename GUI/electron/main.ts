@@ -1,4 +1,4 @@
-import { app, BrowserWindow, dialog, ipcMain, shell } from "electron";
+import { app, BrowserWindow, dialog, ipcMain, nativeTheme, shell } from "electron";
 import { writeFile } from "node:fs/promises";
 import { extname, join } from "node:path";
 import { dataUrlToBuffer } from "./files";
@@ -77,6 +77,9 @@ const knownPath = async (path: string) => {
   return path;
 };
 ipcMain.handle("app:version", () => app.getVersion());
+ipcMain.handle("theme:set", (_e, pref: string) => {
+  if (pref === "system" || pref === "light" || pref === "dark") nativeTheme.themeSource = pref; // menus, scrollbars, frame
+});
 ipcMain.handle("projects:list", () => projects.list());
 ipcMain.handle("projects:add", (_e, path: string) => projects.add(path));
 ipcMain.handle("projects:remove", (_e, path: string) => projects.remove(path));

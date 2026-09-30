@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld("metbit", {
     ipcRenderer.invoke("dialog:save", defaultName, filters),
   saveImage: (defaultName: string, dataUrl: string) => ipcRenderer.invoke("file:saveImage", defaultName, dataUrl),
   appVersion: () => ipcRenderer.invoke("app:version"),
+  setTheme: (pref: string) => ipcRenderer.invoke("theme:set", pref),
   projects: {
     list: () => ipcRenderer.invoke("projects:list"),
     add: (path: string) => ipcRenderer.invoke("projects:add", path),

@@ -37,6 +37,7 @@ interface Window {
     saveDialog(defaultName: string, filters?: { name: string; extensions: string[] }[]): Promise<string | null>;
     saveImage(defaultName: string, dataUrl: string): Promise<string | null>;
     appVersion(): Promise<string>;
+    setTheme?(pref: "system" | "light" | "dark"): Promise<void>;
     projects: ProjectsApi;
   };
 }

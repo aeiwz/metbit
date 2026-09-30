@@ -1,6 +1,7 @@
 import { Fragment } from "preact";
 import type { StageInfo } from "../api";
 import { Lockup } from "./Brand";
+import { ThemeToggle } from "./ThemeToggle";
 
 interface Props {
   stages: StageInfo[];
@@ -53,6 +54,7 @@ export function Rail({ stages, current, onSelect, onOpen, onSave, onStyle, onHom
           {onOpen && <button onClick={onOpen}>Open project…</button>}
           {onSave && <button onClick={onSave}>Save project…</button>}
           {onAbout && <button onClick={onAbout}>About & License</button>}
+          <ThemeToggle />
         </div>
       )}
     </nav>
