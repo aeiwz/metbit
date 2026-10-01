@@ -122,6 +122,7 @@ class opls_da:
         random_state: int = 42,
         auto_ncomp: bool = True,
         dtype: Optional[type] = None,
+        cv_splits: Optional[List[Any]] = None,
     ) -> None:
 
         '''
@@ -212,6 +213,7 @@ class opls_da:
         self.n_components = n_components
         self.scaling_method = scaling_method
         self.kfold = kfold
+        self.cv_splits = cv_splits  # (train, test) index pairs replacing the k stratified folds
         self.estimator = estimator
         self.random_state = random_state
         self.auto_ncomp = auto_ncomp
@@ -268,7 +270,7 @@ class opls_da:
         pipeline = Pipeline([
                                 ('scale', Scaler(scale_power=Scale_power)),
                                 ('oplsda', PLSRegression(n_components=n_components)),
-                                ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scaling_method))
+                                ('opls', CrossValidation(kfold=kfold, estimator=estimator, scaler=scaling_method, splits=self.cv_splits))
                             ])
 
         self.pipeline = pipeline

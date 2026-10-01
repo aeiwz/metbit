@@ -46,7 +46,7 @@ class CrossValidation:
 
     """
 
-    def __init__(self, estimator="opls", kfold=10, scaler="pareto", max_components=15) -> None:
+    def __init__(self, estimator="opls", kfold=10, scaler="pareto", max_components=15, splits=None) -> None:
         
         from .pls import PLS
         from .opls import OPLS
@@ -58,6 +58,10 @@ class CrossValidation:
 
         # number of folds
         self.kfold = kfold
+        # optional (train, test) index pairs used instead of the stratified
+        # blocks below: grouped, shuffled or leave-one-out folds. Every sample
+        # must be in exactly one test set.
+        self.splits = None if splits is None else [(np.asarray(a), np.asarray(b)) for a, b in splits]
         # most components cross-validated. Q2 plateaus within a few; past roughly
         # 20-30, test-set correction compounds rounding error and predictions blow
         # up (|Q2| > 1), so the misclassification minimum would be picked from noise.
@@ -505,6 +509,9 @@ class CrossValidation:
         iterator
 
         """
+        if self.splits is not None:
+            yield from self.splits
+            return
         n, k = y.size, self.kfold
         groups, counts = np.unique(y, return_counts=True)
 
