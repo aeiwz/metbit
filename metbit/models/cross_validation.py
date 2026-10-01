@@ -135,7 +135,10 @@ class CrossValidation:
             ssx_tot = (xte_scale ** 2).sum()
 
             # fit the model
-            npc = min(min(xtr.shape), self.max_components)
+            # centring leaves n - 1 directions in the training block, and a fit with
+            # n - 1 or more components divides by near zero: its CV predictions blow
+            # up (Q2 around -1e9 or worse) and can still be chosen as optimal
+            npc = max(1, min(xtr.shape[0] - 2, xtr.shape[1], self.max_components))
             self.estimator.fit(xtr_scale.copy(), ytr_scale, n_comp=npc)
             if npc < npc0:
                 npc0 = npc
