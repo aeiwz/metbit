@@ -114,3 +114,19 @@ class TestResetOptimalComponent:
         cv.fit(X, y)
         with pytest.raises(ValueError):
             cv.reset_optimal_num_component(1.5)
+
+
+def test_scores_only_gives_the_same_q2_r2y_and_components():
+    """A permutation test's fast path: what it skips must not change what it reports."""
+    import numpy as np
+    from metbit.models.cross_validation import CrossValidation
+    rng = np.random.default_rng(0)
+    X = rng.normal(size=(40, 300))
+    y = np.array(["a"] * 20 + ["b"] * 20)
+    X[y == "b", :10] += 1.5
+    for est in ("opls", "pls"):
+        for labels in (y, rng.permutation(y)):
+            full, fast = CrossValidation(kfold=5, estimator=est), CrossValidation(kfold=5, estimator=est)
+            full.fit(X, labels)
+            fast.fit(X, labels, scores_only=True)
+            assert (fast.q2, fast.R2y, fast.optimal_component_num) == (full.q2, full.R2y, full.optimal_component_num)
