@@ -36,7 +36,18 @@ int main(void) { return omp_get_max_threads(); }
 
 def _detect_openmp():
     """Return (compile_args, link_args) for OpenMP, or ([], []) if unavailable."""
+    if os.environ.get("METBIT_OPENMP", "").lower() in {"0", "false", "no"}:
+        print("setup.py: METBIT_OPENMP=0 - building single-threaded native backend.")
+        return [], []
+    if sys.platform == "win32":
+        # MSVC: /openmp is OpenMP 2.0 with vcomp140.dll, part of the Visual C++
+        # redistributable (every OpenMP pragma in _native_backend.c is 2.0)
+        print("setup.py: OpenMP via MSVC /openmp")
+        return ["/openmp"], []
     cc = os.environ.get("CC", "cc")
+    # include and library paths for a libomp outside the compiler's defaults
+    # (Homebrew's, or a prebuilt runtime): the same flags the build will use
+    env_flags = " ".join(os.environ.get(k, "") for k in ("CPPFLAGS", "CFLAGS", "LDFLAGS")).split()
 
     # Platform-specific flag candidates
     if sys.platform == "darwin":
@@ -56,7 +67,7 @@ def _detect_openmp():
             exe = join(tmp, "omp_test")
             with open(src, "w") as f:
                 f.write(_OPENMP_TEST_SRC)
-            cmd = [cc] + cflags + [src, "-o", exe] + lflags
+            cmd = [cc] + cflags + env_flags + [src, "-o", exe] + lflags
             try:
                 r = subprocess.run(
                     cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL

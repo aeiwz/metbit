@@ -224,7 +224,7 @@ pearson_columns_par(PyObject *self, PyObject *args)
         double *lcol_sq = (double *)calloc((size_t)columns, sizeof(double));
         if (!lcov || !lcol_sq) {
             free(lcov); free(lcol_sq);
-            #pragma omp atomic write
+            #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom = 1;
         } else {
             #pragma omp for schedule(static)
@@ -362,7 +362,7 @@ pearson_columns_f32(PyObject *self, PyObject *args)
         double *ls  = (double *)calloc((size_t)columns, sizeof(double));
         if (!lc || !ls) {
             free(lc); free(ls);
-            #pragma omp atomic write
+            #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom_f32 = 1;
         } else {
             #pragma omp for schedule(static)
@@ -482,7 +482,7 @@ column_variances(PyObject *self, PyObject *args)
     {
         double *lvar = (double *)calloc((size_t)columns, sizeof(double));
         if (!lvar) {
-            #pragma omp atomic write
+            #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom_var = 1;
         } else {
             #pragma omp for schedule(static)
@@ -592,7 +592,7 @@ column_variances_f32(PyObject *self, PyObject *args)
     {
         double *lv = (double *)calloc((size_t)columns, sizeof(double));
         if (!lv) {
-            #pragma omp atomic write
+            #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom_vf = 1;
         } else {
             #pragma omp for schedule(static)

@@ -664,14 +664,10 @@ def scale_transform(
         X_c = X_c.reshape(1, -1)
     n, p   = X_c.shape
 
-    if _NATIVE_OK and hasattr(_native_backend, "scale_transform"):  # pragma: no cover
-        raw = _native_backend.scale_transform(
-            memoryview(X_c), memoryview(mean_c), memoryview(s_c), n, p
-        )
-        result = np.frombuffer(raw, dtype=np.float64).reshape(n, p).copy()
-        return result.squeeze(0) if squeeze else result
-
-    # NumPy fallback – avoids large temporary via in-place ops on a copy
+    # NumPy, in place on one new array: the same (X - mean) * (1 / s) as the C
+    # kernel, bit for bit, without its bytes result and the copy that made it
+    # writable (two full-size allocations instead of one). The work is
+    # memory-bound, so the C loop was no faster.
     out = X_c - mean_c
     inv_s = np.where(s_c != 0.0, 1.0 / s_c, 1.0)
     out *= inv_s
