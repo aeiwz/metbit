@@ -227,8 +227,9 @@ pearson_columns_par(PyObject *self, PyObject *args)
             #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom = 1;
         } else {
+            Py_ssize_t r;  /* declared before the loop: MSVC's OpenMP 2.0 (C3015) */
             #pragma omp for schedule(static)
-            for (Py_ssize_t r = 0; r < rows; ++r) {
+            for (r = 0; r < rows; ++r) {
                 const double *row = data + r * columns;
                 const double ac = row[anchor_index] - means[anchor_index];
                 anchor_sq += ac * ac;
@@ -365,8 +366,9 @@ pearson_columns_f32(PyObject *self, PyObject *args)
             #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom_f32 = 1;
         } else {
+            Py_ssize_t r;  /* declared before the loop: MSVC's OpenMP 2.0 (C3015) */
             #pragma omp for schedule(static)
-            for (Py_ssize_t r = 0; r < rows; ++r) {
+            for (r = 0; r < rows; ++r) {
                 const float *row = data + r * columns;
                 const double ac = (double)row[anchor_index] - means[anchor_index];
                 anchor_sq += ac * ac;
@@ -485,8 +487,9 @@ column_variances(PyObject *self, PyObject *args)
             #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom_var = 1;
         } else {
+            Py_ssize_t r;  /* declared before the loop: MSVC's OpenMP 2.0 (C3015) */
             #pragma omp for schedule(static)
-            for (Py_ssize_t r = 0; r < rows; ++r) {
+            for (r = 0; r < rows; ++r) {
                 const double *row = data + r * columns;
                 for (Py_ssize_t c = 0; c < columns; ++c) {
                     const double d = row[c] - means[c];
@@ -595,8 +598,9 @@ column_variances_f32(PyObject *self, PyObject *args)
             #pragma omp critical(metbit_oom)  /* OpenMP 2.0 (MSVC /openmp): no atomic write */
             oom_vf = 1;
         } else {
+            Py_ssize_t r;  /* declared before the loop: MSVC's OpenMP 2.0 (C3015) */
             #pragma omp for schedule(static)
-            for (Py_ssize_t r = 0; r < rows; ++r) {
+            for (r = 0; r < rows; ++r) {
                 const float *row = data + r * columns;
                 for (Py_ssize_t c = 0; c < columns; ++c) {
                     const double d = (double)row[c] - means[c];
@@ -739,10 +743,11 @@ vip_scores(PyObject *self, PyObject *args)
         total_s += S[h];
 
     /* Step 3: VIP per feature - trivially parallel, no shared writes */
+    Py_ssize_t i;  /* declared before the loop: MSVC's OpenMP 2.0 (C3015) */
 #ifdef _OPENMP
     #pragma omp parallel for schedule(static)
 #endif
-    for (Py_ssize_t i = 0; i < n_feat; ++i) {
+    for (i = 0; i < n_feat; ++i) {
         double acc = 0.0;
         const double *w_row = w_data + i * n_comp;
         for (Py_ssize_t h = 0; h < n_comp; ++h) {
