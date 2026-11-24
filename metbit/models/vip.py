@@ -98,3 +98,22 @@ if __name__ == '__main__':  # pragma: no cover
     model.fit(X, y)
     vip = vip_scores(model)
     print(vip.vip())
+
+
+def vip_regions(ppm, vip, threshold: float = 1.0, merge_ppm: float = 0.02) -> list:
+    """Regions at or above `threshold`, strongest first, as (high ppm, low ppm, index of top VIP, strength).
+
+    Runs closer than `merge_ppm` are one region, so a peak is not split. Strength is the VIP area
+    over the threshold: about half of all features pass VIP 1 by definition, and a lone noise
+    point has little area where a real peak has a lot.
+    """
+    ppm, vip = np.asarray(ppm, dtype=float), np.asarray(vip, dtype=float)
+    idx = np.flatnonzero(vip >= threshold)
+    if not len(idx):
+        return []
+    step = float(np.median(np.abs(np.diff(ppm)))) if len(ppm) > 1 else 1.0
+    out = []
+    for r in np.split(idx, np.flatnonzero(np.diff(idx) > max(1, round(merge_ppm / step))) + 1):
+        out.append((float(max(ppm[r[0]], ppm[r[-1]])), float(min(ppm[r[0]], ppm[r[-1]])),
+                    int(r[np.argmax(vip[r])]), float((vip[r] - threshold).sum())))
+    return sorted(out, key=lambda x: -x[3])

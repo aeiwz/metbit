@@ -159,7 +159,6 @@ setup(
         "lingress",
         "tqdm",
         "dash",
-        "pingouin",
         "nmrglue",
         "pybaselines",
     ],
