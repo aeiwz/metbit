@@ -41,6 +41,16 @@ from metbit.stats.multitest import VolcanoPlot, ANOVAStats, KruskalStats
 # Extended multivariate analysis
 from metbit.analysis.multivariate import lda, plsr, ica, hca
 
+# Features shared with the metbit desktop app
+from metbit.nmr.regions import parse_windows, bin_spectra, select_regions
+from metbit.nmr.integrate import pick_peaks, integrate_regions, calibrate_integrals, integral_table
+from metbit.preprocessing.qc import normalize_spectra, qc_rsd, qc_drift_correct, detect_outliers
+from metbit.stats.features import two_group_test, linear_model_test, correlation_test, normality_test
+from metbit.stats.biomarker import feature_auc, biomarker_panel
+from metbit.analysis.longitudinal import asca, mixed_model_test, friedman_test
+from metbit.models.vip import vip_regions
+from metbit.validation.q2 import make_folds, repeated_q2, q2_permutation_test, nested_opls_cv
+
 # Validation
 from metbit.validation.metrics import ModelValidator
 from metbit.validation.splitter import TrainTestSplit, CrossValidator, available_cv_strategies

@@ -62,3 +62,8 @@ manuscript/incob2026/~$cob2026_manuscript.docx
 
 # Benchmark raw datasets (large; fetch per each dataset's PROVENANCE/README)
 /Benchmark/data/
+
+# GUI
+/GUI/node_modules/
+/GUI/dist-electron/
+/GUI/test-results/

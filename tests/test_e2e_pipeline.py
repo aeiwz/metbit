@@ -173,7 +173,7 @@ class TestSTOCSYEndToEnd:
     def test_figure_has_two_traces(self, spectra_df):
         from metbit import STOCSY
         ppm = [float(c) for c in spectra_df.columns]
-        fig = STOCSY(spectra_df, anchor_ppm_value=ppm[50])
+        fig = STOCSY(spectra_df, anchor_ppm_value=ppm[50], plot="markers")
         assert len(fig.data) == 2
 
     def test_xaxis_reversed(self, spectra_df):
@@ -210,7 +210,7 @@ class TestChunkedSTOCSYEndToEnd:
         from metbit import ChunkedSTOCSY
         ppm = [float(c) for c in spectra_df.columns]
         stocsy = ChunkedSTOCSY()
-        fig = stocsy.plot(spectra_df, anchor_ppm_value=ppm[50])
+        fig = stocsy.plot(spectra_df, anchor_ppm_value=ppm[50], plot="markers")
         assert isinstance(fig, go.Figure)
         assert len(fig.data) == 2
 

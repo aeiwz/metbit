@@ -345,8 +345,10 @@ class ChunkedSTOCSY:
         self,
         spectra: pd.DataFrame,
         anchor_ppm_value: float,
+        plot: str = "line",
+        colorscale: str = "Jet",
     ):
-        """Compute and return a Plotly figure identical in style to STOCSY().
+        """Compute and return a Plotly figure identical in style to STOCSY() (same ``plot`` / ``colorscale``).
 
         Compatible with existing downstream code that calls .show() or saves
         the figure.
@@ -361,41 +363,12 @@ class ChunkedSTOCSY:
             >>> fig = stocsy.plot(spectra, anchor_ppm_value=3.56)
             >>> fig.show()
         """
-        import plotly.graph_objects as go
+        from .stocsy import stocsy_figure
 
         ppm, correlations, p_values = self.compute(spectra, anchor_ppm_value)
         median_y = np.median(spectra.to_numpy(dtype=np.float32, copy=False), axis=0)
-
-        sig_mask = p_values < self.p_value_threshold
-        non_sig_mask = ~sig_mask
-
-        fig = go.Figure()
-        fig.add_trace(go.Scatter(
-            x=ppm[non_sig_mask],
-            y=median_y[non_sig_mask],
-            mode="markers",
-            marker=dict(size=3, color="gray"),
-            name="Non-significant",
-        ))
-        fig.add_trace(go.Scatter(
-            x=ppm[sig_mask],
-            y=median_y[sig_mask],
-            mode="markers",
-            marker=dict(size=3, color="red"),
-            name=f"Significant (<i>p</i> < {self.p_value_threshold})",
-        ))
-        fig.update_layout(
-            title={
-                "text": f"<b>STOCSY (chunked): δ {np.round(anchor_ppm_value, 4)}</b>",
-                "y": 0.9, "x": 0.5,
-                "xanchor": "center", "yanchor": "top",
-            },
-            xaxis_title="<b>δ<sup>1</sup>H</b>",
-            yaxis_title=f"Correlation (r<sup>2</sup>) δ = {np.round(anchor_ppm_value, 4)}",
-            showlegend=True,
-        )
-        fig.update_xaxes(autorange="reversed")
-        return fig
+        return stocsy_figure(ppm, median_y, correlations, p_values, anchor_ppm_value, self.p_value_threshold,
+                             plot=plot, colorscale=colorscale, title="STOCSY (chunked)")
 
 
 # ---------------------------------------------------------------------------

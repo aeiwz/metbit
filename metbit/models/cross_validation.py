@@ -46,7 +46,7 @@ class CrossValidation:
 
     """
 
-    def __init__(self, estimator="opls", kfold=10, scaler="pareto") -> None:
+    def __init__(self, estimator="opls", kfold=10, scaler="pareto", max_components=15, splits=None) -> None:
         
         from .pls import PLS
         from .opls import OPLS
@@ -58,6 +58,14 @@ class CrossValidation:
 
         # number of folds
         self.kfold = kfold
+        # optional (train, test) index pairs used instead of the stratified
+        # blocks below: grouped, shuffled or leave-one-out folds. Every sample
+        # must be in exactly one test set.
+        self.splits = None if splits is None else [(np.asarray(a), np.asarray(b)) for a, b in splits]
+        # most components cross-validated. Q2 plateaus within a few; past roughly
+        # 20-30, test-set correction compounds rounding error and predictions blow
+        # up (|Q2| > 1), so the misclassification minimum would be picked from noise.
+        self.max_components = max_components
         # estimator
         if estimator == "pls":
             self.estimator = PLS()
@@ -84,7 +92,7 @@ class CrossValidation:
         self.y: np.ndarray = None
         self.groups: dict = None
 
-    def fit(self, x, y) -> None:
+    def fit(self, x, y, scores_only: bool = False) -> None:
         """
         Fitting variable matrix X
 
@@ -96,12 +104,18 @@ class CrossValidation:
             Dependent matrix with size n samples by 1. The values in
             this vector must be 0 and 1, otherwise the classification
             performance will be wrongly concluded.
+        scores_only : bool
+            Compute only what q2 and R2y need (a permutation test runs this
+            hundreds of times): the X sums of squares, covariance loadings,
+            R2X, R2Xcorr, R2XYO, covariance and correlation are left unset.
+            q2, R2y and the optimal number of components are identical.
 
         Returns
         -------
         CrossValidation object
 
         """
+        self._scores_only = scores_only
         # TODO: Check dimension consistencies between X and y.
         # set the labels in y to 0 and 1, and name the groups using
         # the labels in y
@@ -109,7 +123,7 @@ class CrossValidation:
         # matrix dimension
         n, p = x.shape
         # max number of principal components
-        npc0 = min(n, p)
+        npc0 = min(n, p, self.max_components)
         # preallocation
         ssx = collections.defaultdict(lambda: collections.defaultdict(list))
         ssy = []
@@ -128,22 +142,38 @@ class CrossValidation:
 
             # variances
             ssy_tot = (yte_scale ** 2).sum()
-            ssx_tot = (xte_scale ** 2).sum()
+            ssx_tot = None if scores_only else (xte_scale ** 2).sum()
 
             # fit the model
-            npc = min(xtr.shape)
-            self.estimator.fit(xtr_scale.copy(), ytr_scale, n_comp=npc)
+            # centring leaves n - 1 directions in the training block, and a fit with
+            # n - 1 or more components divides by near zero: its CV predictions blow
+            # up (Q2 around -1e9 or worse) and can still be chosen as optimal
+            npc = max(1, min(xtr.shape[0] - 2, xtr.shape[1], self.max_components))
+            # fit works in place on X; scores_only never reads xtr_scale again
+            self.estimator.fit(xtr_scale if scores_only else xtr_scale.copy(), ytr_scale, n_comp=npc)
             if npc < npc0:
                 npc0 = npc
+
+            # the test block with orthogonal components 1..k removed, built
+            # one component at a time: the same operations, in the same order,
+            # as estimator.correct(n_component=k), which would redo 1..k from
+            # scratch for every k (quadratic in the number of components)
+            if self.estimator_id == "opls":
+                xte_corr = xte_scale.copy()
+                tcorr1 = None
 
             # do prediction iterating through components
             for k in range(1, npc+1):
                 # if OPLS is used, the test matrix should be corrected to
                 # remove orthogonal components
                 if self.estimator_id == "opls":
-                    xte_corr, tcorr = self.estimator.correct(
-                        xte_scale, n_component=k, return_scores=True
-                    )
+                    t_k = np.dot(xte_corr, self.estimator._Wortho[:, k-1])
+                    if xte_corr.ndim == 1:
+                        xte_corr -= t_k * self.estimator._Portho[:, k-1]
+                    else:
+                        xte_corr -= t_k[:, np.newaxis] * self.estimator._Portho[:, k-1]
+                    if tcorr1 is None:
+                        tcorr1 = t_k  # first orthogonal score, the same for every k
                     # prediction
                     yp_k, tp_k = self.estimator.predict(
                         xte_corr, n_component=k, return_scores=True
@@ -151,23 +181,18 @@ class CrossValidation:
 
                     # save the parameters for model quality assessments
                     # Orthogonal and predictive scores
-                    if xte_scale.ndim == 1:
-                        tortho[test_index, k-1] = tcorr[0]
-                    else:
-                        tortho[test_index, k-1] = tcorr[:, 0]
+                    tortho[test_index, k-1] = tcorr1
                     tpred[test_index, k-1] = tp_k
 
-                    # sum of squares
-                    ssx[k]["corr"].append((xte_corr ** 2).sum())
-                    xte_ortho = np.dot(
-                        tcorr, self.estimator.orthogonal_loadings[:, :k].T
-                    )
-                    ssx[k]["xyo"].append((xte_ortho ** 2).sum())
-                    ssx[k]["total"].append(ssx_tot)
+                    if not scores_only:
+                        # sum of squares; the orthogonal part is what was removed
+                        ssx[k]["corr"].append((xte_corr ** 2).sum())
+                        ssx[k]["xyo"].append(((xte_scale - xte_corr) ** 2).sum())
+                        ssx[k]["total"].append(ssx_tot)
 
-                    # covariances from fitting
-                    tp = self.estimator.predictive_scores[:, k-1]
-                    pcv[k].append(np.dot(tp, xtr_scale) / (tp ** 2).sum())
+                        # covariances from fitting
+                        tp = self.estimator.predictive_scores[:, k-1]
+                        pcv[k].append(np.dot(tp, xtr_scale) / (tp ** 2).sum())
 
                 else:
                     # prediction
@@ -492,6 +517,9 @@ class CrossValidation:
         iterator
 
         """
+        if self.splits is not None:
+            yield from self.splits
+            return
         n, k = y.size, self.kfold
         groups, counts = np.unique(y, return_counts=True)
 
@@ -531,7 +559,8 @@ class CrossValidation:
         npc = self._opt_component+1
 
         # fit the model
-        self.estimator.fit(x_scale.copy(), y_scale.copy(), n_comp=npc)
+        scores_only = getattr(self, "_scores_only", False)  # _summary_fit then reads only y
+        self.estimator.fit(x_scale if scores_only else x_scale.copy(), y_scale.copy(), n_comp=npc)
 
         # summary the fitting
         self._summary_fit(x_scale, y_scale)
@@ -552,6 +581,16 @@ class CrossValidation:
 
         """
         npc = self._opt_component + 1
+        if getattr(self, "_scores_only", False):
+            # R2y only: y rebuilt from the predictive scores, X never rebuilt
+            if self.estimator_id == "opls":
+                yrec = (self.estimator.predictive_score(npc)
+                        * self.estimator.weights_y[npc-1])
+            else:
+                yrec = np.dot(self.estimator.scores_x[:, :npc],
+                              self.estimator.weights_y[:npc])
+            self._r2y = 1 - ((y - yrec) ** 2).sum() / (y ** 2).sum()
+            return
         # Calculate covariance and correlation for variable importance
         # assessment. Only works for OPLS/OPLS-DA
         if self.estimator_id == "opls":
@@ -607,7 +646,7 @@ class CrossValidation:
         # Q2
         self._q2 = 1 - self._pressy.sum(axis=0) / self._ssy
         # metrics for OPLS
-        if self.estimator_id == "opls":
+        if self.estimator_id == "opls" and not getattr(self, "_scores_only", False):
             _, npc = _pred_class.shape
             # r2xcorr, r2xyo
             r2xcorr, r2xyo = [], []

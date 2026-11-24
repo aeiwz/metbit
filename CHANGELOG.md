@@ -6,6 +6,40 @@ Versions follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased]
+
+### Added
+
+Analysis steps of the metbit desktop app, now available as library functions
+(all exported from `metbit`):
+
+- `metbit.nmr.regions`: `parse_windows`, `bin_spectra`, `select_regions` (keep range,
+  cut regions, suppress to baseline or zero).
+- `metbit.nmr.integrate`: `pick_peaks` (TopSpin-style peaks and integral regions),
+  `integrate_regions` (trapezoidal, optional chord baseline), `calibrate_integrals`,
+  `integral_table`.
+- `metbit.preprocessing.qc`: `normalize_spectra` (PQN, SNV, SNV+PQN, MSC, returning the
+  exact factors and offsets), `qc_drift_correct` (QC-RLSC with LOESS), `qc_rsd`,
+  `detect_outliers` (Hotelling T2 and DModX with F limits).
+- `metbit.stats.features`: `two_group_test` (Welch, Student, Mann-Whitney, paired t,
+  Wilcoxon; Hedges' g with 95% CI), `linear_model_test` (covariate-adjusted),
+  `correlation_test`, `normality_test`.
+- `metbit.stats.biomarker`: `feature_auc`, `biomarker_panel` (cross-validated logistic
+  panel with fold-wise feature selection and bootstrap CI).
+- `metbit.analysis.longitudinal`: `asca` (permutation p-values within subjects),
+  `mixed_model_test` (MixedLM, Wald test per term), `friedman_test`.
+- `metbit.validation.q2`: `make_folds` (grouped and repeated folds), `repeated_q2`,
+  `q2_permutation_test` (permutes labels at the subject level and refits the OPLS
+  cross-validation), `nested_opls_cv`.
+- `metbit.models.vip.vip_regions`: VIP regions ranked by area over the threshold.
+
+### Removed
+
+- `pingouin` from the install requirements: it was imported nowhere, and its GPL-3.0
+  licence kept it out of bundled applications.
+
+---
+
 ## [9.0.0] - 2026-06-19
 
 ### Summary
